@@ -2,6 +2,8 @@
 import { 
   type BACnetClientType,
   BACnetError,
+  sendConfirmedCovNotification,
+  sendUnconfirmedCovNotification,
 } from './utils.js';
 
 import {
@@ -15,7 +17,6 @@ import bacnet, {
   type BACnetMessageHeader,
   type SubscribeCovPayload,
   Segmentation,
-
 } from '@innovation-system/node-bacnet';
 
 import { 
@@ -28,6 +29,8 @@ import { BACnetObject } from './object.js';
 
 import { BACnetProperty } from './property.js';
 import { BACnetDevice, type DeviceCovHandler } from './device.js';
+
+import fastq from 'fastq';
 
 import Debug from 'debug';
 
@@ -43,9 +46,17 @@ export interface BACnetSubscription {
   subscriber: BACnetMessageHeader['sender'];
 }
 
+export interface QueuedCov { 
+  device: BACnetDevice;
+  object: BACnetObject;
+  property: BACnetProperty;
+  data: BACNetAppData[];
+}
+
 export class BACnetNode {
   
   readonly #client: BACnetClientType;
+  readonly #covqueue: fastq.queueAsPromised<QueuedCov>;
   readonly #subscriptions: Map<number, Set<BACnetSubscription>>;
   
   #device: BACnetDevice | null;
@@ -54,6 +65,7 @@ export class BACnetNode {
     const client = new BACnetClient(opts);
     this.#device = null;
     this.#client = client;
+    this.#covqueue = fastq.promise(null, this.#covQueueWorker, 1);
     this.#subscriptions = new Map();
     client.on('whoHas', this.#onWhoHas);
     client.on('iAm', this.#onIAm);
@@ -76,35 +88,22 @@ export class BACnetNode {
     return this.#device;
   }
   
-  #onCov: DeviceCovHandler = async (device: BACnetDevice, object: BACnetObject, property: BACnetProperty, data: BACNetAppData[]) => {
-    if (property.identifier === PropertyIdentifier.PRESENT_VALUE && this.#subscriptions.has(object.instanceId)) { 
-      for (const subscription of this.#subscriptions.get(object.instanceId)!) {
+
+  
+  #covQueueWorker = async (cov: QueuedCov) => { 
+    if (cov.property.identifier === PropertyIdentifier.PRESENT_VALUE && this.#subscriptions.has(cov.object.instanceId)) { 
+      for (const subscription of this.#subscriptions.get(cov.object.instanceId)!) {
         if (subscription.issueConfirmedNotifications) {
-          this.#client.confirmedCOVNotification(
-            { address: subscription.subscriber.address },
-            { type: object.type, instance: object.instanceId },
-            subscription.subscriberProcessId,
-            this.#device!.id,
-            subscription.lifetime,
-            [
-              { property: { id: property.identifier }, value: data },
-            ],
-            (err) => { },
-          );
+          await sendConfirmedCovNotification(this.#client, this.#device!, subscription, cov);
         } else { 
-          this.#client.unconfirmedCOVNotification(
-            subscription.subscriber,
-            subscription.subscriberProcessId,
-            this.#device!.id,
-            { type: object.type, instance: object.instanceId },
-            subscription.lifetime,
-            [
-              { property: { id: property.identifier }, value: data },
-            ],
-          );
+          await sendUnconfirmedCovNotification(this.#client, this.#device!, subscription, cov);
         } 
       }
     }
+  };
+  
+  #onCov: DeviceCovHandler = async (device: BACnetDevice, object: BACnetObject, property: BACnetProperty, data: BACNetAppData[]) => {
+    await this.#covqueue.push({ device, object, property, data });
   };
   
   #onReadProperty = async (req: ReadPropertyContent) => {
