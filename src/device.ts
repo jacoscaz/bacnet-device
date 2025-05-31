@@ -7,13 +7,13 @@ import {
   ErrorCode,
   ErrorClass,
   ObjectType,
+  ApplicationTag,
+  PropertyIdentifier,
 } from './enums/index.js';
 
 import bacnet, { 
   type BACNetAppData,
   type BACNetObjectID,
-  ApplicationTag,
-  PropertyIdentifier,
 } from '@innovation-system/node-bacnet';
 
 import { 

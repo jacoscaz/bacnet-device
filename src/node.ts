@@ -7,14 +7,15 @@ import {
 import {
   ErrorCode,
   ErrorClass,
-} from './enums/errors.js';
+  PropertyIdentifier,
+} from './enums/index.js';
 
 import bacnet, { 
   type BACNetAppData,
   type BACnetMessageHeader,
   type SubscribeCovPayload,
   Segmentation,
-  PropertyIdentifier,
+
 } from '@innovation-system/node-bacnet';
 
 import { 
