@@ -1,0 +1,33 @@
+{
+  "name": "bacnet-device",
+  "version": "0.0.1",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Jacopo Scazzosi <jacopo@scazzosi.com>",
+  "license": "MIT",
+  "description": "A library for implementing BACnet IP devices",
+  "devDependencies": {
+    "@types/debug": "^4.1.12",
+    "@types/node": "^22.15.21",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "@innovation-system/node-bacnet": "^1.3.0",
+    "debug": "^4.4.1"
+  },
+  "homepage": "https://github.com/jacoscaz/bacnet-device",
+  "bugs": "https://github.com/jacoscaz/bacnet-device/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jacoscaz/bacnet-device.git"
+  },
+  "files": [
+    "dist/**/*.js",
+    "dist/**/*.d.ts"
+  ]
+}
