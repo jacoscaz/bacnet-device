@@ -1,4 +1,7 @@
 
+import { isDeepStrictEqual } from 'node:util';
+import { EventEmitter } from 'node:events';
+
 import { 
   type BACnetClientType,
   BACnetError,
@@ -9,7 +12,9 @@ import {
 import {
   ErrorCode,
   ErrorClass,
+  ObjectType,
   PropertyIdentifier,
+  ObjectTypeName,
 } from './enums/index.js';
 
 import bacnet, { 
@@ -42,7 +47,8 @@ export interface BACnetSubscription {
   subscriberProcessId: number;
   monitoredObjectId: bacnet.BACNetObjectID,
   issueConfirmedNotifications: boolean;
-  lifetime: number;
+  /** milliseconds since unix epoch */
+  expiresAt: number;
   subscriber: BACnetMessageHeader['sender'];
 }
 
@@ -53,20 +59,28 @@ export interface QueuedCov {
   data: BACNetAppData[];
 }
 
-export class BACnetNode {
+export interface BACnetNodeEvents { 
+  error: [err: Error];
+  listening: [];
+}
+
+export class BACnetNode extends EventEmitter<BACnetNodeEvents> {
   
   readonly #client: BACnetClientType;
   readonly #covqueue: fastq.queueAsPromised<QueuedCov>;
-  readonly #subscriptions: Map<number, Set<BACnetSubscription>>;
+  readonly #subscriptions: Map<ObjectType, Map<number, Set<BACnetSubscription>>>;
   
   #device: BACnetDevice | null;
+  #maintenanceInterval: NodeJS.Timer;
   
   constructor(opts: bacnet.ClientOptions) {
+    super();
     const client = new BACnetClient(opts);
     this.#device = null;
     this.#client = client;
     this.#covqueue = fastq.promise(null, this.#covQueueWorker, 1);
     this.#subscriptions = new Map();
+    this.#maintenanceInterval = setInterval(this.#onMaintenance, 30_000);
     client.on('whoHas', this.#onWhoHas);
     client.on('iAm', this.#onIAm);
     client.on('iHave', this.#onIHave);
@@ -88,13 +102,40 @@ export class BACnetNode {
     return this.#device;
   }
   
+  #onMaintenance = () => { 
+    const now = Date.now();
+    for (const [type, typeSubs] of this.#subscriptions.entries()) { 
+      for (const [instance, instanceSubs] of typeSubs.entries()) {
+        for (const sub of instanceSubs) { 
+          if (sub.expiresAt < now) { 
+            instanceSubs.delete(sub);
+          }
+        }
+        if (instanceSubs.size === 0) {
+          typeSubs.delete(instance);
+        }
+      }
+      if (typeSubs.size === 0) { 
+        this.#subscriptions.delete(type);
+      }
+    }
+  };
+  
   #covQueueWorker = async (cov: QueuedCov) => { 
-    if (cov.property.identifier === PropertyIdentifier.PRESENT_VALUE && this.#subscriptions.has(cov.object.instance)) { 
-      for (const subscription of this.#subscriptions.get(cov.object.instance)!) {
-        if (subscription.issueConfirmedNotifications) {
-          await sendConfirmedCovNotification(this.#client, this.#device!, subscription, cov);
-        } else { 
-          await sendUnconfirmedCovNotification(this.#client, this.#device!, subscription, cov);
+    const now = Date.now();
+    if (cov.property.identifier === PropertyIdentifier.PRESENT_VALUE) { 
+      const subscriptions = this.#subscriptions.get(cov.object.type)?.get(cov.object.instance);
+      if (subscriptions) {
+        for (const subscription of subscriptions) {
+          if (now < subscription.expiresAt) {
+            if (subscription.issueConfirmedNotifications) {
+              await sendConfirmedCovNotification(this.#client, this.#device!, subscription, cov);
+            } else {
+              await sendUnconfirmedCovNotification(this.#client, this.#device!, subscription, cov);
+            }
+          } else {
+            subscriptions.delete(subscription);
+          }
         } 
       }
     }
@@ -122,20 +163,41 @@ export class BACnetNode {
   }
   
   #onSubscribeCov = async (req: SubscribeCovContent) => {
-    const { payload } = req;
-    console.log('new request: readProperty');
     const { payload: { subscriberProcessId, monitoredObjectId, issueConfirmedNotifications, lifetime }, header, service, invokeId } = req;
+    debug('new subscription: object %s %s', ObjectTypeName[monitoredObjectId.type as ObjectType], monitoredObjectId.instance);
     if (!header) return;
-    if (!this.#subscriptions.has(monitoredObjectId.instance)) {
-      this.#subscriptions.set(monitoredObjectId.instance, new Set());
+    let typeSubs = this.#subscriptions.get(monitoredObjectId.type);
+    if (!typeSubs) { 
+      typeSubs = new Map();
+      this.#subscriptions.set(monitoredObjectId.type, typeSubs);
     }
-    this.#subscriptions.get(monitoredObjectId.instance)!.add({
-      subscriberProcessId,
-      issueConfirmedNotifications,
-      lifetime,
-      monitoredObjectId,
-      subscriber: header.sender,
-    });
+    let instanceSubs = typeSubs.get(monitoredObjectId.instance);
+    if (!instanceSubs) { 
+      instanceSubs = new Set();
+      typeSubs.set(monitoredObjectId.instance, instanceSubs);
+    }
+    let previous: BACnetSubscription | null = null;
+    for (const sub of instanceSubs) { 
+      if (sub.subscriber.address === header.sender.address
+        && isDeepStrictEqual(monitoredObjectId, sub.monitoredObjectId)
+        && sub.subscriberProcessId === subscriberProcessId
+      ) { 
+        previous = sub;
+      }
+    }
+    if (previous) {
+      debug('updating previous subscription');
+      previous.expiresAt = Date.now() + (lifetime * 1000);
+    } else { 
+      debug('registering new subscription');
+      instanceSubs.add({
+        subscriberProcessId,
+        issueConfirmedNotifications,
+        expiresAt: Date.now() + (lifetime * 1000),
+        monitoredObjectId,
+        subscriber: header.sender,
+      });
+    }
     this.#client.simpleAckResponse({ address: header.sender.address }, service!, invokeId!);
   };
   
@@ -147,7 +209,7 @@ export class BACnetNode {
   // - monitored property: reference to the specific property being monitored
   // - covIncrement: (optional) minimum value change required to send cov
   #onSubscribeProperty = async (req: Omit<BaseEventContent, 'payload'> & { payload: SubscribeCovPayload }) => { 
-    console.log('new request: readRange');
+    debug('new request: subscribeProperty');
     const { header, service, invokeId } = req;
     if (!header) return;
     this.#client.errorResponse({ address: header.sender.address }, service!, invokeId!, ErrorClass.DEVICE, ErrorCode.INTERNAL_ERROR);
@@ -155,7 +217,7 @@ export class BACnetNode {
   };
   
   #onWhoIs = (req: BaseEventContent) => { 
-    console.log('new request: whoIs');
+    debug('new request: whoIs');
     const { header } = req;
     if (!header) return;
     if (!this.#device) return;
@@ -163,46 +225,48 @@ export class BACnetNode {
   }
   
   #onWhoHas = (req: BaseEventContent) => {
-    console.log('new request: whoHas');
+    debug('new request: whoHas');
     const { header, service, invokeId } = req;
     if (!header) return;
     this.#client.errorResponse({ address: header.sender.address }, service!, invokeId!, ErrorClass.DEVICE, ErrorCode.INTERNAL_ERROR);
   };
   
   #onIAm = (req: BaseEventContent) => {
-    console.log('new request: iAm');
+    debug('new request: iAm');
     const { header, service, invokeId } = req;
     if (!header) return;
     this.#client.errorResponse({ address: header.sender.address }, service!, invokeId!, ErrorClass.DEVICE, ErrorCode.INTERNAL_ERROR);
   };
   
   #onIHave = (req: BaseEventContent) => {
-    console.log('new request: iHave');
+    debug('new request: iHave');
     const { header, service, invokeId } = req;
     if (!header) return;
     this.#client.errorResponse({ address: header.sender.address }, service!, invokeId!, ErrorClass.DEVICE, ErrorCode.INTERNAL_ERROR);
   };
   
   #onReadRange = (req: BaseEventContent) => {
-    console.log('new request: readRange');
+    debug('new request: readRange');
     const { header, service, invokeId } = req;
     if (!header) return;
     this.#client.errorResponse({ address: header.sender.address }, service!, invokeId!, ErrorClass.DEVICE, ErrorCode.INTERNAL_ERROR);
   };
   
   #onDeviceCommunicationControl = (req: BaseEventContent) => {
-    console.log('new request: deviceCommunicationControl');
+    debug('new request: deviceCommunicationControl');
     const { header, service, invokeId } = req;
     if (!header) return;
     this.#client.errorResponse({ address: header.sender.address }, service!, invokeId!, ErrorClass.DEVICE, ErrorCode.INTERNAL_ERROR);
   };
   
   #onError = (err: Error) => {
-    console.log('server error', err);
+    debug('server error', err);
+    this.emit('error', err);
   };
   
   #onListening = () => { 
-    console.log('server is listening');
+    debug('server is listening');
+    this.emit('listening');
   };
   
 }

@@ -32,10 +32,8 @@ export const sendConfirmedCovNotification = async (client: BACnetClientType, emi
       { type: cov.object.type, instance: cov.object.instance },
       subscription.subscriberProcessId,
       emitter.id,
-      subscription.lifetime,
-      [
-        { property: { id: cov.property.identifier }, value: cov.data },
-      ],
+      Math.floor(Math.max(0, subscription.expiresAt - Date.now()) / 1000),
+      [ { property: { id: cov.property.identifier }, value: cov.data } ],
       (err) => err ? reject(err) : resolve(),
     );
   });
@@ -47,7 +45,7 @@ export const sendUnconfirmedCovNotification = async (client: BACnetClientType, e
     subscription.subscriberProcessId,
     emitter.id,
     { type: cov.object.type, instance: cov.object.instance },
-    subscription.lifetime,
+    Math.floor(Math.max(0, subscription.expiresAt - Date.now()) / 1000),
     [ { property: { id: cov.property.identifier }, value: cov.data } ],
   );
 }
