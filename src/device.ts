@@ -44,12 +44,12 @@ export class BACnetDevice {
     this.vendorId = vendorId;
   }
   
-  registerObject(type: ObjectType, instanceId: number, name: string): BACnetObject {
-    const object = new BACnetObject(type, instanceId, name, this.#onObjectCov);
+  registerObject(type: ObjectType, instance: number, name: string): BACnetObject {
+    const object = new BACnetObject(type, instance, name, this.#onObjectCov);
     if (!this.#objects.has(type)) { 
       this.#objects.set(type, new Map());
     }
-    this.#objects.get(type)!.set(instanceId, object);
+    this.#objects.get(type)!.set(instance, object);
     return object;
   }
   

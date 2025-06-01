@@ -24,17 +24,17 @@ export type ObjectCovHandler = (object: BACnetObject, property: BACnetProperty, 
 
 export class BACnetObject { 
   
-  readonly instanceId: number;
+  readonly instance: number;
   readonly type: ObjectType;
   readonly name: string;
   
   #onCov: ObjectCovHandler;
   #properties: Map<PropertyIdentifier, BACnetProperty>;
   
-  constructor(type: ObjectType, instanceId: number, name: string, onCov: ObjectCovHandler) {
+  constructor(type: ObjectType, instance: number, name: string, onCov: ObjectCovHandler) {
     this.type = type;
     this.name = name;
-    this.instanceId = instanceId;
+    this.instance = instance;
     this.#onCov = onCov;
     this.#properties = new Map();
   }
@@ -85,7 +85,7 @@ export class BACnetObject {
   };
   
   #readObjectIdentifier = (req: ReadPropertyContent): BACNetAppData => { 
-    return { type: ApplicationTag.OBJECTIDENTIFIER, value: this.instanceId };
+    return { type: ApplicationTag.OBJECTIDENTIFIER, value: this.instance };
   };
   
 }

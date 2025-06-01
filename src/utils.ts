@@ -29,7 +29,7 @@ export const sendConfirmedCovNotification = async (client: BACnetClientType, emi
   return new Promise<void>((resolve, reject) => {
     client.confirmedCOVNotification(
       { address: subscription.subscriber.address },
-      { type: cov.object.type, instance: cov.object.instanceId },
+      { type: cov.object.type, instance: cov.object.instance },
       subscription.subscriberProcessId,
       emitter.id,
       subscription.lifetime,
@@ -46,7 +46,7 @@ export const sendUnconfirmedCovNotification = async (client: BACnetClientType, e
     subscription.subscriber,
     subscription.subscriberProcessId,
     emitter.id,
-    { type: cov.object.type, instance: cov.object.instanceId },
+    { type: cov.object.type, instance: cov.object.instance },
     subscription.lifetime,
     [ { property: { id: cov.property.identifier }, value: cov.data } ],
   );

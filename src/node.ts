@@ -89,8 +89,8 @@ export class BACnetNode {
   }
   
   #covQueueWorker = async (cov: QueuedCov) => { 
-    if (cov.property.identifier === PropertyIdentifier.PRESENT_VALUE && this.#subscriptions.has(cov.object.instanceId)) { 
-      for (const subscription of this.#subscriptions.get(cov.object.instanceId)!) {
+    if (cov.property.identifier === PropertyIdentifier.PRESENT_VALUE && this.#subscriptions.has(cov.object.instance)) { 
+      for (const subscription of this.#subscriptions.get(cov.object.instance)!) {
         if (subscription.issueConfirmedNotifications) {
           await sendConfirmedCovNotification(this.#client, this.#device!, subscription, cov);
         } else { 
