@@ -28,7 +28,7 @@ const analogOutput = device.registerObject(ObjectType.ANALOG_OUTPUT, 1, 'analog 
 const presentValue = analogOutput.registerProperty(PropertyIdentifier.PRESENT_VALUE);
 
 setInterval(() => { 
-  presentValue.setValue({ type: ApplicationTag.UNSIGNED_INTEGER, value: Date.now() % 42 });
+  presentValue.setValue([{ type: ApplicationTag.UNSIGNED_INTEGER, value: Date.now() % 42 }]);
 }, 1_000);
 ```
 
