@@ -35,10 +35,12 @@ export class BACnetDevice {
   
   readonly #onCov: DeviceCovHandler;
   readonly #objects: Map<ObjectType, Map<number, BACnetObject>>;
+  readonly #objectList: BACNetAppData[];
   
   constructor(id: number, name: string, vendorId: number, onCov: DeviceCovHandler) {
     this.#onCov = onCov;
     this.#objects = new Map();
+    this.#objectList = [];
     this.id = id;
     this.name = name;
     this.vendorId = vendorId;
@@ -49,7 +51,7 @@ export class BACnetDevice {
     device.registerProperty(PropertyIdentifier.OBJECT_TYPE)
       .setValue({ type: ApplicationTag.ENUMERATED, value: ObjectType.DEVICE });
     device.registerProperty(PropertyIdentifier.OBJECT_LIST)
-      .setValue(this.#getObjectList);
+      .setValue(this.#objectList);
   }
   
   registerObject(type: ObjectType, instance: number, name: string): BACnetObject {
@@ -58,6 +60,7 @@ export class BACnetDevice {
       this.#objects.set(type, new Map());
     }
     this.#objects.get(type)!.set(instance, object);
+    this.#objectList.push({ type: ApplicationTag.OBJECTIDENTIFIER, value: object.identifier });
     return object;
   }
   
@@ -75,19 +78,6 @@ export class BACnetDevice {
     }
     throw new BACnetError('unknown object', ErrorCode.UNKNOWN_OBJECT, ErrorClass.DEVICE);
   }
-  
-  #getObjectList = (): BACNetAppData[] => {
-    const list: BACNetAppData[] = []; 
-    for (const [type, objects] of this.#objects.entries()) { 
-      for (const instance of objects.keys()) {
-        list.push({
-          type: ApplicationTag.OBJECTIDENTIFIER,
-          value: { type, instance },
-        });
-      }
-    }
-    return list;
-  };
   
   #onObjectCov: ObjectCovHandler = async (object: BACnetObject, property: BACnetProperty, data: BACNetAppData[]) => { 
     return this.#onCov(this, object, property, data);

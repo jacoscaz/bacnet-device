@@ -1,16 +1,7 @@
 
-import { 
-  ApplicationTag,
-  PropertyIdentifier,
-} from './enums/index.js';
+import type { BACNetAppData } from '@innovation-system/node-bacnet';
 
-import { 
-  type BACNetAppData,
-} from '@innovation-system/node-bacnet';
-
-import { 
-  type ReadPropertyContent,
-} from '@innovation-system/node-bacnet/dist/lib/EventTypes.js';
+import { PropertyIdentifier } from './enums/index.js';
 
 export type PropertyValueGetter = () => BACNetAppData | BACNetAppData[] | Promise<BACNetAppData | BACNetAppData[]>;
 

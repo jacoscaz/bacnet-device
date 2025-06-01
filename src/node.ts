@@ -13,8 +13,9 @@ import {
   ErrorCode,
   ErrorClass,
   ObjectType,
-  PropertyIdentifier,
   ObjectTypeName,
+  PropertyIdentifier,
+  PropertyIdentifierName,
 } from './enums/index.js';
 
 import bacnet, { 
@@ -27,6 +28,7 @@ import bacnet, {
 import { 
   type BaseEventContent,
   type ReadPropertyContent,
+  type ReadPropertyMultipleContent,
   type SubscribeCovContent,
 } from '@innovation-system/node-bacnet/dist/lib/EventTypes.js';
 
@@ -92,6 +94,7 @@ export class BACnetNode extends EventEmitter<BACnetNodeEvents> {
     client.on('whoIs', this.#onWhoIs);
     client.on('subscribeCov', this.#onSubscribeCov);
     client.on('subscribeProperty', this.#onSubscribeProperty);
+    client.on('readPropertyMultiple', this.#onReadPropertyMultiple);
   }
   
   initDevice(id: number, name: string, vendorId: number) { 
@@ -124,7 +127,7 @@ export class BACnetNode extends EventEmitter<BACnetNodeEvents> {
   #covQueueWorker = async (cov: QueuedCov) => { 
     const now = Date.now();
     if (cov.property.identifier === PropertyIdentifier.PRESENT_VALUE) { 
-      const subscriptions = this.#subscriptions.get(cov.object.type)?.get(cov.object.instance);
+      const subscriptions = this.#subscriptions.get(cov.object.identifier.type)?.get(cov.object.identifier.instance);
       if (subscriptions) {
         for (const subscription of subscriptions) {
           if (now < subscription.expiresAt) {
@@ -147,7 +150,7 @@ export class BACnetNode extends EventEmitter<BACnetNodeEvents> {
   
   #onReadProperty = async (req: ReadPropertyContent) => {
     const { payload: { objectId, property }, address, header, service, invokeId } = req;
-    debug('req #%s: readProperty, object %s, property %s', invokeId, objectId.instance, property.id);
+    debug('req #%s: readProperty, object %s %s, property %s', invokeId, ObjectTypeName[objectId.type as ObjectType], objectId.instance, PropertyIdentifierName[property.id as PropertyIdentifier]);
     if (!header) return;
     if (!this.#device) return;
     try {
@@ -254,6 +257,13 @@ export class BACnetNode extends EventEmitter<BACnetNodeEvents> {
   
   #onDeviceCommunicationControl = (req: BaseEventContent) => {
     debug('new request: deviceCommunicationControl');
+    const { header, service, invokeId } = req;
+    if (!header) return;
+    this.#client.errorResponse({ address: header.sender.address }, service!, invokeId!, ErrorClass.DEVICE, ErrorCode.INTERNAL_ERROR);
+  };
+  
+  #onReadPropertyMultiple = (req: ReadPropertyMultipleContent) => { 
+    debug('new request: readPropertyMultiple');
     const { header, service, invokeId } = req;
     if (!header) return;
     this.#client.errorResponse({ address: header.sender.address }, service!, invokeId!, ErrorClass.DEVICE, ErrorCode.INTERNAL_ERROR);

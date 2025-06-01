@@ -459,4 +459,4 @@ export enum PropertyIdentifier {
   ZONE_TO = 321,
 };
 
-export const PropertiIdentifierName = invertEnum(PropertyIdentifier);
+export const PropertyIdentifierName = invertEnum(PropertyIdentifier);

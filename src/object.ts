@@ -9,10 +9,13 @@ import {
   PropertyIdentifier,
 } from './enums/index.js';
 
-import { type BACNetAppData } from '@innovation-system/node-bacnet';
+import type { 
+  BACNetAppData, 
+  BACNetObjectID,
+} from '@innovation-system/node-bacnet';
 
-import { 
-  type ReadPropertyContent,
+import type { 
+  ReadPropertyContent,
 } from '@innovation-system/node-bacnet/dist/lib/EventTypes.js';
 
 import {
@@ -24,34 +27,30 @@ export type ObjectCovHandler = (object: BACnetObject, property: BACnetProperty, 
 
 export class BACnetObject { 
   
-  readonly instance: number;
-  readonly type: ObjectType;
-  readonly name: string;
+  readonly identifier: BACNetObjectID;
+  readonly #propertyList: BACNetAppData[];
   
   #onCov: ObjectCovHandler;
   #properties: Map<PropertyIdentifier, BACnetProperty>;
   
   constructor(type: ObjectType, instance: number, name: string, onCov: ObjectCovHandler) {
-    this.type = type;
-    this.name = name;
-    this.instance = instance;
+    this.identifier = Object.freeze({ type, instance });
     this.#onCov = onCov;
     this.#properties = new Map();
+    this.#propertyList = [];
     
     this.registerProperty(PropertyIdentifier.OBJECT_NAME)
-      .setValue({ type: ApplicationTag.CHARACTER_STRING, value: this.name });
-    this.registerProperty(PropertyIdentifier.OBJECT_TYPE)
-      .setValue({ type: ApplicationTag.ENUMERATED, value: this.type });
+      .setValue({ type: ApplicationTag.CHARACTER_STRING, value: name });
     this.registerProperty(PropertyIdentifier.OBJECT_IDENTIFIER)
-      .setValue({ type: ApplicationTag.OBJECTIDENTIFIER, value: this.instance });
+      .setValue({ type: ApplicationTag.OBJECTIDENTIFIER, value: this.identifier });
     this.registerProperty(PropertyIdentifier.PROPERTY_LIST)
-      .setValue(this.#getPropertyList);
-    
+      .setValue(this.#propertyList);
   }
   
   registerProperty(identifier: PropertyIdentifier): BACnetProperty { 
     const property = new BACnetProperty(identifier, this.___onPropertyCov);
     this.#properties.set(identifier, property);
+    this.#propertyList.push({ type: ApplicationTag.ENUMERATED, value: property.identifier });
     return property;
   }
 
@@ -66,14 +65,5 @@ export class BACnetObject {
   ___onPropertyCov: PropertyCovHandler = async (property: BACnetProperty, data: BACNetAppData[]) => {
     return this.#onCov(this, property, data);
   };
-  
-  async #getPropertyList(): Promise<BACNetAppData[]> {
-    const list: BACNetAppData[] = [];
-    for (const property of this.#properties.values()) { 
-      list.push({ type: ApplicationTag.ENUMERATED, value: property.identifier });
-    }
-    return list;
-  }
-
-  
+    
 }
