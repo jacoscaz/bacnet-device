@@ -12,10 +12,12 @@ import {
 import type { 
   BACNetAppData, 
   BACNetObjectID,
+  BACNetReadAccess,
 } from '@innovation-system/node-bacnet';
 
 import type { 
   ReadPropertyContent,
+  ReadPropertyMultipleContent,
 } from '@innovation-system/node-bacnet/dist/lib/EventTypes.js';
 
 import {
@@ -60,6 +62,29 @@ export class BACnetObject {
       return this.#properties.get(property.id as PropertyIdentifier)!.getValue();
     }
     throw new BACnetError('unknown property', ErrorCode.UNKNOWN_PROPERTY, ErrorClass.PROPERTY);
+  }
+  
+  async ___readPropertyMultipleAll(): Promise<BACNetReadAccess> { 
+    const values: BACNetReadAccess['values'] = [];
+    for (const [identifier, property] of this.#properties.entries()) {
+      const value = await property.getValue();
+      values.push({ property: { id: identifier, index: 0 }, value: Array.isArray(value) ? value : [value] });
+    }
+    return { objectId: this.identifier, values };
+  }
+  
+  async ___readPropertyMultiple(properties: ReadPropertyMultipleContent['payload']['properties'][number]['properties']): Promise<BACNetReadAccess> { 
+    const values: BACNetReadAccess['values'] = [];
+    if (properties.length === 1 && properties[0].id === PropertyIdentifier.ALL) { 
+      return this.___readPropertyMultipleAll();
+    }
+    for (const property of properties) {
+      if (this.#properties.has(property.id)) {
+        const value = await this.#properties.get(property.id)!.getValue();
+        values.push({ property, value: Array.isArray(value) ? value : [value] });
+      }
+    }
+    return { objectId: this.identifier, values };
   }
   
   ___onPropertyCov: PropertyCovHandler = async (property: BACnetProperty, data: BACNetAppData[]) => {

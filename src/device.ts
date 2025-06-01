@@ -14,11 +14,13 @@ import {
 import bacnet, { 
   type BACNetAppData,
   type BACNetObjectID,
+  type BACNetReadAccess,
 } from '@innovation-system/node-bacnet';
 
 import { 
   type BaseEventContent,
   type ReadPropertyContent,
+  type ReadPropertyMultipleContent,
 } from '@innovation-system/node-bacnet/dist/lib/EventTypes.js';
 
 import { BACnetObject, type ObjectCovHandler } from './object.js';
@@ -70,6 +72,17 @@ export class BACnetDevice {
       return object.___readProperty(req);
     });
   }
+  
+  ___readPropertyMultiple = async (properties: ReadPropertyMultipleContent['payload']['properties']): Promise<BACNetReadAccess[]> => {
+    const values: BACNetReadAccess[] = [];
+    for (const { objectId: { type, instance }, properties: objProperties } of properties) { 
+      const object = this.#objects.get(type)?.get(instance);
+      if (object) { 
+        values.push(await object.___readPropertyMultiple(objProperties));
+      }
+    }
+    return values;
+  };
   
   async #handleObjectReq<T extends BaseEventContent>(req: T, objectId: BACNetObjectID, service: number, invokeId: number, cb: (obj: BACnetObject, req: T) => Promise<BACNetAppData | BACNetAppData[]>): Promise<BACNetAppData | BACNetAppData[]> {
     const object = this.#objects.get(objectId.type)?.get(objectId.instance);

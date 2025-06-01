@@ -21,6 +21,7 @@ import {
 import bacnet, { 
   type BACNetAppData,
   type BACnetMessageHeader,
+  type BACNetReadAccess,
   type SubscribeCovPayload,
   Segmentation,
 } from '@innovation-system/node-bacnet';
@@ -262,11 +263,13 @@ export class BACnetNode extends EventEmitter<BACnetNodeEvents> {
     this.#client.errorResponse({ address: header.sender.address }, service!, invokeId!, ErrorClass.DEVICE, ErrorCode.INTERNAL_ERROR);
   };
   
-  #onReadPropertyMultiple = (req: ReadPropertyMultipleContent) => { 
+  #onReadPropertyMultiple = async (req: ReadPropertyMultipleContent) => { 
     debug('new request: readPropertyMultiple');
-    const { header, service, invokeId } = req;
+    const { header, invokeId, payload: { properties } } = req;
     if (!header) return;
-    this.#client.errorResponse({ address: header.sender.address }, service!, invokeId!, ErrorClass.DEVICE, ErrorCode.INTERNAL_ERROR);
+    if (!this.#device) return;
+    const values = await this.#device.___readPropertyMultiple(properties);
+    this.#client.readPropertyMultipleResponse({ address: header.sender.address }, invokeId!, values);
   };
   
   #onError = (err: Error) => {
