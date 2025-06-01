@@ -37,29 +37,28 @@ export class BACnetObject {
     this.instance = instance;
     this.#onCov = onCov;
     this.#properties = new Map();
+    
+    this.registerProperty(PropertyIdentifier.OBJECT_NAME)
+      .setValue({ type: ApplicationTag.CHARACTER_STRING, value: this.name });
+    this.registerProperty(PropertyIdentifier.OBJECT_TYPE)
+      .setValue({ type: ApplicationTag.ENUMERATED, value: this.type });
+    this.registerProperty(PropertyIdentifier.OBJECT_IDENTIFIER)
+      .setValue({ type: ApplicationTag.OBJECTIDENTIFIER, value: this.instance });
+    this.registerProperty(PropertyIdentifier.PROPERTY_LIST)
+      .setValue(this.#getPropertyList);
+    
   }
   
-  registerProperty(identifier: PropertyIdentifier, tag: ApplicationTag): BACnetProperty { 
-    const property = new BACnetProperty(identifier, tag, this.___onPropertyCov);
+  registerProperty(identifier: PropertyIdentifier): BACnetProperty { 
+    const property = new BACnetProperty(identifier, this.___onPropertyCov);
     this.#properties.set(identifier, property);
     return property;
   }
 
   async ___readProperty(req: ReadPropertyContent): Promise<BACNetAppData | BACNetAppData[]> {
     const { payload: { property } } = req;
-    switch (property.id) { 
-      case PropertyIdentifier.PROPERTY_LIST:
-        return this.#readPropertyList(req);
-      case PropertyIdentifier.OBJECT_NAME:
-        return this.#readObjectName(req);
-      case PropertyIdentifier.OBJECT_TYPE:
-        return this.#readObjectType(req);
-      case PropertyIdentifier.OBJECT_IDENTIFIER:
-        return this.#readObjectIdentifier(req);
-      default:
-        if (this.#properties.has(property.id as PropertyIdentifier)) { 
-          return this.#properties.get(property.id as PropertyIdentifier)!.___readProperty(req);
-        }
+    if (this.#properties.has(property.id as PropertyIdentifier)) { 
+      return this.#properties.get(property.id as PropertyIdentifier)!.getValue();
     }
     throw new BACnetError('unknown property', ErrorCode.UNKNOWN_PROPERTY, ErrorClass.PROPERTY);
   }
@@ -68,24 +67,13 @@ export class BACnetObject {
     return this.#onCov(this, property, data);
   };
   
-  async #readPropertyList(req: ReadPropertyContent): Promise<BACNetAppData[]> {
-    const data: BACNetAppData[] = [];
+  async #getPropertyList(): Promise<BACNetAppData[]> {
+    const list: BACNetAppData[] = [];
     for (const property of this.#properties.values()) { 
-      data.push({ type: ApplicationTag.ENUMERATED, value: property.identifier });
+      list.push({ type: ApplicationTag.ENUMERATED, value: property.identifier });
     }
-    return data;
+    return list;
   }
-  
-  #readObjectName = (req: ReadPropertyContent): BACNetAppData => { 
-    return { type: ApplicationTag.CHARACTER_STRING, value: this.name };
-  };
-  
-  #readObjectType = (req: ReadPropertyContent): BACNetAppData => { 
-    return { type: ApplicationTag.ENUMERATED, value: this.type };
-  };
-  
-  #readObjectIdentifier = (req: ReadPropertyContent): BACNetAppData => { 
-    return { type: ApplicationTag.OBJECTIDENTIFIER, value: this.instance };
-  };
+
   
 }

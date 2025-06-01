@@ -12,34 +12,35 @@ import {
   type ReadPropertyContent,
 } from '@innovation-system/node-bacnet/dist/lib/EventTypes.js';
 
+export type PropertyValueGetter = () => BACNetAppData | BACNetAppData[] | Promise<BACNetAppData | BACNetAppData[]>;
+
 export type PropertyCovHandler = (property: BACnetProperty, data: BACNetAppData[]) => Promise<void>;
 
 export class BACnetProperty {
   
-  readonly tag: ApplicationTag;
   readonly identifier: PropertyIdentifier;
   
   #onCov: PropertyCovHandler;
-  #value: BACNetAppData;
+  #value: BACNetAppData | BACNetAppData[] | PropertyValueGetter;
   
-  constructor(identifier: PropertyIdentifier, tag: ApplicationTag, onCov: PropertyCovHandler) {
-    this.tag = tag;
+  constructor(identifier: PropertyIdentifier, onCov: PropertyCovHandler) {
     this.identifier = identifier;
     this.#onCov = onCov;
-    this.#value = { type: this.tag, value: null };
+    this.#value = [];
   }
   
-  async getValue() { 
+  async getValue(): Promise<BACNetAppData | BACNetAppData[]> {
+    if (typeof this.#value === 'function') { 
+      return this.#value();
+    }
     return this.#value;
   }
   
-  async setValue(value: string | number | boolean) { 
-    this.#value.value = value;
-    await this.#onCov(this, [this.#value]);
-  }
-  
-  async ___readProperty(req: ReadPropertyContent): Promise<BACNetAppData> {
-    return { type: this.tag, value: this.getValue() };
+  async setValue(value: BACNetAppData | BACNetAppData[] | PropertyValueGetter) { 
+    this.#value = value;
+    if (typeof value !== 'function') {
+      await this.#onCov(this, Array.isArray(value) ? value : [value]);
+    }
   }
 
 }

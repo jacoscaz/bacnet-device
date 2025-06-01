@@ -42,6 +42,14 @@ export class BACnetDevice {
     this.id = id;
     this.name = name;
     this.vendorId = vendorId;
+    
+    const device = this.registerObject(ObjectType.DEVICE, id, 'device');
+    device.registerProperty(PropertyIdentifier.OBJECT_NAME)
+      .setValue({ type: ApplicationTag.CHARACTER_STRING, value: name });
+    device.registerProperty(PropertyIdentifier.OBJECT_TYPE)
+      .setValue({ type: ApplicationTag.ENUMERATED, value: ObjectType.DEVICE });
+    device.registerProperty(PropertyIdentifier.OBJECT_LIST)
+      .setValue(this.#getObjectList);
   }
   
   registerObject(type: ObjectType, instance: number, name: string): BACnetObject {
@@ -55,15 +63,9 @@ export class BACnetDevice {
   
   ___readProperty = async (req: ReadPropertyContent): Promise<BACNetAppData | BACNetAppData[]> => {
     const { payload: { objectId }, service, invokeId } = req;
-    let data: BACNetAppData | BACNetAppData[] | null = null;
-    if (objectId.type === ObjectType.DEVICE && objectId.instance === this.id) {
-      data = this.#readDeviceProperty(req);
-    } else {
-      data = await this.#handleObjectReq(req, objectId, service!, invokeId!, async (object) => {
-        return object.___readProperty(req);
-      });
-    }
-    return data;
+    return await this.#handleObjectReq(req, objectId, service!, invokeId!, async (object) => {
+      return object.___readProperty(req);
+    });
   }
   
   async #handleObjectReq<T extends BaseEventContent>(req: T, objectId: BACNetObjectID, service: number, invokeId: number, cb: (obj: BACnetObject, req: T) => Promise<BACNetAppData | BACNetAppData[]>): Promise<BACNetAppData | BACNetAppData[]> {
@@ -74,15 +76,7 @@ export class BACnetDevice {
     throw new BACnetError('unknown object', ErrorCode.UNKNOWN_OBJECT, ErrorClass.DEVICE);
   }
   
-  #readDeviceName = (req: ReadPropertyContent): BACNetAppData => { 
-    return { type: ApplicationTag.CHARACTER_STRING, value: this.name };
-  };
-  
-  #readDeviceType = (req: ReadPropertyContent): BACNetAppData => { 
-    return { type: ApplicationTag.ENUMERATED, value: ObjectType.DEVICE };
-  };
-  
-  #readDeviceObjectList = (req: ReadPropertyContent): BACNetAppData[] => {
+  #getObjectList = (): BACNetAppData[] => {
     const list: BACNetAppData[] = []; 
     for (const [type, objects] of this.#objects.entries()) { 
       for (const instance of objects.keys()) {
@@ -93,20 +87,6 @@ export class BACnetDevice {
       }
     }
     return list;
-  };
-  
-  #readDeviceProperty = (req: ReadPropertyContent): BACNetAppData | BACNetAppData[] => {
-    const { payload: { property } } = req;
-    switch (property.id) {
-      case PropertyIdentifier.OBJECT_NAME:
-        return this.#readDeviceName(req);
-      case PropertyIdentifier.OBJECT_TYPE:
-        return this.#readDeviceType(req);
-      case PropertyIdentifier.OBJECT_LIST:
-        return this.#readDeviceObjectList(req);
-      default:
-    }
-    throw new BACnetError('unknown property', ErrorCode.UNKNOWN_PROPERTY, ErrorClass.OBJECT);
   };
   
   #onObjectCov: ObjectCovHandler = async (object: BACnetObject, property: BACnetProperty, data: BACNetAppData[]) => { 
