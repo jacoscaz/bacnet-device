@@ -33,10 +33,10 @@ import {
   type SubscribeCovContent,
 } from '@innovation-system/node-bacnet/dist/lib/EventTypes.js';
 
-import { BACnetObject } from './object.js';
+import { BACnetObject, type ObjectCovHandler } from './object.js';
 
 import { BACnetProperty } from './property.js';
-import { BACnetDevice, type DeviceCovHandler } from './device.js';
+import { BACnetDevice, type DeviceCovHandler } from './objects/device.js';
 
 import fastq from 'fastq';
 
@@ -55,8 +55,7 @@ export interface BACnetSubscription {
   subscriber: BACnetMessageHeader['sender'];
 }
 
-export interface QueuedCov { 
-  device: BACnetDevice;
+export interface QueuedCov {
   object: BACnetObject;
   property: BACnetProperty;
   data: BACNetAppData[];
@@ -145,8 +144,8 @@ export class BACnetNode extends EventEmitter<BACnetNodeEvents> {
     }
   };
   
-  #onCov: DeviceCovHandler = async (device: BACnetDevice, object: BACnetObject, property: BACnetProperty, data: BACNetAppData[]) => {
-    await this.#covqueue.push({ device, object, property, data });
+  #onCov: ObjectCovHandler = async (object: BACnetObject, property: BACnetProperty, data: BACNetAppData[]) => {
+    await this.#covqueue.push({ object, property, data });
   };
   
   #onReadProperty = async (req: ReadPropertyContent) => {
@@ -225,7 +224,7 @@ export class BACnetNode extends EventEmitter<BACnetNodeEvents> {
     const { header } = req;
     if (!header) return;
     if (!this.#device) return;
-    this.#client.iAmResponse({ address: header.sender.address }, this.#device.id, Segmentation.NO_SEGMENTATION, this.#device.vendorId);
+    this.#client.iAmResponse({ address: header.sender.address }, this.#device.identifier.instance, Segmentation.NO_SEGMENTATION, this.#device.vendorId);
   }
   
   #onWhoHas = (req: BaseEventContent) => {
@@ -268,7 +267,7 @@ export class BACnetNode extends EventEmitter<BACnetNodeEvents> {
     const { header, invokeId, payload: { properties } } = req;
     if (!header) return;
     if (!this.#device) return;
-    const values = await this.#device.___readPropertyMultiple(properties);
+    const values = await this.#device.___readPropertyMultiplee(properties);
     this.#client.readPropertyMultipleResponse({ address: header.sender.address }, invokeId!, values);
   };
   

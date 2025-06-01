@@ -1,7 +1,7 @@
 
 import { 
   BACnetError,
-} from './utils.js';
+} from '../utils.js';
 
 import {
   ErrorCode,
@@ -9,7 +9,7 @@ import {
   ObjectType,
   ApplicationTag,
   PropertyIdentifier,
-} from './enums/index.js';
+} from '../enums/index.js';
 
 import bacnet, { 
   type BACNetAppData,
@@ -23,31 +23,27 @@ import {
   type ReadPropertyMultipleContent,
 } from '@innovation-system/node-bacnet/dist/lib/EventTypes.js';
 
-import { BACnetObject, type ObjectCovHandler } from './object.js';
+import { BACnetObject, type ObjectCovHandler } from '../object.js';
 
-import { BACnetProperty } from './property.js';
+import { BACnetProperty } from '../property.js';
 
 export type DeviceCovHandler = (device: BACnetDevice, object: BACnetObject, property: BACnetProperty, data: BACNetAppData[]) => Promise<void>;
 
-export class BACnetDevice {
+export class BACnetDevice extends BACnetObject {
   
-  readonly id: number;
   readonly name: string;
   readonly vendorId: number;
   
-  readonly #onCov: DeviceCovHandler;
   readonly #objects: Map<ObjectType, Map<number, BACnetObject>>;
   readonly #objectList: BACNetAppData[];
   
-  constructor(id: number, name: string, vendorId: number, onCov: DeviceCovHandler) {
-    this.#onCov = onCov;
-    this.#objects = new Map();
-    this.#objectList = [];
-    this.id = id;
+  constructor(id: number, name: string, vendorId: number, onCov: ObjectCovHandler) {
+    super(ObjectType.DEVICE, id, name, onCov);
+    this.#objects = new Map([[ObjectType.DEVICE, new Map([[id, this]])]]);
+    this.#objectList = [{ type: ApplicationTag.OBJECTIDENTIFIER, value: this.identifier }];
     this.name = name;
     this.vendorId = vendorId;
-    const device = this.registerObject(ObjectType.DEVICE, id, name);
-    device.registerProperty(PropertyIdentifier.OBJECT_LIST)
+    this.registerProperty(PropertyIdentifier.OBJECT_LIST)
       .setValue(this.#objectList);
   }
   
@@ -58,7 +54,7 @@ export class BACnetDevice {
     if (this.#objects.get(type)!.has(instance)) {
       throw new Error('Cannot register object: duplicate object identifier');
     }
-    const object = new BACnetObject(type, instance, name, this.#onObjectCov);
+    const object = new BACnetObject(type, instance, name, this.___onCov);
     this.#objects.get(type)!.set(instance, object);
     this.#objectList.push({ type: ApplicationTag.OBJECTIDENTIFIER, value: object.identifier });
     return object;
@@ -71,7 +67,7 @@ export class BACnetDevice {
     });
   }
   
-  ___readPropertyMultiple = async (properties: ReadPropertyMultipleContent['payload']['properties']): Promise<BACNetReadAccess[]> => {
+  ___readPropertyMultiplee = async (properties: ReadPropertyMultipleContent['payload']['properties']): Promise<BACNetReadAccess[]> => {
     const values: BACNetReadAccess[] = [];
     for (const { objectId: { type, instance }, properties: objProperties } of properties) { 
       const object = this.#objects.get(type)?.get(instance);
@@ -89,11 +85,5 @@ export class BACnetDevice {
     }
     throw new BACnetError('unknown object', ErrorCode.UNKNOWN_OBJECT, ErrorClass.DEVICE);
   }
-  
-  #onObjectCov: ObjectCovHandler = async (object: BACnetObject, property: BACnetProperty, data: BACNetAppData[]) => { 
-    return this.#onCov(this, object, property, data);
-  };
-  
-  
-  
+    
 }

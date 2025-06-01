@@ -32,12 +32,12 @@ export class BACnetObject {
   readonly identifier: BACNetObjectID;
   readonly #propertyList: BACNetAppData[];
   
-  #onCov: ObjectCovHandler;
+  protected ___onCov: ObjectCovHandler;
   #properties: Map<PropertyIdentifier, BACnetProperty>;
   
   constructor(type: ObjectType, instance: number, name: string, onCov: ObjectCovHandler) {
     this.identifier = Object.freeze({ type, instance });
-    this.#onCov = onCov;
+    this.___onCov = onCov;
     this.#properties = new Map();
     this.#propertyList = [];
     
@@ -93,7 +93,7 @@ export class BACnetObject {
   }
   
   ___onPropertyCov: PropertyCovHandler = async (property: BACnetProperty, data: BACNetAppData[]) => {
-    return this.#onCov(this, property, data);
+    return this.___onCov(this, property, data);
   };
     
 }
