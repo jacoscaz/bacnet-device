@@ -88,8 +88,6 @@ export class BACnetNode {
     return this.#device;
   }
   
-
-  
   #covQueueWorker = async (cov: QueuedCov) => { 
     if (cov.property.identifier === PropertyIdentifier.PRESENT_VALUE && this.#subscriptions.has(cov.object.instanceId)) { 
       for (const subscription of this.#subscriptions.get(cov.object.instanceId)!) {

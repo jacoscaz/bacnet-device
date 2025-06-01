@@ -34,7 +34,7 @@ export class BACnetDevice {
   readonly vendorId: number;
   
   readonly #onCov: DeviceCovHandler;
-  readonly #objects: Map<number, BACnetObject>;
+  readonly #objects: Map<ObjectType, Map<number, BACnetObject>>;
   
   constructor(id: number, name: string, vendorId: number, onCov: DeviceCovHandler) {
     this.#onCov = onCov;
@@ -46,7 +46,10 @@ export class BACnetDevice {
   
   registerObject(type: ObjectType, instanceId: number, name: string): BACnetObject {
     const object = new BACnetObject(type, instanceId, name, this.#onObjectCov);
-    this.#objects.set(instanceId, object);
+    if (!this.#objects.has(type)) { 
+      this.#objects.set(type, new Map());
+    }
+    this.#objects.get(type)!.set(instanceId, object);
     return object;
   }
   
@@ -64,7 +67,7 @@ export class BACnetDevice {
   }
   
   async #handleObjectReq<T extends BaseEventContent>(req: T, objectId: BACNetObjectID, service: number, invokeId: number, cb: (obj: BACnetObject, req: T) => Promise<BACNetAppData | BACNetAppData[]>): Promise<BACNetAppData | BACNetAppData[]> {
-    const object = this.#objects.get(objectId.instance);
+    const object = this.#objects.get(objectId.type)?.get(objectId.instance);
     if (object) { 
       return await cb(object, req);
     }
@@ -81,11 +84,13 @@ export class BACnetDevice {
   
   #readDeviceObjectList = (req: ReadPropertyContent): BACNetAppData[] => {
     const list: BACNetAppData[] = []; 
-    for (const [objectId, object] of this.#objects.entries()) { 
-      list.push({
-        type: ApplicationTag.OBJECTIDENTIFIER,
-        value: { type: object.type, instance: objectId },
-      });
+    for (const [type, objects] of this.#objects.entries()) { 
+      for (const instance of objects.keys()) {
+        list.push({
+          type: ApplicationTag.OBJECTIDENTIFIER,
+          value: { type, instance },
+        });
+      }
     }
     return list;
   };
