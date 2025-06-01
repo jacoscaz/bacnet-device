@@ -46,12 +46,7 @@ export class BACnetDevice {
     this.id = id;
     this.name = name;
     this.vendorId = vendorId;
-    
     const device = this.registerObject(ObjectType.DEVICE, id, 'device');
-    device.registerProperty(PropertyIdentifier.OBJECT_NAME)
-      .setValue({ type: ApplicationTag.CHARACTER_STRING, value: name });
-    device.registerProperty(PropertyIdentifier.OBJECT_TYPE)
-      .setValue({ type: ApplicationTag.ENUMERATED, value: ObjectType.DEVICE });
     device.registerProperty(PropertyIdentifier.OBJECT_LIST)
       .setValue(this.#objectList);
   }

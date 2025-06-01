@@ -43,6 +43,8 @@ export class BACnetObject {
     
     this.registerProperty(PropertyIdentifier.OBJECT_NAME)
       .setValue({ type: ApplicationTag.CHARACTER_STRING, value: name });
+    this.registerProperty(PropertyIdentifier.OBJECT_TYPE)
+      .setValue({ type: ApplicationTag.ENUMERATED, value: type });
     this.registerProperty(PropertyIdentifier.OBJECT_IDENTIFIER)
       .setValue({ type: ApplicationTag.OBJECTIDENTIFIER, value: this.identifier });
     this.registerProperty(PropertyIdentifier.PROPERTY_LIST)
