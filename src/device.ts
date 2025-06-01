@@ -57,10 +57,13 @@ export class BACnetDevice {
   }
   
   registerObject(type: ObjectType, instance: number, name: string): BACnetObject {
-    const object = new BACnetObject(type, instance, name, this.#onObjectCov);
     if (!this.#objects.has(type)) { 
       this.#objects.set(type, new Map());
     }
+    if (this.#objects.get(type)!.has(instance)) {
+      throw new Error('Cannot register object: duplicate object identifier');
+    }
+    const object = new BACnetObject(type, instance, name, this.#onObjectCov);
     this.#objects.get(type)!.set(instance, object);
     this.#objectList.push({ type: ApplicationTag.OBJECTIDENTIFIER, value: object.identifier });
     return object;

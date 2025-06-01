@@ -49,7 +49,10 @@ export class BACnetObject {
       .setValue(this.#propertyList);
   }
   
-  registerProperty(identifier: PropertyIdentifier): BACnetProperty { 
+  registerProperty(identifier: PropertyIdentifier): BACnetProperty {
+    if (this.#properties.has(identifier)) { 
+      throw new Error('Cannot register property: duplicate property identifier');
+    }
     const property = new BACnetProperty(identifier, this.___onPropertyCov);
     this.#properties.set(identifier, property);
     this.#propertyList.push({ type: ApplicationTag.ENUMERATED, value: property.identifier });
