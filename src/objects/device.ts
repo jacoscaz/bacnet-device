@@ -60,14 +60,14 @@ export class BACnetDevice extends BACnetObject {
     return object;
   }
   
-  ___readProperty = async (req: ReadPropertyContent): Promise<BACNetAppData[]> => {
+  ___readObjectProperty = async (req: ReadPropertyContent): Promise<BACNetAppData[]> => {
     const { payload: { objectId }, service, invokeId } = req;
     return await this.#handleObjectReq(req, objectId, service!, invokeId!, async (object) => {
       return object.___readProperty(req);
     });
   }
   
-  ___readPropertyMultiplee = async (properties: ReadPropertyMultipleContent['payload']['properties']): Promise<BACNetReadAccess[]> => {
+  ___readObjectPropertyMultiple = async (properties: ReadPropertyMultipleContent['payload']['properties']): Promise<BACNetReadAccess[]> => {
     const values: BACNetReadAccess[] = [];
     for (const { objectId: { type, instance }, properties: objProperties } of properties) { 
       const object = this.#objects.get(type)?.get(instance);

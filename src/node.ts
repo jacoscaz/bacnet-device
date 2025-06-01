@@ -154,7 +154,7 @@ export class BACnetNode extends EventEmitter<BACnetNodeEvents> {
     if (!header) return;
     if (!this.#device) return;
     try {
-      const data = await this.#device.___readProperty(req);
+      const data = await this.#device.___readObjectProperty(req);
       this.#client.readPropertyResponse({ address: header.sender.address }, invokeId!, objectId, property, data);
     } catch (err) { 
       if (err instanceof BACnetError) {
@@ -267,7 +267,7 @@ export class BACnetNode extends EventEmitter<BACnetNodeEvents> {
     const { header, invokeId, payload: { properties } } = req;
     if (!header) return;
     if (!this.#device) return;
-    const values = await this.#device.___readPropertyMultiplee(properties);
+    const values = await this.#device.___readObjectPropertyMultiple(properties);
     this.#client.readPropertyMultipleResponse({ address: header.sender.address }, invokeId!, values);
   };
   
