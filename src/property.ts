@@ -3,8 +3,6 @@ import type { BACNetAppData } from '@innovation-system/node-bacnet';
 
 import { PropertyIdentifier } from './enums/index.js';
 
-export type PropertyValueGetter = () => BACNetAppData | BACNetAppData[] | Promise<BACNetAppData | BACNetAppData[]>;
-
 export type PropertyCovHandler = (property: BACnetProperty, data: BACNetAppData[]) => Promise<void>;
 
 export class BACnetProperty {
@@ -12,7 +10,7 @@ export class BACnetProperty {
   readonly identifier: PropertyIdentifier;
   
   #onCov: PropertyCovHandler;
-  #value: BACNetAppData | BACNetAppData[] | PropertyValueGetter;
+  #value: BACNetAppData | BACNetAppData[];
   
   constructor(identifier: PropertyIdentifier, onCov: PropertyCovHandler) {
     this.identifier = identifier;
@@ -21,17 +19,12 @@ export class BACnetProperty {
   }
   
   async getValue(): Promise<BACNetAppData | BACNetAppData[]> {
-    if (typeof this.#value === 'function') { 
-      return this.#value();
-    }
     return this.#value;
   }
   
-  async setValue(value: BACNetAppData | BACNetAppData[] | PropertyValueGetter) { 
+  async setValue(value: BACNetAppData | BACNetAppData[]) { 
     this.#value = value;
-    if (typeof value !== 'function') {
-      await this.#onCov(this, Array.isArray(value) ? value : [value]);
-    }
+    await this.#onCov(this, Array.isArray(value) ? value : [value]);
   }
 
 }
