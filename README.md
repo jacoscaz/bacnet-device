@@ -25,10 +25,10 @@ const node = new BACnetNode({
 const device = node.initDevice(4194301, 'MyTestDevice', 0);
 
 const analogOutput = device.registerObject(ObjectType.ANALOG_OUTPUT, 1, 'analog output');
-const presentValue = analogOutput.registerProperty(PropertyIdentifier.PRESENT_VALUE, ApplicationTag.UNSIGNED_INTEGER);
+const presentValue = analogOutput.registerProperty(PropertyIdentifier.PRESENT_VALUE);
 
 setInterval(() => { 
-  presentValue1.setValue(Date.now() % 42);
+  presentValue.setValue({ type: ApplicationTag.UNSIGNED_INTEGER, value: Date.now() % 42 });
 }, 1_000);
 ```
 
