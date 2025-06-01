@@ -5,7 +5,8 @@
   "types": "dist/index.d.ts",
   "type": "module",
   "scripts": {
-    "build": "tsc -p .",
+    "clean": "rm -r ./dist",
+    "build": "npm run clean && tsc -p .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Jacopo Scazzosi <jacopo@scazzosi.com>",
