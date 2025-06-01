@@ -10,7 +10,7 @@ export class BACnetProperty {
   readonly identifier: PropertyIdentifier;
   
   #onCov: PropertyCovHandler;
-  #value: BACNetAppData | BACNetAppData[];
+  #value: BACNetAppData[];
   
   constructor(identifier: PropertyIdentifier, onCov: PropertyCovHandler) {
     this.identifier = identifier;
@@ -18,11 +18,11 @@ export class BACnetProperty {
     this.#value = [];
   }
   
-  async getValue(): Promise<BACNetAppData | BACNetAppData[]> {
+  async getValue(): Promise<BACNetAppData[]> {
     return this.#value;
   }
   
-  async setValue(value: BACNetAppData | BACNetAppData[]) { 
+  async setValue(value: BACNetAppData[]) { 
     this.#value = value;
     await this.#onCov(this, Array.isArray(value) ? value : [value]);
   }

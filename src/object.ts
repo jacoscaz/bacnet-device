@@ -42,11 +42,11 @@ export class BACnetObject {
     this.#propertyList = [];
     
     this.registerProperty(PropertyIdentifier.OBJECT_NAME)
-      .setValue({ type: ApplicationTag.CHARACTER_STRING, value: name });
+      .setValue([{ type: ApplicationTag.CHARACTER_STRING, value: name }]);
     this.registerProperty(PropertyIdentifier.OBJECT_TYPE)
-      .setValue({ type: ApplicationTag.ENUMERATED, value: type });
+      .setValue([{ type: ApplicationTag.ENUMERATED, value: type }]);
     this.registerProperty(PropertyIdentifier.OBJECT_IDENTIFIER)
-      .setValue({ type: ApplicationTag.OBJECTIDENTIFIER, value: this.identifier });
+      .setValue([{ type: ApplicationTag.OBJECTIDENTIFIER, value: this.identifier }]);
     this.registerProperty(PropertyIdentifier.PROPERTY_LIST)
       .setValue(this.#propertyList);
   }
@@ -61,7 +61,7 @@ export class BACnetObject {
     return property;
   }
 
-  async ___readProperty(req: ReadPropertyContent): Promise<BACNetAppData | BACNetAppData[]> {
+  async ___readProperty(req: ReadPropertyContent): Promise<BACNetAppData[]> {
     const { payload: { property } } = req;
     if (this.#properties.has(property.id as PropertyIdentifier)) { 
       return this.#properties.get(property.id as PropertyIdentifier)!.getValue();

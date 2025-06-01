@@ -64,7 +64,7 @@ export class BACnetDevice {
     return object;
   }
   
-  ___readProperty = async (req: ReadPropertyContent): Promise<BACNetAppData | BACNetAppData[]> => {
+  ___readProperty = async (req: ReadPropertyContent): Promise<BACNetAppData[]> => {
     const { payload: { objectId }, service, invokeId } = req;
     return await this.#handleObjectReq(req, objectId, service!, invokeId!, async (object) => {
       return object.___readProperty(req);
@@ -82,7 +82,7 @@ export class BACnetDevice {
     return values;
   };
   
-  async #handleObjectReq<T extends BaseEventContent>(req: T, objectId: BACNetObjectID, service: number, invokeId: number, cb: (obj: BACnetObject, req: T) => Promise<BACNetAppData | BACNetAppData[]>): Promise<BACNetAppData | BACNetAppData[]> {
+  async #handleObjectReq<T extends BaseEventContent>(req: T, objectId: BACNetObjectID, service: number, invokeId: number, cb: (obj: BACnetObject, req: T) => Promise<BACNetAppData[]>): Promise<BACNetAppData[]> {
     const object = this.#objects.get(objectId.type)?.get(objectId.instance);
     if (object) { 
       return await cb(object, req);
