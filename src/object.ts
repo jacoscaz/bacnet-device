@@ -12,12 +12,14 @@ import {
 import type { 
   BACNetAppData, 
   BACNetObjectID,
+  BACNetPropertyID,
   BACNetReadAccess,
 } from '@innovation-system/node-bacnet';
 
 import type { 
   ReadPropertyContent,
   ReadPropertyMultipleContent,
+  WritePropertyContent,
 } from '@innovation-system/node-bacnet/dist/lib/EventTypes.js';
 
 import {
@@ -61,10 +63,19 @@ export class BACnetObject {
     return property;
   }
 
+  async ___writeProperty(property: BACNetPropertyID, value: BACNetAppData[]): Promise<void> {
+    if (this.#properties.has(property.id as PropertyIdentifier)) { 
+      await this.#properties.get(property.id as PropertyIdentifier)!.setValue(value);
+      return;
+    }
+    throw new BACnetError('unknown property', ErrorCode.UNKNOWN_PROPERTY, ErrorClass.PROPERTY);
+  }
+  
   async ___readProperty(req: ReadPropertyContent): Promise<BACNetAppData[]> {
     const { payload: { property } } = req;
     if (this.#properties.has(property.id as PropertyIdentifier)) { 
-      return this.#properties.get(property.id as PropertyIdentifier)!.getValue();
+      return this.#properties.get(property.id as PropertyIdentifier)!
+        .getValue();
     }
     throw new BACnetError('unknown property', ErrorCode.UNKNOWN_PROPERTY, ErrorClass.PROPERTY);
   }

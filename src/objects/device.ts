@@ -21,6 +21,7 @@ import {
   type BaseEventContent,
   type ReadPropertyContent,
   type ReadPropertyMultipleContent,
+  type WritePropertyContent,
 } from '@innovation-system/node-bacnet/dist/lib/EventTypes.js';
 
 import { BACnetObject, type ObjectCovHandler } from '../object.js';
@@ -60,9 +61,21 @@ export class BACnetDevice extends BACnetObject {
     return object;
   }
   
+  async ___writeObjectProperty(req: WritePropertyContent): Promise<void> {
+    const { payload: { objectId, property, value } } = req;
+    const _value = value?.value;
+    const _property = value?.property ?? property;
+    if (!_value || !_property) {
+      return; // TODO: throw
+    }
+    await this.#handleObjectReq(req, objectId, async (object) => {
+      await object.___writeProperty(_property, Array.isArray(_value) ? _value : [_value]);
+    });
+  }
+  
   ___readObjectProperty = async (req: ReadPropertyContent): Promise<BACNetAppData[]> => {
-    const { payload: { objectId }, service, invokeId } = req;
-    return await this.#handleObjectReq(req, objectId, service!, invokeId!, async (object) => {
+    const { payload: { objectId } } = req;
+    return await this.#handleObjectReq(req, objectId, async (object) => {
       return object.___readProperty(req);
     });
   }
@@ -78,7 +91,7 @@ export class BACnetDevice extends BACnetObject {
     return values;
   };
   
-  async #handleObjectReq<T extends BaseEventContent>(req: T, objectId: BACNetObjectID, service: number, invokeId: number, cb: (obj: BACnetObject, req: T) => Promise<BACNetAppData[]>): Promise<BACNetAppData[]> {
+  async #handleObjectReq<T extends BaseEventContent, O>(req: T, objectId: BACNetObjectID, cb: (obj: BACnetObject, req: T) => Promise<O>): Promise<O> {
     const object = this.#objects.get(objectId.type)?.get(objectId.instance);
     if (object) { 
       return await cb(object, req);

@@ -31,6 +31,7 @@ import {
   type ReadPropertyContent,
   type ReadPropertyMultipleContent,
   type SubscribeCovContent,
+  type WritePropertyContent,
 } from '@innovation-system/node-bacnet/dist/lib/EventTypes.js';
 
 import { BACnetObject, type ObjectCovHandler } from './object.js';
@@ -95,6 +96,7 @@ export class BACnetNode extends EventEmitter<BACnetNodeEvents> {
     client.on('subscribeCov', this.#onSubscribeCov);
     client.on('subscribeProperty', this.#onSubscribeProperty);
     client.on('readPropertyMultiple', this.#onReadPropertyMultiple);
+    client.on('writeProperty', this.#onWriteProperty);
   }
   
   initDevice(id: number, name: string, vendorId: number) { 
@@ -269,6 +271,17 @@ export class BACnetNode extends EventEmitter<BACnetNodeEvents> {
     if (!this.#device) return;
     const values = await this.#device.___readObjectPropertyMultiple(properties);
     this.#client.readPropertyMultipleResponse({ address: header.sender.address }, invokeId!, values);
+  };
+  
+  #onWriteProperty = async (req: WritePropertyContent) => { 
+    debug('req #%s: writeProperty');
+    console.log(JSON.stringify(req, null, 2));
+    const { payload: { objectId }, header, service, invokeId } = req;
+    // debug('req #%s: writeProperty, object %s %s, property %s', invokeId, ObjectTypeName[objectId.type as ObjectType], objectId.instance, PropertyIdentifierName[property.id as PropertyIdentifier]);
+    if (!header) return;
+    if (!this.#device) return;
+    await this.#device.___writeObjectProperty(req);
+    this.#client.simpleAckResponse({ address: header.sender.address }, service!, invokeId!);
   };
   
   #onError = (err: Error) => {
