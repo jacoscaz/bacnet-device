@@ -65,6 +65,7 @@ export class BACnetObject {
 
   async ___writeProperty(property: BACNetPropertyID, value: BACNetAppData[]): Promise<void> {
     if (this.#properties.has(property.id as PropertyIdentifier)) { 
+      // TODO: test/validate value before setting it!
       await this.#properties.get(property.id as PropertyIdentifier)!.setValue(value);
       return;
     }
