@@ -1,4 +1,4 @@
-import { invertEnum } from './utils.js';
+import { invertEnum } from '../utils.js';
 
 export enum ObjectType {
   ACCESS_CREDENTIAL = 32,

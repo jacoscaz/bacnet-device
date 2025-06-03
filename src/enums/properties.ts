@@ -1,5 +1,5 @@
 
-import { invertEnum } from './utils.js';
+import { invertEnum } from '../utils.js';
 
 export enum PropertyIdentifier {
   ABSENTEE_LIMIT = 244,

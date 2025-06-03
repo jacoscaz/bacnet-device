@@ -1,4 +1,4 @@
-import { invertEnum } from './utils.js';
+import { invertEnum } from '../utils.js';
 
 // See node_modules/@innovation-system/node-bacnet/dist/lib/enum.d.ts
 export enum ErrorClass {

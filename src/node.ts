@@ -4,10 +4,12 @@ import { EventEmitter } from 'node:events';
 
 import { 
   type BACnetClientType,
-  BACnetError,
   sendConfirmedCovNotification,
   sendUnconfirmedCovNotification,
 } from './utils.js';
+
+import { type BACnetValue } from './value.js';
+import { BACnetError } from './errors.js';
 
 import {
   ErrorCode,
@@ -18,10 +20,9 @@ import {
   PropertyIdentifierName,
 } from './enums/index.js';
 
-import bacnet, { 
-  type BACNetAppData,
+import bacnet, {
   type BACnetMessageHeader,
-  type BACNetReadAccess,
+  type ListElementOperationPayload,
   type SubscribeCovPayload,
   Segmentation,
 } from '@innovation-system/node-bacnet';
@@ -34,10 +35,10 @@ import {
   type WritePropertyContent,
 } from '@innovation-system/node-bacnet/dist/lib/EventTypes.js';
 
-import { BACnetObject, type ObjectCovHandler } from './object.js';
+import { BACnetObject } from './object.js';
 
-import { BACnetProperty } from './property.js';
-import { BACnetDevice, type DeviceCovHandler } from './objects/device.js';
+import { type BACnetProperty } from './property.js';
+import { BACnetDevice } from './objects/device.js';
 
 import fastq from 'fastq';
 
@@ -59,7 +60,7 @@ export interface BACnetSubscription {
 export interface QueuedCov {
   object: BACnetObject;
   property: BACnetProperty;
-  data: BACNetAppData[];
+  value: BACnetValue | BACnetValue[];
 }
 
 export interface BACnetNodeEvents { 
@@ -97,13 +98,16 @@ export class BACnetNode extends EventEmitter<BACnetNodeEvents> {
     client.on('subscribeProperty', this.#onSubscribeProperty);
     client.on('readPropertyMultiple', this.#onReadPropertyMultiple);
     client.on('writeProperty', this.#onWriteProperty);
+    client.on('addListElement', this.#onAddListElement);
+    client.on('removeListElement', this.#onRemoveListElement);
   }
   
-  initDevice(id: number, name: string, vendorId: number) { 
+  addDevice(device: BACnetDevice) { 
     if (this.#device) { 
-      throw new Error('device already initialized');
+      throw new Error('cannot add more than one device per node');
     }
-    this.#device = new BACnetDevice(id, name, vendorId, this.#onCov);
+    this.#device = device; 
+    device.subscribe('post_cov', this.#onCov);
     return this.#device;
   }
   
@@ -146,8 +150,8 @@ export class BACnetNode extends EventEmitter<BACnetNodeEvents> {
     }
   };
   
-  #onCov: ObjectCovHandler = async (object: BACnetObject, property: BACnetProperty, data: BACNetAppData[]) => {
-    await this.#covqueue.push({ object, property, data });
+  #onCov = async (object: BACnetObject, property: BACnetProperty, value: BACnetValue | BACnetValue[]) => {
+    await this.#covqueue.push({ object, property, value });
   };
   
   #onReadProperty = async (req: ReadPropertyContent) => {
@@ -275,14 +279,23 @@ export class BACnetNode extends EventEmitter<BACnetNodeEvents> {
   
   #onWriteProperty = async (req: WritePropertyContent) => { 
     debug('req #%s: writeProperty');
-    console.log(JSON.stringify(req, null, 2));
-    const { payload: { objectId }, header, service, invokeId } = req;
+    const { header, service, invokeId } = req;
     // debug('req #%s: writeProperty, object %s %s, property %s', invokeId, ObjectTypeName[objectId.type as ObjectType], objectId.instance, PropertyIdentifierName[property.id as PropertyIdentifier]);
     if (!header) return;
     if (!this.#device) return;
     await this.#device.___writeObjectProperty(req);
     this.#client.simpleAckResponse({ address: header.sender.address }, service!, invokeId!);
   };
+  
+  #onAddListElement = async (req: Omit<BaseEventContent, 'payload'> & { payload: ListElementOperationPayload }) => { 
+    const { payload: { } } = req;
+    // objectId
+    // propertyId
+    // arrayIndex
+    // listOfElements
+  };
+  
+  #onRemoveListElement = async (req: Omit<BaseEventContent, 'payload'> & { payload: ListElementOperationPayload }) => { };
   
   #onError = (err: Error) => {
     debug('server error', err);

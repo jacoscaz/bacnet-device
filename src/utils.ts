@@ -4,26 +4,15 @@ import type { BACnetDevice } from './objects/device.js';
 
 import bacnet from '@innovation-system/node-bacnet';
 
-import { ErrorCode, ErrorClass } from './enums/errors.js';
-
-
-const { 
-  default: BACnetClient, 
-} = bacnet;
+const { default: BACnetClient } = bacnet;
 
 export type BACnetClientType = InstanceType<typeof BACnetClient>;
 
-export class BACnetError extends Error { 
-  errorCode: ErrorCode;
-  errorClass: ErrorClass;
-  constructor(message: string, errorCode: ErrorCode, errorClass: ErrorClass) {
-    super(message);
-    this.errorCode = errorCode;
-    this.errorClass = errorClass;
-  }
-}
-
-
+export const invertEnum = <E extends Record<string, string | number>>(enumeration: E) => {
+  return Object.fromEntries(
+    Object.entries(enumeration).map(([key, value]) => [value, key])
+  ) as Record<E[keyof E], string>;
+};
 
 export const sendConfirmedCovNotification = async (client: BACnetClientType, emitter: BACnetDevice, subscription: BACnetSubscription, cov: QueuedCov) => {
   return new Promise<void>((resolve, reject) => {
@@ -33,7 +22,7 @@ export const sendConfirmedCovNotification = async (client: BACnetClientType, emi
       subscription.subscriberProcessId,
       emitter.identifier.instance,
       Math.floor(Math.max(0, subscription.expiresAt - Date.now()) / 1000),
-      [ { property: { id: cov.property.identifier }, value: cov.data } ],
+      [ { property: { id: cov.property.identifier }, value: Array.isArray(cov.value) ? cov.value : [cov.value] } ],
       (err) => err ? reject(err) : resolve(),
     );
   });
@@ -46,6 +35,6 @@ export const sendUnconfirmedCovNotification = async (client: BACnetClientType, e
     emitter.identifier.instance,
     cov.object.identifier,
     Math.floor(Math.max(0, subscription.expiresAt - Date.now()) / 1000),
-    [ { property: { id: cov.property.identifier }, value: cov.data } ],
+    [ { property: { id: cov.property.identifier }, value: Array.isArray(cov.value) ? cov.value : [cov.value] } ],
   );
 }

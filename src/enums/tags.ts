@@ -1,4 +1,5 @@
-import { invertEnum } from './utils.js';
+
+import { invertEnum } from '../utils.js';
 
 export enum ApplicationTag {
   NULL = 0,

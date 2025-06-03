@@ -1,7 +1,6 @@
 
-import { 
-  BACnetError,
-} from '../utils.js';
+import { BACnetError } from '../errors.js';
+import { type BACnetValue } from '../value.js';
 
 import {
   ErrorCode,
@@ -12,7 +11,6 @@ import {
 } from '../enums/index.js';
 
 import bacnet, { 
-  type BACNetAppData,
   type BACNetObjectID,
   type BACNetReadAccess,
 } from '@innovation-system/node-bacnet';
@@ -24,11 +22,9 @@ import {
   type WritePropertyContent,
 } from '@innovation-system/node-bacnet/dist/lib/EventTypes.js';
 
-import { BACnetObject, type ObjectCovHandler } from '../object.js';
+import { BACnetObject } from '../object.js';
 
-import { BACnetProperty } from '../property.js';
-
-export type DeviceCovHandler = (device: BACnetDevice, object: BACnetObject, property: BACnetProperty, data: BACNetAppData[]) => Promise<void>;
+import { BACnetListProperty, type BACnetProperty } from '../property.js';
 
 export class BACnetDevice extends BACnetObject {
   
@@ -36,31 +32,37 @@ export class BACnetDevice extends BACnetObject {
   readonly vendorId: number;
   
   readonly #objects: Map<ObjectType, Map<number, BACnetObject>>;
-  readonly #objectList: BACNetAppData[];
+  readonly #objectList: BACnetValue[];
   
-  constructor(id: number, name: string, vendorId: number, onCov: ObjectCovHandler) {
-    super(ObjectType.DEVICE, id, name, onCov);
-    this.#objects = new Map([[ObjectType.DEVICE, new Map([[id, this]])]]);
-    this.#objectList = [{ type: ApplicationTag.OBJECTIDENTIFIER, value: this.identifier }];
+  constructor(id: number, name: string, vendorId: number) {
+    super(ObjectType.DEVICE, id, name);
+    this.#objects = new Map();
+    this.#objectList = [];
     this.name = name;
     this.vendorId = vendorId;
-    this.registerProperty(PropertyIdentifier.OBJECT_LIST)
-      .setValue(this.#objectList);
+    this.addObject(this);
+    this.addProperty(new BACnetListProperty(PropertyIdentifier.OBJECT_LIST, false, this.#objectList));
   }
   
-  registerObject(type: ObjectType, instance: number, name: string): BACnetObject {
-    if (!this.#objects.has(type)) { 
-      this.#objects.set(type, new Map());
+  addObject<T extends BACnetObject>(object: T): T { 
+    if (!this.#objects.has(object.identifier.type)) { 
+      this.#objects.set(object.identifier.type, new Map());
     }
-    if (this.#objects.get(type)!.has(instance)) {
+    if (this.#objects.get(object.identifier.type)!.has(object.identifier.instance)) {
       throw new Error('Cannot register object: duplicate object identifier');
     }
-    const object = new BACnetObject(type, instance, name, this.___onCov);
-    this.#objects.get(type)!.set(instance, object);
+    if (this !== (object as BACnetObject)) {
+      object.subscribe('post_cov', this.#onCov);
+    }
+    this.#objects.get(object.identifier.type)!.set(object.identifier.instance, object);
     this.#objectList.push({ type: ApplicationTag.OBJECTIDENTIFIER, value: object.identifier });
     return object;
   }
   
+  #onCov = async (object: BACnetObject, property: BACnetProperty, value: BACnetValue | BACnetValue[]) => { 
+    await this.trigger('post_cov', object, property, value);
+  }
+
   async ___writeObjectProperty(req: WritePropertyContent): Promise<void> {
     const { payload: { objectId, property, value } } = req;
     const _value = value?.value;
@@ -73,7 +75,7 @@ export class BACnetDevice extends BACnetObject {
     });
   }
   
-  ___readObjectProperty = async (req: ReadPropertyContent): Promise<BACNetAppData[]> => {
+  ___readObjectProperty = async (req: ReadPropertyContent): Promise<BACnetValue | BACnetValue[]> => {
     const { payload: { objectId } } = req;
     return await this.#handleObjectReq(req, objectId, async (object) => {
       return object.___readProperty(req);
