@@ -3,6 +3,9 @@ import type { BACNetBitString } from '@innovation-system/node-bacnet';
 
 export type Bit = 1 | 0;
 
+/**
+ * Strongly-typed representation of BACnet's StatusFlags data structure.
+ */
 export class StatusFlagsBitString implements BACNetBitString {
   readonly bitsUsed: 4 = 4;
   readonly value: [Bit, Bit, Bit, Bit];

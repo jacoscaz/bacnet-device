@@ -24,7 +24,7 @@ import type {
 } from '@innovation-system/node-bacnet/dist/lib/EventTypes.js';
 
 import {
-  BACnetScalarProperty,
+  BACnetSingletProperty,
   BACnetListProperty,
   type BACnetProperty,
 } from './properties/index.js';
@@ -47,9 +47,9 @@ export class BACnetObject extends Evented<BACnetObjectEvents> {
     this.#properties = new Map();
     this.#propertyList = [];
     
-    this.addProperty(new BACnetScalarProperty(PropertyIdentifier.OBJECT_NAME, ApplicationTag.CHARACTER_STRING, false, name));
-    this.addProperty(new BACnetScalarProperty(PropertyIdentifier.OBJECT_TYPE, ApplicationTag.ENUMERATED, false, type));
-    this.addProperty(new BACnetScalarProperty(PropertyIdentifier.OBJECT_IDENTIFIER, ApplicationTag.OBJECTIDENTIFIER, false, this.identifier));
+    this.addProperty(new BACnetSingletProperty(PropertyIdentifier.OBJECT_NAME, ApplicationTag.CHARACTER_STRING, false, name));
+    this.addProperty(new BACnetSingletProperty(PropertyIdentifier.OBJECT_TYPE, ApplicationTag.ENUMERATED, false, type));
+    this.addProperty(new BACnetSingletProperty(PropertyIdentifier.OBJECT_IDENTIFIER, ApplicationTag.OBJECTIDENTIFIER, false, this.identifier));
     this.addProperty(new BACnetListProperty(PropertyIdentifier.PROPERTY_LIST, ApplicationTag.ENUMERATED, false, this.#propertyList));
   }
   

@@ -5,6 +5,7 @@
   "types": "dist/index.d.ts",
   "type": "module",
   "scripts": {
+    "docs": "typedoc --out ./docs src/index.ts",
     "clean": "rm -rf ./dist",
     "build": "npm run clean && tsc -p .",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -15,6 +16,7 @@
   "devDependencies": {
     "@types/debug": "^4.1.12",
     "@types/node": "^22.15.21",
+    "typedoc": "^0.28.5",
     "typescript": "^5.8.3"
   },
   "dependencies": {

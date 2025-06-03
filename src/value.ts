@@ -15,12 +15,19 @@ import type {
 
 import type { StatusFlagsBitString } from './bitstrings.js';
 
+/**
+ * Representation of a BACnet value.
+ */
 export interface BACnetValue<Tag extends ApplicationTag = ApplicationTag, Type extends ApplicationTagValueType[Tag] = ApplicationTagValueType[Tag]> extends BACNetAppData { 
   type: Tag;
   value: Type;
   encoding?: CharacterStringEncoding;
 }
 
+/**
+ * Map between BACnet Application Tags and native JavaScript types.
+ * Entries mapping to the `never` type are not yet supported.
+ */
 export interface ApplicationTagValueType { 
   [ApplicationTag.NULL]: null;
   [ApplicationTag.BOOLEAN]: boolean;
