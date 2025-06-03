@@ -8,6 +8,10 @@ const { default: BACnetClient } = bacnet;
 
 export type BACnetClientType = InstanceType<typeof BACnetClient>;
 
+export const ensureArray = <T>(val: T | T[]): T[] => {
+  return Array.isArray(val) ? val : [val];
+};
+
 export const invertEnum = <E extends Record<string, string | number>>(enumeration: E) => {
   return Object.fromEntries(
     Object.entries(enumeration).map(([key, value]) => [value, key])
@@ -22,7 +26,7 @@ export const sendConfirmedCovNotification = async (client: BACnetClientType, emi
       subscription.subscriberProcessId,
       emitter.identifier.instance,
       Math.floor(Math.max(0, subscription.expiresAt - Date.now()) / 1000),
-      [ { property: { id: cov.property.identifier }, value: Array.isArray(cov.value) ? cov.value : [cov.value] } ],
+      [ { property: { id: cov.property.identifier }, value: ensureArray(cov.value) } ],
       (err) => err ? reject(err) : resolve(),
     );
   });
@@ -35,6 +39,6 @@ export const sendUnconfirmedCovNotification = async (client: BACnetClientType, e
     emitter.identifier.instance,
     cov.object.identifier,
     Math.floor(Math.max(0, subscription.expiresAt - Date.now()) / 1000),
-    [ { property: { id: cov.property.identifier }, value: Array.isArray(cov.value) ? cov.value : [cov.value] } ],
+    [ { property: { id: cov.property.identifier }, value: ensureArray(cov.value) } ],
   );
 }

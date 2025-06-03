@@ -37,7 +37,7 @@ import {
 
 import { BACnetObject } from './object.js';
 
-import { type BACnetProperty } from './property.js';
+import { type BACnetProperty } from './properties/index.js';
 import { BACnetDevice } from './objects/device.js';
 
 import fastq from 'fastq';
@@ -59,7 +59,7 @@ export interface BACnetSubscription {
 
 export interface QueuedCov {
   object: BACnetObject;
-  property: BACnetProperty;
+  property: BACnetProperty<any, any>;
   value: BACnetValue | BACnetValue[];
 }
 
@@ -107,7 +107,7 @@ export class BACnetNode extends EventEmitter<BACnetNodeEvents> {
       throw new Error('cannot add more than one device per node');
     }
     this.#device = device; 
-    device.subscribe('post_cov', this.#onCov);
+    device.subscribe('aftercov', this.#onCov);
     return this.#device;
   }
   
@@ -150,7 +150,7 @@ export class BACnetNode extends EventEmitter<BACnetNodeEvents> {
     }
   };
   
-  #onCov = async (object: BACnetObject, property: BACnetProperty, value: BACnetValue | BACnetValue[]) => {
+  #onCov = async (object: BACnetObject, property: BACnetProperty<any, any>, value: BACnetValue | BACnetValue[]) => {
     await this.#covqueue.push({ object, property, value });
   };
   

@@ -10,6 +10,7 @@ import type {
   ObjectType,
   EventState,
   EngineeringUnit,
+  PropertyIdentifier,
 } from './enums/index.js';
 
 import type { StatusFlagsBitString } from './bitstrings.js';
@@ -30,7 +31,7 @@ export interface ApplicationTagValueType {
   [ApplicationTag.OCTET_STRING]: never;
   [ApplicationTag.CHARACTER_STRING]: string;
   [ApplicationTag.BIT_STRING]: StatusFlagsBitString;
-  [ApplicationTag.ENUMERATED]: ObjectType | EventState | EngineeringUnit;
+  [ApplicationTag.ENUMERATED]: ObjectType | EventState | EngineeringUnit | PropertyIdentifier;
   [ApplicationTag.DATE]: never;
   [ApplicationTag.TIME]: never;
   [ApplicationTag.OBJECTIDENTIFIER]: BACNetObjectID;

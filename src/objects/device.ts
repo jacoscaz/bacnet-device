@@ -24,7 +24,7 @@ import {
 
 import { BACnetObject } from '../object.js';
 
-import { BACnetListProperty, type BACnetProperty } from '../property.js';
+import { BACnetListProperty, type BACnetProperty } from '../properties/index.js';
 
 export class BACnetDevice extends BACnetObject {
   
@@ -32,7 +32,7 @@ export class BACnetDevice extends BACnetObject {
   readonly vendorId: number;
   
   readonly #objects: Map<ObjectType, Map<number, BACnetObject>>;
-  readonly #objectList: BACnetValue[];
+  readonly #objectList: BACnetValue<ApplicationTag.OBJECTIDENTIFIER>[];
   
   constructor(id: number, name: string, vendorId: number) {
     super(ObjectType.DEVICE, id, name);
@@ -41,7 +41,7 @@ export class BACnetDevice extends BACnetObject {
     this.name = name;
     this.vendorId = vendorId;
     this.addObject(this);
-    this.addProperty(new BACnetListProperty(PropertyIdentifier.OBJECT_LIST, false, this.#objectList));
+    this.addProperty(new BACnetListProperty(PropertyIdentifier.OBJECT_LIST, ApplicationTag.OBJECTIDENTIFIER, false, this.#objectList));
   }
   
   addObject<T extends BACnetObject>(object: T): T { 
@@ -52,15 +52,15 @@ export class BACnetDevice extends BACnetObject {
       throw new Error('Cannot register object: duplicate object identifier');
     }
     if (this !== (object as BACnetObject)) {
-      object.subscribe('post_cov', this.#onCov);
+      object.subscribe('aftercov', this.#onCov);
     }
     this.#objects.get(object.identifier.type)!.set(object.identifier.instance, object);
     this.#objectList.push({ type: ApplicationTag.OBJECTIDENTIFIER, value: object.identifier });
     return object;
   }
   
-  #onCov = async (object: BACnetObject, property: BACnetProperty, value: BACnetValue | BACnetValue[]) => { 
-    await this.trigger('post_cov', object, property, value);
+  #onCov = async (object: BACnetObject, property: BACnetProperty<any, any>, value: BACnetValue | BACnetValue[]) => { 
+    await this.trigger('aftercov', object, property, value);
   }
 
   async ___writeObjectProperty(req: WritePropertyContent): Promise<void> {
@@ -71,7 +71,7 @@ export class BACnetDevice extends BACnetObject {
       return; // TODO: throw
     }
     await this.#handleObjectReq(req, objectId, async (object) => {
-      await object.___writeProperty(_property, Array.isArray(_value) ? _value : [_value]);
+      await object.___writeProperty(_property, _value);
     });
   }
   

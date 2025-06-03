@@ -27,7 +27,9 @@ export class Evented<T extends EventMap<T>> {
   }
   
   async trigger<K extends Key<T>>(event: K, ...args: Args<T, K>) {
-    await Promise.all(this.#callbacks[event]?.map(cb => cb.apply(this, args)));
+    if (this.#callbacks[event]) { 
+      await Promise.all(this.#callbacks[event].map(cb => cb.apply(this, args)));  
+    }
   }
   
 }

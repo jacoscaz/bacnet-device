@@ -27,21 +27,19 @@ import {
   BACnetScalarProperty,
   BACnetListProperty,
   type BACnetProperty,
-} from './property.js';
-
-
+} from './properties/index.js';
+import { ensureArray } from './utils.js';
 
 export interface BACnetObjectEvents { 
-  pre_cov: [object: BACnetObject, property: BACnetProperty, nextValue: BACnetValue | BACnetValue[]],
-  post_cov: [object: BACnetObject, property: BACnetProperty, newValue: BACnetValue | BACnetValue[]],
+  beforecov: [object: BACnetObject, property: BACnetProperty<any, any>, nextValue: BACnetValue | BACnetValue[]],
+  aftercov: [object: BACnetObject, property: BACnetProperty<any, any>, newValue: BACnetValue | BACnetValue[]],
 }
 
 export class BACnetObject extends Evented<BACnetObjectEvents> { 
   
   readonly identifier: BACNetObjectID;
-  readonly #propertyList: BACnetValue[];
-  
-  #properties: Map<PropertyIdentifier, BACnetProperty>;
+  readonly #propertyList: BACnetValue<ApplicationTag.ENUMERATED, PropertyIdentifier>[];
+  readonly #properties: Map<PropertyIdentifier, BACnetProperty<any, any>>;
   
   constructor(type: ObjectType, instance: number, name: string) {
     super();
@@ -52,20 +50,19 @@ export class BACnetObject extends Evented<BACnetObjectEvents> {
     this.addProperty(new BACnetScalarProperty(PropertyIdentifier.OBJECT_NAME, ApplicationTag.CHARACTER_STRING, false, name));
     this.addProperty(new BACnetScalarProperty(PropertyIdentifier.OBJECT_TYPE, ApplicationTag.ENUMERATED, false, type));
     this.addProperty(new BACnetScalarProperty(PropertyIdentifier.OBJECT_IDENTIFIER, ApplicationTag.OBJECTIDENTIFIER, false, this.identifier));
-    this.addProperty(new BACnetListProperty(PropertyIdentifier.PROPERTY_LIST, false, this.#propertyList));
+    this.addProperty(new BACnetListProperty(PropertyIdentifier.PROPERTY_LIST, ApplicationTag.ENUMERATED, false, this.#propertyList));
   }
   
-  addProperty<T extends BACnetProperty>(property: T): T { 
+  addProperty<T extends BACnetProperty<any, any>>(property: T): T { 
     if (this.#properties.has(property.identifier)) { 
       throw new Error('Cannot register property: duplicate property identifier');
     }
     this.#properties.set(property.identifier, property);
     this.#propertyList.push({ type: ApplicationTag.ENUMERATED, value: property.identifier });
-    property.subscribe('pre_cov', this.#onPropertyPreCov);
-    property.subscribe('post_cov', this.#onPropertyPostCov);
+    property.subscribe('beforecov', this.#onPropertyBeforeCov);
+    property.subscribe('aftercov', this.#onPropertyAfterCov);
     return property;
   }
-
 
   async ___writeProperty(identifier: BACNetPropertyID, value: BACnetValue | BACnetValue[]): Promise<void> {
     const property = this.#properties.get(identifier.id as PropertyIdentifier);
@@ -89,7 +86,7 @@ export class BACnetObject extends Evented<BACnetObjectEvents> {
   async ___readPropertyMultipleAll(): Promise<BACNetReadAccess> { 
     const values: BACNetReadAccess['values'] = [];
     for (const [identifier, property] of this.#properties.entries()) {
-      values.push({ property: { id: identifier, index: 0 }, value: await property.___readValueAsList() });
+      values.push({ property: { id: identifier, index: 0 }, value: ensureArray(property.___readValue()) });
     }
     return { objectId: this.identifier, values };
   }
@@ -101,25 +98,18 @@ export class BACnetObject extends Evented<BACnetObjectEvents> {
     }
     for (const property of properties) {
       if (this.#properties.has(property.id)) {
-        values.push({ property, value: await this.#properties.get(property.id)!.___readValueAsList() });
+        values.push({ property, value: ensureArray(this.#properties.get(property.id)!.___readValue()) });
       }
     }
     return { objectId: this.identifier, values };
   }
   
-  
-  
-  #onPropertyPreCov = async (property: BACnetProperty, nextValue: BACnetValue | BACnetValue[]) => { 
-    await this.trigger('pre_cov', this, property, nextValue);
+  #onPropertyBeforeCov = async (property: BACnetProperty<any, any>, nextValue: BACnetValue | BACnetValue[]) => { 
+    await this.trigger('beforecov', this, property, nextValue);
   };
   
-  #onPropertyPostCov = async (property: BACnetProperty, nextValue: BACnetValue | BACnetValue[]) => { 
-    await this.trigger('post_cov', this, property, nextValue);
+  #onPropertyAfterCov = async (property: BACnetProperty<any, any>, nextValue: BACnetValue | BACnetValue[]) => { 
+    await this.trigger('aftercov', this, property, nextValue);
   };
-  
-
-
-  
-
     
 }
