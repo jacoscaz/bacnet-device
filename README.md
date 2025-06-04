@@ -1,10 +1,25 @@
+
 # `bacnet-device`
 
-A library for implementing BACnet IP devices.
+A TypeScript library for implementing BACnet IP devices in Node.js.
 
 ## Status
 
 Under heavy development as of June 2025. For more information, [get in touch][1].
+
+## Characteristics
+
+1. **Strong TypeScript Integration**: well-defined interfaces, generics, and
+   type definitions that accurately model BACnet's complex data structures.
+2. **Clean Object-Oriented Design**: separation of concerns between objects,
+   properties, and network operations.
+3. **Evented Architecture**: uses a custom asynchronous event system.
+4. **Queued Property Updates**: ensures that operations are processed
+   sequentially, preventing race conditions.
+
+This library provides a high-level, type-safe API built on top of
+[`@innovation-system/node-bacnet`][2].
+
 
 ## Example usage
 
@@ -32,3 +47,4 @@ setInterval(() => {
 ```
 
 [1]: https://github.com/jacoscaz/bacnet-device
+[2]: https://github.com/innovation-system/node-bacnet

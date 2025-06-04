@@ -12,7 +12,7 @@
   },
   "author": "Jacopo Scazzosi <jacopo@scazzosi.com>",
   "license": "MIT",
-  "description": "A library for implementing BACnet IP devices",
+  "description": "A TypeScript library for implementing BACnet IP devices in Node.js.",
   "devDependencies": {
     "@types/debug": "^4.1.12",
     "@types/node": "^22.15.21",
@@ -33,5 +33,12 @@
   "files": [
     "dist/**/*.js",
     "dist/**/*.d.ts"
+  ],
+  "keywords": [
+    "bacnet",
+    "device",
+    "ashrae",
+    "object",
+    "property"
   ]
 }
