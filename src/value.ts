@@ -13,6 +13,7 @@ import type {
   PropertyIdentifier,
   DeviceStatus,
   Segmentation,
+  Reliability,
 } from './enums/index.js';
 
 import type { SupportedObjectTypesBitString, SupportedServicesBitString, StatusFlagsBitString } from './bitstrings/index.js';
@@ -40,7 +41,7 @@ export interface ApplicationTagValueType {
   [ApplicationTag.OCTET_STRING]: never;
   [ApplicationTag.CHARACTER_STRING]: string;
   [ApplicationTag.BIT_STRING]: StatusFlagsBitString | SupportedObjectTypesBitString | SupportedServicesBitString;
-  [ApplicationTag.ENUMERATED]: ObjectType | EventState | EngineeringUnit | PropertyIdentifier | DeviceStatus | Segmentation;
+  [ApplicationTag.ENUMERATED]: ObjectType | EventState | EngineeringUnit | PropertyIdentifier | DeviceStatus | Segmentation | Reliability;
   [ApplicationTag.DATE]: never;
   [ApplicationTag.TIME]: never;
   [ApplicationTag.OBJECTIDENTIFIER]: BACNetObjectID;

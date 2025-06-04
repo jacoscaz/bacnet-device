@@ -10,3 +10,4 @@ export { BACnetArrayProperty, BACnetSingletProperty } from './properties/index.j
 
 export { BACnetDevice } from './objects/device.js';
 export { BACnetAnalogOutput } from './objects/analogoutput.js';
+export { BACnetAnalogInput } from './objects/analoginput.js';

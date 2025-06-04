@@ -98,6 +98,7 @@ export class BACnetDevice extends BACnetObject {
     )));
     this.addProperty(new BACnetSingletProperty(PropertyIdentifier.PROTOCOL_OBJECT_TYPES_SUPPORTED, ApplicationTag.BIT_STRING, false, new SupportedObjectTypesBitString(
       SupportedObjectTypesBit.DEVICE,
+      SupportedObjectTypesBit.ANALOG_INPUT,
       SupportedObjectTypesBit.ANALOG_OUTPUT,
     )));
   }
