@@ -1,4 +1,3 @@
-import { invertEnum } from '../utils.js';
 
 export enum EngineeringUnit {
   METERS_PER_SECOND_PER_SECOND = 166,
@@ -264,5 +263,3 @@ export enum EngineeringUnit {
   GRAMS_PER_SQUARE_METER = 235,
   MINUTES_PER_DEGREE_KELVIN = 236,
 }
-
-export const EngineeringUnitName = invertEnum(EngineeringUnit);

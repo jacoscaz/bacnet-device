@@ -12,12 +12,6 @@ export const ensureArray = <T>(val: T | T[]): T[] => {
   return Array.isArray(val) ? val : [val];
 };
 
-export const invertEnum = <E extends Record<string, string | number>>(enumeration: E) => {
-  return Object.fromEntries(
-    Object.entries(enumeration).map(([key, value]) => [value, key])
-  ) as Record<E[keyof E], string>;
-};
-
 export const sendConfirmedCovNotification = async (client: BACnetClientType, emitter: BACnetDevice, subscription: BACnetSubscription, cov: QueuedCov) => {
   return new Promise<void>((resolve, reject) => {
     client.confirmedCOVNotification(

@@ -1,4 +1,3 @@
-import { invertEnum } from '../utils.js';
 
 // See node_modules/@innovation-system/node-bacnet/dist/lib/enum.d.ts
 export enum ErrorClass {
@@ -11,8 +10,6 @@ export enum ErrorClass {
   VT = 6,
   COMMUNICATION = 7,
 };
-
-export const ErrorClassName = invertEnum(ErrorClass);
 
 // See node_modules/@innovation-system/node-bacnet/dist/lib/enum.d.ts
 export enum ErrorCode {
@@ -150,5 +147,3 @@ export enum ErrorCode {
   WRITE_ACCESS_DENIED = 40,
   WRITE_BDT_FAILED = 116,
 };
-
-export const ErrorCodeName = invertEnum(ErrorCode);

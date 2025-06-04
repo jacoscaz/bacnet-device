@@ -1,4 +1,3 @@
-import { invertEnum } from '../utils.js';
 
 export enum ObjectType {
   ACCESS_CREDENTIAL = 32,
@@ -62,5 +61,3 @@ export enum ObjectType {
   TREND_LOG = 20,
   TREND_LOG_MULTIPLE = 27,
 };
-
-export const ObjectTypeName = invertEnum(ObjectType);

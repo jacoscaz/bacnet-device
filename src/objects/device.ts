@@ -8,6 +8,7 @@ import {
   ObjectType,
   ApplicationTag,
   PropertyIdentifier,
+  Segmentation,
 } from '../enums/index.js';
 
 import bacnet, { 
@@ -24,7 +25,29 @@ import {
 
 import { BACnetObject } from '../object.js';
 
-import { BACnetArrayProperty, type BACnetProperty } from '../properties/index.js';
+import { BACnetArrayProperty, BACnetSingletProperty, type BACnetProperty } from '../properties/index.js';
+import { DeviceStatus } from '../enums/index.js';
+
+
+export interface BACnetDeviceOpts {
+  /**
+   * @see https://kargs.net/BACnet/Foundations2012-BACnetDeviceID.pdf
+   */
+  instance: number;
+  name: string;
+  /**
+   * @see https://bacnet.org/assigned-vendor-ids/
+   */
+  vendorId: number;
+  vendorName: string;
+  modelName: string;  
+  firmwareRevision: string;
+  applicationSoftwareVersion: string;
+  apduLength: number;
+  apduTimeout: number;
+  apduRetries: number;
+  databaseRevision: number;
+}
 
 export class BACnetDevice extends BACnetObject {
   
@@ -34,14 +57,42 @@ export class BACnetDevice extends BACnetObject {
   readonly #objects: Map<ObjectType, Map<number, BACnetObject>>;
   readonly #objectList: BACnetValue<ApplicationTag.OBJECTIDENTIFIER>[];
   
-  constructor(id: number, name: string, vendorId: number) {
-    super(ObjectType.DEVICE, id, name);
+  constructor(opts: BACnetDeviceOpts) {
+    super(ObjectType.DEVICE, opts.instance, opts.name);
     this.#objects = new Map();
     this.#objectList = [];
-    this.name = name;
-    this.vendorId = vendorId;
+    this.name = opts.name;
+    this.vendorId = opts.vendorId;
     this.addObject(this);
     this.addProperty(new BACnetArrayProperty(PropertyIdentifier.OBJECT_LIST, ApplicationTag.OBJECTIDENTIFIER, false, this.#objectList));
+    this.addProperty(new BACnetSingletProperty(PropertyIdentifier.SYSTEM_STATUS, ApplicationTag.ENUMERATED, false, DeviceStatus.OPERATIONAL));
+    this.addProperty(new BACnetSingletProperty(PropertyIdentifier.VENDOR_IDENTIFIER, ApplicationTag.UNSIGNED_INTEGER, false, opts.vendorId));
+    this.addProperty(new BACnetSingletProperty(PropertyIdentifier.VENDOR_NAME, ApplicationTag.CHARACTER_STRING, false, opts.vendorName));
+    this.addProperty(new BACnetSingletProperty(PropertyIdentifier.MODEL_NAME, ApplicationTag.CHARACTER_STRING, false, opts.vendorName));
+    this.addProperty(new BACnetSingletProperty(PropertyIdentifier.FIRMWARE_REVISION, ApplicationTag.CHARACTER_STRING, false, opts.vendorName));
+    this.addProperty(new BACnetSingletProperty(PropertyIdentifier.APPLICATION_SOFTWARE_VERSION, ApplicationTag.CHARACTER_STRING, false, opts.vendorName));
+    this.addProperty(new BACnetSingletProperty(PropertyIdentifier.PROTOCOL_VERSION, ApplicationTag.UNSIGNED_INTEGER, false, 1));
+    this.addProperty(new BACnetSingletProperty(PropertyIdentifier.PROTOCOL_REVISION, ApplicationTag.UNSIGNED_INTEGER, false, 14));
+    
+    
+    this.addProperty(new BACnetSingletProperty(PropertyIdentifier.SEGMENTATION_SUPPORTED, ApplicationTag.ENUMERATED, false, Segmentation.NO_SEGMENTATION));
+    this.addProperty(new BACnetSingletProperty(PropertyIdentifier.APDU_LENGTH, ApplicationTag.UNSIGNED_INTEGER, false, opts.apduLength));
+    this.addProperty(new BACnetSingletProperty(PropertyIdentifier.APDU_TIMEOUT, ApplicationTag.UNSIGNED_INTEGER, false, opts.apduLength));
+    this.addProperty(new BACnetSingletProperty(PropertyIdentifier.NUMBER_OF_APDU_RETRIES, ApplicationTag.UNSIGNED_INTEGER, false, opts.apduRetries));
+    
+    this.addProperty(new BACnetSingletProperty(PropertyIdentifier.DATABASE_REVISION, ApplicationTag.UNSIGNED_INTEGER, false, opts.databaseRevision));
+    
+    // Bindings can be discovered via the "Who-Is" and "I-Am" services. 
+    // This property represents a list of static bindings and we can leave it empty.
+    this.addProperty(new BACnetArrayProperty(PropertyIdentifier.DEVICE_ADDRESS_BINDING, ApplicationTag.NULL, false, []));
+    
+    
+
+    
+    
+    // Protocol_Services_Supported BACnetServicesSupported R
+    // Protocol_Object_Types_Supported BACnetObjectTypesSupported R
+    // this.addProperty(new BACnetSingletProperty(PropertyIdentifier.PROTOCOL_SERVICES_SUPPORTED, ApplicationTag.UNSIGNED_INTEGER, false, 14));
   }
   
   addObject<T extends BACnetObject>(object: T): T { 

@@ -1,6 +1,4 @@
 
-import { invertEnum } from '../utils.js';
-
 export enum CharacterStringEncoding {
   UTF_8 = 0,
   MICROSOFT_DBCS = 1,
@@ -9,5 +7,3 @@ export enum CharacterStringEncoding {
   UCS_2 = 4,
   ISO_8859_1 = 5,
 };
-
-export const CharacterStringEncodingName = invertEnum(CharacterStringEncoding);

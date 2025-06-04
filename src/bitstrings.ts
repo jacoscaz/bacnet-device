@@ -13,3 +13,11 @@ export class StatusFlagsBitString implements BACNetBitString {
     this.value = [inAlarm, fault, overridden, outOfService];
   }
 }
+
+// export class ProtocolServicesSupported implements BACNetBitString {
+//   readonly bitsUsed: 4 = 4;
+//   readonly value: [Bit, Bit, Bit, Bit];
+//   constructor(inAlarm: Bit, fault: Bit, overridden: Bit, outOfService: Bit) {
+//     this.value = [inAlarm, fault, overridden, outOfService];
+//   }
+// }

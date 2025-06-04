@@ -1,6 +1,4 @@
 
-import { invertEnum } from '../utils.js';
-
 export enum ApplicationTag {
   NULL = 0,
   BOOLEAN = 1,
@@ -37,5 +35,3 @@ export enum ApplicationTag {
   CONTEXT_SPECIFIC_ENCODED = 119,
   LOG_RECORD = 120,
 };
-
-export const ApplicationTagName = invertEnum(ApplicationTag);

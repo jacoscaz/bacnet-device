@@ -1,6 +1,4 @@
 
-import { invertEnum } from '../utils.js';
-
 export enum PropertyIdentifier {
   ABSENTEE_LIMIT = 244,
   ACCEPTED_MODES = 175,
@@ -458,5 +456,3 @@ export enum PropertyIdentifier {
   ZONE_MEMBERS = 165,
   ZONE_TO = 321,
 };
-
-export const PropertyIdentifierName = invertEnum(PropertyIdentifier);

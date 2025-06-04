@@ -5,3 +5,4 @@ export * from './properties.js';
 export * from './encodings.js';
 export * from './units.js';
 export * from './events.js';
+export * from './devices.js';

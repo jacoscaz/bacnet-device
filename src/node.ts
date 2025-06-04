@@ -15,9 +15,7 @@ import {
   ErrorCode,
   ErrorClass,
   ObjectType,
-  ObjectTypeName,
   PropertyIdentifier,
-  PropertyIdentifierName,
 } from './enums/index.js';
 
 import bacnet, {
@@ -156,7 +154,7 @@ export class BACnetNode extends EventEmitter<BACnetNodeEvents> {
   
   #onReadProperty = async (req: ReadPropertyContent) => {
     const { payload: { objectId, property }, address, header, service, invokeId } = req;
-    debug('req #%s: readProperty, object %s %s, property %s', invokeId, ObjectTypeName[objectId.type as ObjectType], objectId.instance, PropertyIdentifierName[property.id as PropertyIdentifier]);
+    debug('req #%s: readProperty, object %s %s, property %s', invokeId, ObjectType[objectId.type as ObjectType], objectId.instance, PropertyIdentifier[property.id as PropertyIdentifier]);
     if (!header) return;
     if (!this.#device) return;
     try {
@@ -173,7 +171,7 @@ export class BACnetNode extends EventEmitter<BACnetNodeEvents> {
   
   #onSubscribeCov = async (req: SubscribeCovContent) => {
     const { payload: { subscriberProcessId, monitoredObjectId, issueConfirmedNotifications, lifetime }, header, service, invokeId } = req;
-    debug('new subscription: object %s %s', ObjectTypeName[monitoredObjectId.type as ObjectType], monitoredObjectId.instance);
+    debug('new subscription: object %s %s', ObjectType[monitoredObjectId.type as ObjectType], monitoredObjectId.instance);
     if (!header) return;
     let typeSubs = this.#subscriptions.get(monitoredObjectId.type);
     if (!typeSubs) { 
