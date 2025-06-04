@@ -6,8 +6,11 @@ import { EventState, EngineeringUnit, Reliability } from '../enums/index.js';
 import { StatusFlagsBitString } from '../bitstrings/index.js';
 
 /**
- * Implements a BACnet Analog Input object, which represents a physical analog
- * input such as a temperature sensor, pressure sensor, etc.
+ * Implements a BACnet Analog Input object
+ * 
+ * The Analog Input object represents a physical or virtual analog input source such as a
+ * temperature sensor, pressure sensor, or other analog measurement device. This object
+ * type provides a standard way to represent analog inputs in BACnet systems.
  * 
  * Required properties according to the BACnet specification:
  * - Object_Identifier (automatically added by BACnetObject)
@@ -19,16 +22,67 @@ import { StatusFlagsBitString } from '../bitstrings/index.js';
  * - Out_Of_Service
  * - Units
  * - Reliability (optional but commonly included)
+ * 
+ * @extends BACnetObject
  */
 export class BACnetAnalogInput extends BACnetObject {
   
+  /** 
+   * The current value of the analog input
+   * 
+   * This property represents the current value of the analog input in the
+   * units specified by the engineeringUnit property. It's read-only unless
+   * outOfService is set to true.
+   */
   readonly presentValue: BACnetSingletProperty<ApplicationTag.REAL>;
+  
+  /**
+   * The current status flags for this object
+   * 
+   * This property contains four flags: IN_ALARM, FAULT, OVERRIDDEN, and OUT_OF_SERVICE.
+   * These flags provide a summary of the object's current status.
+   */
   readonly statusFlags: BACnetSingletProperty<ApplicationTag.BIT_STRING>;
+  
+  /**
+   * The current event state of this object
+   * 
+   * This property indicates whether the object is in an alarm condition.
+   * For objects that do not support event reporting, this is typically NORMAL.
+   */
   readonly eventState: BACnetSingletProperty<ApplicationTag.ENUMERATED, EventState>;
+  
+  /**
+   * The engineering units for the present value
+   * 
+   * This property specifies the units of measurement for the present value,
+   * such as degrees Celsius, Pascal, etc.
+   */
   readonly engineeringUnit: BACnetSingletProperty<ApplicationTag.ENUMERATED, EngineeringUnit>;
+  
+  /**
+   * Indicates whether this object is out of service
+   * 
+   * When true, the Present_Value property is decoupled from the physical input
+   * and can be modified directly for testing or other purposes.
+   */
   readonly outOfService: BACnetSingletProperty<ApplicationTag.BOOLEAN>;
+  
+  /**
+   * The reliability of the present value
+   * 
+   * This property indicates whether the Present_Value is reliable and why it
+   * might be unreliable (e.g., sensor failure, communication failure, etc.).
+   */
   readonly reliability: BACnetSingletProperty<ApplicationTag.ENUMERATED, Reliability>;
   
+  /**
+   * Creates a new BACnet Analog Input object
+   * 
+   * @param instance - The instance number for this object (must be unique for this type)
+   * @param name - The name of this object
+   * @param unit - The engineering unit for this analog input's present value
+   */
   constructor(instance: number, name: string, unit: EngineeringUnit) {
     super(ObjectType.ANALOG_INPUT, instance, name);
     
