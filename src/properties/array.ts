@@ -10,11 +10,11 @@ import { BACnetError } from '../errors.js';
 import { PropertyIdentifier, ErrorCode, ErrorClass, ApplicationTag } from '../enums/index.js';
 
 export interface ListPropertyEvents<Tag extends ApplicationTag, Type extends ApplicationTagValueType[Tag] = ApplicationTagValueType[Tag]> { 
-  beforecov: [property: BACnetListProperty<Tag, Type>, raw: BACnetValue<Tag, Type>[]],
-  aftercov: [property: BACnetListProperty<Tag, Type>, raw: BACnetValue<Tag, Type>[]],
+  beforecov: [property: BACnetArrayProperty<Tag, Type>, raw: BACnetValue<Tag, Type>[]],
+  aftercov: [property: BACnetArrayProperty<Tag, Type>, raw: BACnetValue<Tag, Type>[]],
 }
 
-export class BACnetListProperty<Tag extends ApplicationTag, Type extends ApplicationTagValueType[Tag] = ApplicationTagValueType[Tag]> extends Evented<ListPropertyEvents<Tag, Type>> {
+export class BACnetArrayProperty<Tag extends ApplicationTag, Type extends ApplicationTagValueType[Tag] = ApplicationTagValueType[Tag]> extends Evented<ListPropertyEvents<Tag, Type>> {
   
   readonly list: false;
   readonly type: Tag;

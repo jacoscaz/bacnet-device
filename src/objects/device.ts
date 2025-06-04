@@ -24,7 +24,7 @@ import {
 
 import { BACnetObject } from '../object.js';
 
-import { BACnetListProperty, type BACnetProperty } from '../properties/index.js';
+import { BACnetArrayProperty, type BACnetProperty } from '../properties/index.js';
 
 export class BACnetDevice extends BACnetObject {
   
@@ -41,7 +41,7 @@ export class BACnetDevice extends BACnetObject {
     this.name = name;
     this.vendorId = vendorId;
     this.addObject(this);
-    this.addProperty(new BACnetListProperty(PropertyIdentifier.OBJECT_LIST, ApplicationTag.OBJECTIDENTIFIER, false, this.#objectList));
+    this.addProperty(new BACnetArrayProperty(PropertyIdentifier.OBJECT_LIST, ApplicationTag.OBJECTIDENTIFIER, false, this.#objectList));
   }
   
   addObject<T extends BACnetObject>(object: T): T { 

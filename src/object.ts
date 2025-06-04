@@ -25,7 +25,7 @@ import type {
 
 import {
   BACnetSingletProperty,
-  BACnetListProperty,
+  BACnetArrayProperty,
   type BACnetProperty,
 } from './properties/index.js';
 import { ensureArray } from './utils.js';
@@ -50,7 +50,7 @@ export class BACnetObject extends Evented<BACnetObjectEvents> {
     this.addProperty(new BACnetSingletProperty(PropertyIdentifier.OBJECT_NAME, ApplicationTag.CHARACTER_STRING, false, name));
     this.addProperty(new BACnetSingletProperty(PropertyIdentifier.OBJECT_TYPE, ApplicationTag.ENUMERATED, false, type));
     this.addProperty(new BACnetSingletProperty(PropertyIdentifier.OBJECT_IDENTIFIER, ApplicationTag.OBJECTIDENTIFIER, false, this.identifier));
-    this.addProperty(new BACnetListProperty(PropertyIdentifier.PROPERTY_LIST, ApplicationTag.ENUMERATED, false, this.#propertyList));
+    this.addProperty(new BACnetArrayProperty(PropertyIdentifier.PROPERTY_LIST, ApplicationTag.ENUMERATED, false, this.#propertyList));
   }
   
   addProperty<T extends BACnetProperty<any, any>>(property: T): T { 
