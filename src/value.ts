@@ -20,16 +20,32 @@ import type { SupportedObjectTypesBitString, SupportedServicesBitString, StatusF
 
 /**
  * Representation of a BACnet value.
+ * 
+ * This interface extends the BACNetAppData interface from the underlying BACnet library
+ * and provides a type-safe way to represent BACnet values with their associated tags.
+ * 
+ * @template Tag - The ApplicationTag that categorizes this value
+ * @template Type - The JavaScript type associated with the Tag, derived from ApplicationTagValueType
  */
 export interface BACnetValue<Tag extends ApplicationTag = ApplicationTag, Type extends ApplicationTagValueType[Tag] = ApplicationTagValueType[Tag]> extends BACNetAppData { 
+  /** The BACnet application tag for this value */
   type: Tag;
+  
+  /** The actual value with type corresponding to the application tag */
   value: Type;
+  
+  /** Optional character string encoding, used only for CHARACTER_STRING type values */
   encoding?: CharacterStringEncoding;
 }
 
 /**
  * Map between BACnet Application Tags and native JavaScript types.
- * Entries mapping to the `never` type are not yet supported.
+ * 
+ * This interface defines the mapping between each BACnet ApplicationTag
+ * and its corresponding JavaScript/TypeScript type. This mapping is used
+ * throughout the library to ensure type safety when working with BACnet values.
+ * 
+ * Entries mapping to the `never` type are not yet supported by this implementation.
  */
 export interface ApplicationTagValueType { 
   [ApplicationTag.NULL]: null;

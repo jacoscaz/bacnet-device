@@ -1,23 +1,47 @@
 
+/**
+ * Event handling module for BACnet devices
+ * 
+ * This module provides an asynchronous event system for BACnet components.
+ * The implementation is inspired by Node.js's native EventEmitter but supports
+ * asynchronous event handlers.
+ * 
+ * @module
+ */
+
 // The following are simplified versions of the equivalent typings for
 // Node.js's native EventEmitter, as taken from the `@types/node` package.
 
 /** 
+ * Type mapping for event names to their argument arrays
+ * 
+ * @typeParam T - An interface mapping event names to their argument arrays
  * @private 
  */
 export type EventMap<T> = Record<keyof T, any[]>;
 
 /** 
+ * Extracts the event names from an event map
+ * 
+ * @typeParam T - An event map interface
  * @private 
  */
 export type Key<T> = keyof T;
 
 /** 
+ * Extracts the argument types for a specific event
+ * 
+ * @typeParam T - An event map interface
+ * @typeParam K - The event name to extract arguments for
  * @private 
  */
 export type Args<T, K extends Key<T>> = T[K];
 
 /** 
+ * Type for event listeners/handlers
+ * 
+ * @typeParam T - An event map interface
+ * @typeParam K - The event name this listener handles
  * @private 
  */
 export type Listener<T, K extends Key<T>> = T[K] extends unknown[] ? (...args: T[K]) => Promise<void> : never;
@@ -27,18 +51,33 @@ export type Listener<T, K extends Key<T>> = T[K] extends unknown[] ? (...args: T
  * Implements an event emitter, conceptually similar to Node.js' native
  * EventEmitter, that supports asynchronous event handlers/listeners.
  * 
- * @private
+ * This class provides a foundation for event-based communication between
+ * BACnet components. It allows objects to register listeners for specific events
+ * and trigger those events asynchronously.
+ * 
+ * @typeParam T - An interface mapping event names to their argument arrays
  */
 export class Evented<T extends EventMap<T>> { 
   
+  /** 
+   * Internal mapping of event names to their registered listeners
+   * @private 
+   */
   #callbacks: { [K in Key<T>]: Listener<T, K>[] };
   
+  /**
+   * Creates a new Evented instance with no registered listeners
+   */
   constructor() { 
     this.#callbacks = Object.create(null);
   }
   
   /**
    * Adds a new listener for the specified event.
+   * 
+   * @param event - The event name to subscribe to
+   * @param cb - The callback function to execute when the event is triggered
+   * @returns The callback function for chaining
    */
   subscribe<K extends Key<T>>(event: K, cb: Listener<T, K>) { 
     if (!this.#callbacks[event]) {
@@ -49,6 +88,10 @@ export class Evented<T extends EventMap<T>> {
   
   /**
    * Fires an event. All subscribed listeners will be called in parallel.
+   * 
+   * @param event - The event name to trigger
+   * @param args - The arguments to pass to each listener
+   * @returns A promise that resolves when all listeners have completed
    */
   async trigger<K extends Key<T>>(event: K, ...args: Args<T, K>) {
     if (this.#callbacks[event]) { 
