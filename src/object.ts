@@ -35,6 +35,19 @@ export interface BACnetObjectEvents {
   aftercov: [object: BACnetObject, property: BACnetProperty<any, any>, newValue: BACnetValue | BACnetValue[]],
 }
 
+/**
+ * The following properties, represented by their identifiers, must
+ * not be listed in the value of the `Property_List` property.
+ * 
+ * @see section 12.1.1.4.1 "Property_List"
+ */
+const unlistedProperties: PropertyIdentifier[] = [
+  PropertyIdentifier.OBJECT_NAME,
+  PropertyIdentifier.OBJECT_TYPE,
+  PropertyIdentifier.OBJECT_IDENTIFIER,
+  PropertyIdentifier.PROPERTY_LIST,
+];
+
 export class BACnetObject extends Evented<BACnetObjectEvents> { 
   
   readonly identifier: BACNetObjectID;
@@ -58,7 +71,9 @@ export class BACnetObject extends Evented<BACnetObjectEvents> {
       throw new Error('Cannot register property: duplicate property identifier');
     }
     this.#properties.set(property.identifier, property);
-    this.#propertyList.push({ type: ApplicationTag.ENUMERATED, value: property.identifier });
+    if (!unlistedProperties.includes(property.identifier)) { 
+      this.#propertyList.push({ type: ApplicationTag.ENUMERATED, value: property.identifier });
+    }
     property.subscribe('beforecov', this.#onPropertyBeforeCov);
     property.subscribe('aftercov', this.#onPropertyAfterCov);
     return property;
