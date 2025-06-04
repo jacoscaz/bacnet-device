@@ -1,10 +1,12 @@
 
-import { BACnetSingletProperty } from '../properties/index.js';
+import type { BACnetValue } from '../value.js';
 
+import { BACnetSingletProperty, BACnetArrayProperty } from '../properties/index.js';
 import { BACnetObject } from '../object.js';
 import { ApplicationTag, ObjectType, PropertyIdentifier } from '../enums/index.js';
 import { EventState, EngineeringUnit } from '../enums/index.js';
-import { StatusFlagsBitString, StatusFlagsBit } from '../bitstrings/index.js';
+import { StatusFlagsBitString } from '../bitstrings/index.js';
+
 
 export class BACnetAnalogOutput extends BACnetObject {
   
@@ -13,6 +15,9 @@ export class BACnetAnalogOutput extends BACnetObject {
   readonly eventState: BACnetSingletProperty<ApplicationTag.ENUMERATED, EventState>;
   readonly engineeringUnit: BACnetSingletProperty<ApplicationTag.ENUMERATED, EngineeringUnit>;
   readonly outOfService: BACnetSingletProperty<ApplicationTag.BOOLEAN>;
+  readonly relinquishDefault: BACnetSingletProperty<ApplicationTag.REAL>;
+  readonly priorityArray: BACnetArrayProperty<ApplicationTag.REAL | ApplicationTag.NULL>;
+  readonly currentCommandPriority: BACnetSingletProperty<ApplicationTag.UNSIGNED_INTEGER | ApplicationTag.NULL>;
   
   constructor(instance: number, name: string, unit: EngineeringUnit) {
     super(ObjectType.ANALOG_OUTPUT, instance, name);
@@ -31,7 +36,20 @@ export class BACnetAnalogOutput extends BACnetObject {
     
     this.outOfService  = this.addProperty(new BACnetSingletProperty(
       PropertyIdentifier.OUT_OF_SERVICE, ApplicationTag.BOOLEAN, false, false));
+    
+    this.relinquishDefault = this.addProperty(new BACnetSingletProperty(
+      PropertyIdentifier.RELINQUISH_DEFAULT, ApplicationTag.REAL, false, 0));
+    
+    this.priorityArray = this.addProperty(new BACnetArrayProperty(
+      PropertyIdentifier.PRIORITY_ARRAY,
+      ApplicationTag.REAL | ApplicationTag.NULL,
+      false,
+      new Array(16).fill({ type: ApplicationTag.NULL, value: null } as BACnetValue<ApplicationTag.REAL | ApplicationTag.NULL>),
+    ));
+    
+    this.currentCommandPriority = this.addProperty(new BACnetSingletProperty(
+      PropertyIdentifier.CURRENT_COMMAND_PRIORITY, ApplicationTag.UNSIGNED_INTEGER | ApplicationTag.NULL, false, null as number | null));
+    
   }
   
 }
-
