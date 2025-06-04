@@ -1,17 +1,43 @@
 
-// See node_modules/@innovation-system/node-bacnet/dist/lib/enum.d.ts
+/**
+ * BACnet error class values
+ * 
+ * This enumeration represents the standard error classes in BACnet as defined
+ * in the BACnet standard. Error classes categorize errors by their general area
+ * or domain within the BACnet system.
+ * 
+ * Error classes are used in conjunction with error codes to provide detailed
+ * information about the nature of an error that has occurred.
+ */
 export enum ErrorClass {
+  /** Error related to the device object */
   DEVICE = 0,
+  /** Error related to an object other than the device object */
   OBJECT = 1,
+  /** Error related to a property of an object */
   PROPERTY = 2,
+  /** Error related to resources, such as memory */
   RESOURCES = 3,
+  /** Error related to security */
   SECURITY = 4,
+  /** Error related to a BACnet service */
   SERVICES = 5,
+  /** Error related to Virtual Terminal services */
   VT = 6,
+  /** Error related to communication */
   COMMUNICATION = 7,
 };
 
-// See node_modules/@innovation-system/node-bacnet/dist/lib/enum.d.ts
+/**
+ * BACnet error code values
+ * 
+ * This enumeration represents the standard error codes in BACnet as defined
+ * in the BACnet standard. Error codes provide specific information about
+ * what kind of error has occurred within a given error class.
+ * 
+ * Error codes are used in conjunction with error classes to provide detailed
+ * information about the nature of an error that has occurred.
+ */
 export enum ErrorCode {
   ABORT_APDU_TOO_LONG = 123,
   ABORT_APPLICATION_EXCEEDED_REPLY_TIME = 124,

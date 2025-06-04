@@ -1,4 +1,17 @@
 
+/**
+ * BACnet property identifier values
+ * 
+ * This enumeration represents the standard property identifiers in BACnet as defined
+ * in the BACnet standard. Each value identifies a specific property that can exist
+ * in BACnet objects.
+ * 
+ * Property identifiers are used in BACnet services like ReadProperty, WriteProperty,
+ * and others to specify which property of an object is being accessed.
+ * 
+ * This comprehensive enumeration includes all standard properties defined in the
+ * BACnet specification, though not all properties are applicable to all object types.
+ */
 export enum PropertyIdentifier {
   ABSENTEE_LIMIT = 244,
   ACCEPTED_MODES = 175,

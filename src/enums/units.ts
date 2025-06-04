@@ -1,4 +1,18 @@
 
+/**
+ * BACnet engineering unit values
+ * 
+ * This enumeration represents the standard engineering units in BACnet as defined
+ * in the BACnet standard. Each value identifies a specific unit of measurement
+ * that can be used in BACnet objects.
+ * 
+ * Engineering units are used in BACnet objects to specify the unit of measurement
+ * for property values, such as the units for a Present_Value property in an
+ * Analog Input, Analog Output, or Analog Value object.
+ * 
+ * This comprehensive enumeration includes all standard units defined in the
+ * BACnet specification, organized by measurement type (length, area, volume, etc.).
+ */
 export enum EngineeringUnit {
   METERS_PER_SECOND_PER_SECOND = 166,
   SQUARE_METERS = 0,
