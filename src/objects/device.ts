@@ -27,6 +27,8 @@ import { BACnetObject } from '../object.js';
 
 import { BACnetArrayProperty, BACnetSingletProperty, type BACnetProperty } from '../properties/index.js';
 import { DeviceStatus } from '../enums/index.js';
+import { SupportedServicesBit, SupportedServicesBitString } from '../bitstrings/supportedservices.js';
+import { SupportedObjectTypesBit, SupportedObjectTypesBitString } from '../bitstrings/supportedobjecttypes.js';
 
 
 export interface BACnetDeviceOpts {
@@ -65,6 +67,7 @@ export class BACnetDevice extends BACnetObject {
     this.vendorId = opts.vendorId;
     this.addObject(this);
     this.addProperty(new BACnetArrayProperty(PropertyIdentifier.OBJECT_LIST, ApplicationTag.OBJECTIDENTIFIER, false, this.#objectList));
+    this.addProperty(new BACnetArrayProperty(PropertyIdentifier.STRUCTURED_OBJECT_LIST, ApplicationTag.OBJECTIDENTIFIER, false, []));
     this.addProperty(new BACnetSingletProperty(PropertyIdentifier.SYSTEM_STATUS, ApplicationTag.ENUMERATED, false, DeviceStatus.OPERATIONAL));
     this.addProperty(new BACnetSingletProperty(PropertyIdentifier.VENDOR_IDENTIFIER, ApplicationTag.UNSIGNED_INTEGER, false, opts.vendorId));
     this.addProperty(new BACnetSingletProperty(PropertyIdentifier.VENDOR_NAME, ApplicationTag.CHARACTER_STRING, false, opts.vendorName));
@@ -73,7 +76,6 @@ export class BACnetDevice extends BACnetObject {
     this.addProperty(new BACnetSingletProperty(PropertyIdentifier.APPLICATION_SOFTWARE_VERSION, ApplicationTag.CHARACTER_STRING, false, opts.vendorName));
     this.addProperty(new BACnetSingletProperty(PropertyIdentifier.PROTOCOL_VERSION, ApplicationTag.UNSIGNED_INTEGER, false, 1));
     this.addProperty(new BACnetSingletProperty(PropertyIdentifier.PROTOCOL_REVISION, ApplicationTag.UNSIGNED_INTEGER, false, 14));
-    
     
     this.addProperty(new BACnetSingletProperty(PropertyIdentifier.SEGMENTATION_SUPPORTED, ApplicationTag.ENUMERATED, false, Segmentation.NO_SEGMENTATION));
     this.addProperty(new BACnetSingletProperty(PropertyIdentifier.APDU_LENGTH, ApplicationTag.UNSIGNED_INTEGER, false, opts.apduLength));
@@ -85,14 +87,19 @@ export class BACnetDevice extends BACnetObject {
     // Bindings can be discovered via the "Who-Is" and "I-Am" services. 
     // This property represents a list of static bindings and we can leave it empty.
     this.addProperty(new BACnetArrayProperty(PropertyIdentifier.DEVICE_ADDRESS_BINDING, ApplicationTag.NULL, false, []));
-    
-    
-
-    
-    
-    // Protocol_Services_Supported BACnetServicesSupported R
-    // Protocol_Object_Types_Supported BACnetObjectTypesSupported R
-    // this.addProperty(new BACnetSingletProperty(PropertyIdentifier.PROTOCOL_SERVICES_SUPPORTED, ApplicationTag.UNSIGNED_INTEGER, false, 14));
+    this.addProperty(new BACnetSingletProperty(PropertyIdentifier.PROTOCOL_SERVICES_SUPPORTED, ApplicationTag.BIT_STRING, false, new SupportedServicesBitString(
+      SupportedServicesBit.WHO_IS,
+      SupportedServicesBit.I_AM,
+      SupportedServicesBit.READ_PROPERTY,
+      SupportedServicesBit.WRITE_PROPERTY,
+      SupportedServicesBit.SUBSCRIBE_COV,
+      SupportedServicesBit.CONFIRMED_COV_NOTIFICATION,
+      SupportedServicesBit.UNCONFIRMED_COV_NOTIFICATION,
+    )));
+    this.addProperty(new BACnetSingletProperty(PropertyIdentifier.PROTOCOL_OBJECT_TYPES_SUPPORTED, ApplicationTag.BIT_STRING, false, new SupportedObjectTypesBitString(
+      SupportedObjectTypesBit.DEVICE,
+      SupportedObjectTypesBit.ANALOG_OUTPUT,
+    )));
   }
   
   addObject<T extends BACnetObject>(object: T): T { 

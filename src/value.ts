@@ -15,7 +15,7 @@ import type {
   Segmentation,
 } from './enums/index.js';
 
-import type { StatusFlagsBitString } from './bitstrings.js';
+import type { SupportedObjectTypesBitString, SupportedServicesBitString, StatusFlagsBitString } from './bitstrings/index.js';
 
 /**
  * Representation of a BACnet value.
@@ -39,7 +39,7 @@ export interface ApplicationTagValueType {
   [ApplicationTag.DOUBLE]: number;
   [ApplicationTag.OCTET_STRING]: never;
   [ApplicationTag.CHARACTER_STRING]: string;
-  [ApplicationTag.BIT_STRING]: StatusFlagsBitString;
+  [ApplicationTag.BIT_STRING]: StatusFlagsBitString | SupportedObjectTypesBitString | SupportedServicesBitString;
   [ApplicationTag.ENUMERATED]: ObjectType | EventState | EngineeringUnit | PropertyIdentifier | DeviceStatus | Segmentation;
   [ApplicationTag.DATE]: never;
   [ApplicationTag.TIME]: never;

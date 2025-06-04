@@ -4,13 +4,13 @@ import { BACnetSingletProperty } from '../properties/index.js';
 import { BACnetObject } from '../object.js';
 import { ApplicationTag, ObjectType, PropertyIdentifier } from '../enums/index.js';
 import { EventState, EngineeringUnit } from '../enums/index.js';
-import { StatusFlagsBitString } from '../bitstrings.js';
+import { StatusFlagsBitString, StatusFlagsBit } from '../bitstrings/index.js';
 
 export class BACnetAnalogOutput extends BACnetObject {
   
   readonly presentValue: BACnetSingletProperty<ApplicationTag.REAL>;
   readonly statusFlags: BACnetSingletProperty<ApplicationTag.BIT_STRING>;
-  // readonly eventState: BACnetSingletProperty<ApplicationTag.ENUMERATED, EventState>;
+  readonly eventState: BACnetSingletProperty<ApplicationTag.ENUMERATED, EventState>;
   readonly engineeringUnit: BACnetSingletProperty<ApplicationTag.ENUMERATED, EngineeringUnit>;
   readonly outOfService: BACnetSingletProperty<ApplicationTag.BOOLEAN>;
   
@@ -21,11 +21,10 @@ export class BACnetAnalogOutput extends BACnetObject {
       PropertyIdentifier.PRESENT_VALUE, ApplicationTag.REAL, true, 0));
     
     this.statusFlags = this.addProperty(new BACnetSingletProperty<ApplicationTag.BIT_STRING, StatusFlagsBitString>(
-      PropertyIdentifier.STATUS_FLAGS, ApplicationTag.BIT_STRING, false, new StatusFlagsBitString(0, 0, 0, 0)));
+      PropertyIdentifier.STATUS_FLAGS, ApplicationTag.BIT_STRING, false, new StatusFlagsBitString()));
     
-    // TODO: this is causing YABE to throw an error - figure out why
-    // this.eventState = this.addProperty(new BACnetSingletProperty<ApplicationTag.ENUMERATED, EventState>(
-    //   PropertyIdentifier.EVENT_STATE, ApplicationTag.ENUMERATED, false, EventState.NORMAL));
+    this.eventState = this.addProperty(new BACnetSingletProperty<ApplicationTag.ENUMERATED, EventState>(
+      PropertyIdentifier.EVENT_STATE, ApplicationTag.ENUMERATED, false, EventState.NORMAL));
     
     this.engineeringUnit = this.addProperty(new BACnetSingletProperty<ApplicationTag.ENUMERATED, EngineeringUnit>(
       PropertyIdentifier.UNITS, ApplicationTag.ENUMERATED, false, unit));
