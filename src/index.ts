@@ -30,6 +30,11 @@ export type { BACnetProperty } from './properties/index.js';
 export * from './enums/index.js';
 
 /**
+ * Export all BitString classes
+ */
+export * from './bitstrings/index.js';
+
+/**
  * Export {@link BACnetNode} class for BACnet node implementation
  */
 export { BACnetNode } from './node.js';

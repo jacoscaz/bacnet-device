@@ -467,11 +467,18 @@ export class BACnetNode extends EventEmitter<BACnetNodeEvents> {
   #onWriteProperty = async (req: WritePropertyContent) => { 
     debug('req #%s: writeProperty');
     const { header, service, invokeId } = req;
-    // debug('req #%s: writeProperty, object %s %s, property %s', invokeId, ObjectType[objectId.type as ObjectType], objectId.instance, PropertyIdentifier[property.id as PropertyIdentifier]);
     if (!header) return;
     if (!this.#device) return;
-    await this.#device.___writeObjectProperty(req);
-    this.#client.simpleAckResponse({ address: header.sender.address }, service!, invokeId!);
+    try {
+      await this.#device.___writeObjectProperty(req);
+      this.#client.simpleAckResponse({ address: header.sender.address }, service!, invokeId!);
+    } catch (err) { 
+      if (err instanceof BACnetError) {
+        this.#client.errorResponse({ address: header.sender.address }, service!, invokeId!, err.errorClass, err.errorCode);
+      } else { 
+        this.#client.errorResponse({ address: header.sender.address }, service!, invokeId!, ErrorClass.DEVICE, ErrorCode.INTERNAL_ERROR);
+      }
+    }
   };
   
   /**

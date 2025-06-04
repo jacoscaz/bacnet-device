@@ -9,42 +9,109 @@ Under heavy development as of June 2025. For more information, [get in touch][1]
 
 ## Characteristics
 
-1. **Strong TypeScript Integration**: well-defined interfaces, generics, and
-   type definitions that accurately model BACnet's complex data structures.
-2. **Clean Object-Oriented Design**: separation of concerns between objects,
+1. **Detailed types**: well-defined interfaces, generics, and type definitions
+   that accurately model BACnet's complex data structures.
+2. **Clean object-oriented design**: separation of concerns between objects,
    properties, and network operations.
-3. **Evented Architecture**: uses a custom asynchronous event system.
-4. **Queued Property Updates**: ensures that operations are processed
-   sequentially, preventing race conditions.
+3. **Evented architecture**: uses a custom asynchronous, error-aware event
+   system to propagate events while preserving modularity and component
+   decoupling.
+4. **Queued property updates**: uses queues to ensure the sequential processing
+   of value change operations, preventing race conditions.
 
 This library provides a high-level, type-safe API built on top of
 [`@innovation-system/node-bacnet`][2].
 
+## Documentation
+
+API documentation is available at [https://jacoscaz.github.io/bacnet-device][3].
 
 ## Example usage
 
 ```typescript
 import { 
-  BACnetNode,
+  BACnetNode, 
   BACnetDevice,
-  EngineeringUnit,
+  BACnetAnalogInput,
   BACnetAnalogOutput,
+  EngineeringUnit,
+  DeviceStatus,
+  ObjectType,
+  PropertyIdentifier,
+  StatusFlagsBit,
+  StatusFlagsBitString
 } from 'bacnet-device';
 
+// Create a BACnet node (network interface)
 const node = new BACnetNode({
-  apduTimeout: 6000,
-  port: 47808,          // default BACnet UDP port
-  interface: '0.0.0.0', // all interfaces
+  port: 47808,           // Standard BACnet/IP port
+  interface: '0.0.0.0',  // Listen on all interfaces
+  broadcastAddress: '255.255.255.255',
+  apduTimeout: 3000,
+  apduSegmentTimeout: 1000,
 });
-const device = node.addDevice(new BACnetDevice(4194301, 'MyTestDevice', 0));
 
-const analogOutput1 = device.addObject(new BACnetAnalogOutput(1, 'outout analogo 1', EngineeringUnit.HERTZ));
-const analogOutput2 = device.addObject(new BACnetAnalogOutput(2, 'outout analogo 2', EngineeringUnit.HERTZ));
+// Initialize a BACnet device
+const device = new BACnetDevice({
+  instance: 1234,         // Must be unique on the network (0-4194303)
+  name: 'My BACnet Device',
+  vendorId: 42,           // Replace with your assigned vendor ID
+  vendorName: 'My Company',
+  modelName: 'Model XYZ',
+  firmwareRevision: '1.0.0',
+  applicationSoftwareVersion: '1.0.0',
+  apduLength: 1476,
+  apduTimeout: 3000,
+  apduRetries: 3,
+  databaseRevision: 1
+});
 
-setInterval(() => { 
-  analogOutput2.presentValue.setValue(Date.now() % 42);
-}, 1_000);
+// Add device to the node
+node.addDevice(device);
+
+// Create and add an Analog Input object
+const temperatureSensor = device.addObject(
+  new BACnetAnalogInput(1, 'Zone Temperature', EngineeringUnit.DEGREES_CELSIUS)
+);
+
+// Create and add an Analog Output object
+const damperControl = device.addObject(
+  new BACnetAnalogOutput(1, 'VAV Damper Control', EngineeringUnit.PERCENT)
+);
+
+// Listen for BACnet events
+node.on('listening', () => {
+  console.log('BACnet device is now online!');
+  console.log(`Device Instance: ${device.identifier.instance}`);
+  
+  // Set the initial value of the temperature input
+  temperatureSensor.presentValue.setValue(21.5);
+  
+  // Set the output value with a specific priority (1-16)
+  damperControl.presentValue.setValue(75.0);
+  
+  // You can also manipulate status flags
+  temperatureSensor.statusFlags.setValue(
+    new StatusFlagsBitString(StatusFlagsBit.OVERRIDDEN)
+  );
+});
+
+// Simulate changing values
+setInterval(() => {
+  // Simulate temperature fluctuation
+  const currentTemp = temperatureSensor.presentValue.getValue();
+  const newTemp = currentTemp + (Math.random() * 0.4 - 0.2); // +/- 0.2°C
+  temperatureSensor.presentValue.setValue(newTemp);
+  
+  console.log(`Temperature updated: ${newTemp.toFixed(1)}°C`);
+}, 10000);
+
+// Listen for errors
+node.on('error', (err) => {
+  console.error('BACnet error:', err);
+});
 ```
 
 [1]: https://github.com/jacoscaz/bacnet-device
 [2]: https://github.com/innovation-system/node-bacnet
+[3]: https://jacoscaz.github.io/bacnet-device
