@@ -19,7 +19,7 @@ const device = new BACnetDevice({
   modelName: 'Model XYZ',
   firmwareRevision: '1.0.0',
   applicationSoftwareVersion: '1.0.0',
-  apduLength: 1476,
+  apduMaxLength: 1476,
   apduTimeout: 3000,
   apduRetries: 3,
   databaseRevision: 1

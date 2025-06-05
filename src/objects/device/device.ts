@@ -184,10 +184,9 @@ export class BACnetDevice extends BACnetObject<BACnetDeviceEvents> {
     this.addProperty(new BACnetSingletProperty(PropertyIdentifier.PROTOCOL_REVISION, ApplicationTag.UNSIGNED_INTEGER, false, 14));
     
     this.addProperty(new BACnetSingletProperty(PropertyIdentifier.SEGMENTATION_SUPPORTED, ApplicationTag.ENUMERATED, false, Segmentation.NO_SEGMENTATION));
-    this.addProperty(new BACnetSingletProperty(PropertyIdentifier.APDU_LENGTH, ApplicationTag.UNSIGNED_INTEGER, false, opts.apduLength));
-    this.addProperty(new BACnetSingletProperty(PropertyIdentifier.APDU_TIMEOUT, ApplicationTag.UNSIGNED_INTEGER, false, opts.apduLength));
+    this.addProperty(new BACnetSingletProperty(PropertyIdentifier.MAX_APDU_LENGTH_ACCEPTED, ApplicationTag.UNSIGNED_INTEGER, false, opts.apduMaxLength));
+    this.addProperty(new BACnetSingletProperty(PropertyIdentifier.APDU_TIMEOUT, ApplicationTag.UNSIGNED_INTEGER, false, opts.apduTimeout));
     this.addProperty(new BACnetSingletProperty(PropertyIdentifier.NUMBER_OF_APDU_RETRIES, ApplicationTag.UNSIGNED_INTEGER, false, opts.apduRetries));
-    
     this.addProperty(new BACnetSingletProperty(PropertyIdentifier.DATABASE_REVISION, ApplicationTag.UNSIGNED_INTEGER, false, opts.databaseRevision));
     
     // Bindings can be discovered via the "Who-Is" and "I-Am" services. 

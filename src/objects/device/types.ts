@@ -131,7 +131,7 @@ export type BACnetDeviceOpts = ClientOptions & {
   /**
    * Maximum APDU length this device can accept
    */
-  apduLength: number;
+  apduMaxLength: number;
   
   /**
    * APDU timeout in milliseconds
