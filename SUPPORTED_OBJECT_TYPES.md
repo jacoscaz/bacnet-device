@@ -55,7 +55,7 @@ according to the following _conformance codes_:
 | ❌ | ACCESS_ZONE | |
 | ❌ | CREDENTIAL_DATA_INPUT | |
 | ❌ | NETWORK_SECURITY | |
-| ❌ | BITSTRING_VALUE</li>  | |
+| ❌ | BITSTRING_VALUE | |
 | ❌ | CHARACTERSTRING_VALUE | |
 | ❌ | DATEPATTERN_VALUE | |
 | ❌ | DATE_VALUE | |
