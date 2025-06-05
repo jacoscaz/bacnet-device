@@ -32,7 +32,8 @@
   },
   "files": [
     "dist/**/*.js",
-    "dist/**/*.d.ts"
+    "dist/**/*.d.ts",
+    "SUPPORTED_OBJECT_TYPES.md"
   ],
   "keywords": [
     "bacnet",

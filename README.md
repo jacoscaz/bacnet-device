@@ -28,6 +28,8 @@ This library provides a high-level, type-safe API built on top of
 
 API documentation is available at [https://jacoscaz.github.io/bacnet-device][3].
 
+Supported object types are listed in the [SUPPORTED_OBJECT_TYPES.md][4] file.
+
 ## Example usage
 
 ```typescript
@@ -116,3 +118,4 @@ node.on('error', (err) => {
 [1]: https://github.com/jacoscaz/bacnet-device
 [2]: https://github.com/innovation-system/node-bacnet
 [3]: https://jacoscaz.github.io/bacnet-device
+[4]: ./SUPPORTED_OBJECT_TYPES.md
