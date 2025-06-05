@@ -9,15 +9,17 @@ Under heavy development as of June 2025. For more information, [get in touch][1]
 
 ## Characteristics
 
-1. **Detailed types**: well-defined interfaces, generics, and type definitions
-   that accurately model BACnet's complex data structures.
-2. **Clean object-oriented design**: separation of concerns between objects,
-   properties, and network operations.
-3. **Evented architecture**: uses a custom asynchronous, error-aware event
-   system to propagate events while preserving modularity and component
-   decoupling.
-4. **Queued property updates**: uses queues to ensure the sequential processing
-   of value change operations, preventing race conditions.
+1. **Detailed types**: maintains well-defined interfaces, generics, and type
+   definitions  that accurately model BACnet's complex data structures.
+2. **Separation of concerns**: maintains separate classes for BACnet objects,
+   properties, and network operations, loosely coupled via events.
+3. **Backpressure management**: operations return Promises that resolve only
+   after full processing and acknowledgment, creating natural throttling - for 
+   example, COV notifications wait for subscriber confirmation before processing
+   the next change.
+4. **Sequential property updates**: value change operations, whether internal
+   or coming in via the BACnet network, are processed through FIFO queues,
+   preventing race conditions.
 
 This library provides a high-level, type-safe API built on top of
 [`@innovation-system/node-bacnet`][2].
@@ -48,7 +50,6 @@ const node = new BACnetNode({
   interface: '0.0.0.0',  // Listen on all interfaces
   broadcastAddress: '255.255.255.255',
   apduTimeout: 3000,
-  apduSegmentTimeout: 1000,
 });
 
 // Initialize a BACnet device
