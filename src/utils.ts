@@ -1,6 +1,6 @@
 
-import type { BACnetSubscription,  QueuedCov } from './node.js';
-import type { BACnetDevice } from './objects/device.js';
+import type { BACnetSubscription,  QueuedCov } from './objects/device/types.js';
+import type { BACnetDevice } from './objects/device/device.js';
 
 import bacnet from '@innovation-system/node-bacnet';
 
@@ -39,7 +39,7 @@ export const sendConfirmedCovNotification = async (client: BACnetClientType, emi
     client.confirmedCOVNotification(
       { address: subscription.subscriber.address },
       cov.object.identifier,
-      subscription.subscriberProcessId,
+      subscription.subscriptionProcessId,
       emitter.identifier.instance,
       Math.floor(Math.max(0, subscription.expiresAt - Date.now()) / 1000),
       [ { property: { id: cov.property.identifier }, value: ensureArray(cov.value) } ],
@@ -63,7 +63,7 @@ export const sendConfirmedCovNotification = async (client: BACnetClientType, emi
 export const sendUnconfirmedCovNotification = async (client: BACnetClientType, emitter: BACnetDevice, subscription: BACnetSubscription, cov: QueuedCov) => {
   client.unconfirmedCOVNotification(
     subscription.subscriber,
-    subscription.subscriberProcessId,
+    subscription.subscriptionProcessId,
     emitter.identifier.instance,
     cov.object.identifier,
     Math.floor(Math.max(0, subscription.expiresAt - Date.now()) / 1000),

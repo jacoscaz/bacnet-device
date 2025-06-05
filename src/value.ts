@@ -17,6 +17,7 @@ import type {
 } from './enums/index.js';
 
 import type { SupportedObjectTypesBitString, SupportedServicesBitString, StatusFlagsBitString } from './bitstrings/index.js';
+import type { BACnetSubscription } from './objects/device/types.js';
 
 /**
  * Representation of a BACnet value.
@@ -72,7 +73,7 @@ export interface ApplicationTagValueType {
   [ApplicationTag.OBJECT_PROPERTY_REFERENCE]: never;
   [ApplicationTag.DESTINATION]: never;
   [ApplicationTag.RECIPIENT]: never;
-  [ApplicationTag.COV_SUBSCRIPTION]: never;
+  [ApplicationTag.COV_SUBSCRIPTION]: BACnetSubscription;
   [ApplicationTag.CALENDAR_ENTRY]: never;
   [ApplicationTag.WEEKLY_SCHEDULE]: never;
   [ApplicationTag.SPECIAL_EVENT]: never;

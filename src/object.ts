@@ -8,7 +8,7 @@
  * @module
  */
 
-import { Evented } from './evented.js';
+import { Evented, type EventMap } from './evented.js';
 
 import { type BACnetValue } from './value.js';
 import { BACnetError } from './errors.js';
@@ -42,7 +42,7 @@ import { ensureArray } from './utils.js';
 /**
  * Events that can be emitted by a BACnet object
  */
-export interface BACnetObjectEvents { 
+export interface BACnetObjectEvents extends EventMap<any> { 
   /** Emitted before a property value changes */
   beforecov: [object: BACnetObject, property: BACnetProperty<any, any>, nextValue: BACnetValue | BACnetValue[]],
   
@@ -72,7 +72,7 @@ const unlistedProperties: PropertyIdentifier[] = [
  * 
  * @extends Evented<BACnetObjectEvents>
  */
-export class BACnetObject extends Evented<BACnetObjectEvents> { 
+export class BACnetObject<EM extends BACnetObjectEvents = BACnetObjectEvents> extends Evented<EM> { 
   
   /** The unique identifier for this object (type and instance number) */
   readonly identifier: BACNetObjectID;

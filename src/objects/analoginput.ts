@@ -76,6 +76,8 @@ export class BACnetAnalogInput extends BACnetObject {
    */
   readonly reliability: BACnetSingletProperty<ApplicationTag.ENUMERATED, Reliability>;
   
+  readonly covIncrement: BACnetSingletProperty<ApplicationTag.REAL>;
+  
   /**
    * Creates a new BACnet Analog Input object
    * 
@@ -103,6 +105,9 @@ export class BACnetAnalogInput extends BACnetObject {
     
     this.reliability = this.addProperty(new BACnetSingletProperty<ApplicationTag.ENUMERATED, Reliability>(
       PropertyIdentifier.RELIABILITY, ApplicationTag.ENUMERATED, false, Reliability.NO_FAULT_DETECTED));
+    
+    this.covIncrement = this.addProperty(new BACnetSingletProperty(
+      PropertyIdentifier.COV_INCREMENT, ApplicationTag.REAL, false, 0.1));
     
   }
   

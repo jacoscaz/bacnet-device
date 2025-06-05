@@ -1,38 +1,3 @@
-
-# `bacnet-device`
-
-A TypeScript library for implementing BACnet IP devices in Node.js.
-
-## Status
-
-Under heavy development as of June 2025. For more information, [get in touch][1].
-
-## Characteristics
-
-1. **Detailed types**: maintains well-defined interfaces, generics, and type
-   definitions  that accurately model BACnet's complex data structures.
-2. **Separation of concerns**: maintains separate classes for BACnet objects,
-   properties, and network operations, loosely coupled via events.
-3. **Backpressure management**: operations return Promises that resolve only
-   after full processing and acknowledgment, creating natural throttling - for 
-   example, COV notifications wait for subscriber confirmation before processing
-   the next change.
-4. **Sequential property updates**: value change operations, whether internal
-   or coming in via the BACnet network, are processed through FIFO queues,
-   preventing race conditions.
-
-This library provides a high-level, type-safe API built on top of
-[`@innovation-system/node-bacnet`][2].
-
-## Documentation
-
-API documentation is available at [https://jacoscaz.github.io/bacnet-device][3].
-
-Supported object types are listed in the [SUPPORTED_OBJECT_TYPES.md][4] file.
-
-## Example usage
-
-```typescript
 import { 
   BACnetDevice,
   BACnetAnalogInput,
@@ -101,9 +66,3 @@ setInterval(() => {
 device.subscribe('error', async (err) => {
   console.error('BACnet error:', err);
 });
-```
-
-[1]: https://github.com/jacoscaz/bacnet-device
-[2]: https://github.com/innovation-system/node-bacnet
-[3]: https://jacoscaz.github.io/bacnet-device
-[4]: ./SUPPORTED_OBJECT_TYPES.md

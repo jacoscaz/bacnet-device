@@ -97,6 +97,8 @@ export class BACnetAnalogOutput extends BACnetObject {
    */
   readonly currentCommandPriority: BACnetSingletProperty<ApplicationTag.UNSIGNED_INTEGER | ApplicationTag.NULL>;
   
+  readonly covIncrement: BACnetSingletProperty<ApplicationTag.REAL>;
+  
   /**
    * Creates a new BACnet Analog Output object
    * 
@@ -131,6 +133,9 @@ export class BACnetAnalogOutput extends BACnetObject {
       false,
       new Array(16).fill({ type: ApplicationTag.NULL, value: null } as BACnetValue<ApplicationTag.REAL | ApplicationTag.NULL>),
     ));
+    
+    this.covIncrement = this.addProperty(new BACnetSingletProperty(
+      PropertyIdentifier.COV_INCREMENT, ApplicationTag.REAL, false, 0.1));
     
     this.currentCommandPriority = this.addProperty(new BACnetSingletProperty(
       PropertyIdentifier.CURRENT_COMMAND_PRIORITY, ApplicationTag.UNSIGNED_INTEGER | ApplicationTag.NULL, false, null as number | null));

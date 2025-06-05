@@ -35,11 +35,6 @@ export * from './enums/index.js';
 export * from './bitstrings/index.js';
 
 /**
- * Export {@link BACnetNode} class for BACnet node implementation
- */
-export { BACnetNode } from './node.js';
-
-/**
  * Export {@link BACnetObject} class for BACnet object implementation
  */
 export { BACnetObject } from './object.js';
@@ -57,6 +52,6 @@ export { BACnetArrayProperty, BACnetSingletProperty } from './properties/index.j
  * - {@link BACnetAnalogOutput} for analog output objects
  * - {@link BACnetAnalogInput} for analog input objects
  */
-export { BACnetDevice } from './objects/device.js';
+export { BACnetDevice } from './objects/device/device.js';
 export { BACnetAnalogOutput } from './objects/analogoutput.js';
 export { BACnetAnalogInput } from './objects/analoginput.js';
