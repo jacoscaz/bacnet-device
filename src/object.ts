@@ -96,7 +96,7 @@ export class BACnetObject<EM extends BACnetObjectEvents = BACnetObjectEvents> ex
    * @param instance - The instance number for this object
    * @param name - The name of this object
    */
-  constructor(type: ObjectType, instance: number, name: string) {
+  constructor(type: ObjectType, instance: number, name: string, description: string = '') {
     super();
     this.identifier = Object.freeze({ type, instance });
     this.#properties = new Map();
@@ -106,6 +106,7 @@ export class BACnetObject<EM extends BACnetObjectEvents = BACnetObjectEvents> ex
     this.addProperty(new BACnetSingletProperty(PropertyIdentifier.OBJECT_TYPE, ApplicationTag.ENUMERATED, false, type));
     this.addProperty(new BACnetSingletProperty(PropertyIdentifier.OBJECT_IDENTIFIER, ApplicationTag.OBJECTIDENTIFIER, false, this.identifier));
     this.addProperty(new BACnetArrayProperty(PropertyIdentifier.PROPERTY_LIST, ApplicationTag.ENUMERATED, false, this.#propertyList));
+    this.addProperty(new BACnetSingletProperty(PropertyIdentifier.DESCRIPTION, ApplicationTag.CHARACTER_STRING, false, description));
   }
   
   /**

@@ -133,6 +133,8 @@ export class BACnetDevice extends BACnetObject<BACnetDeviceEvents> {
    */
   readonly #objectList: BACnetValue<ApplicationTag.OBJECTIDENTIFIER>[];
   
+  readonly systemStatus: BACnetSingletProperty<ApplicationTag.ENUMERATED, DeviceStatus>;
+  
   /**
    * Creates a new BACnet Device object
    * 
@@ -143,7 +145,7 @@ export class BACnetDevice extends BACnetObject<BACnetDeviceEvents> {
    * @param opts - Configuration options for this device
    */
   constructor(opts: BACnetDeviceOpts) {
-    super(ObjectType.DEVICE, opts.instance, opts.name);
+    super(ObjectType.DEVICE, opts.instance, opts.name, opts.description);
   
     this.#vendorId = opts.vendorId;
     this.#objects = new Map();
@@ -174,15 +176,13 @@ export class BACnetDevice extends BACnetObject<BACnetDeviceEvents> {
     this.addObject(this);
     this.addProperty(new BACnetArrayProperty(PropertyIdentifier.OBJECT_LIST, ApplicationTag.OBJECTIDENTIFIER, false, this.#objectList));
     this.addProperty(new BACnetArrayProperty(PropertyIdentifier.STRUCTURED_OBJECT_LIST, ApplicationTag.OBJECTIDENTIFIER, false, []));
-    this.addProperty(new BACnetSingletProperty(PropertyIdentifier.SYSTEM_STATUS, ApplicationTag.ENUMERATED, false, DeviceStatus.OPERATIONAL));
     this.addProperty(new BACnetSingletProperty(PropertyIdentifier.VENDOR_IDENTIFIER, ApplicationTag.UNSIGNED_INTEGER, false, opts.vendorId));
     this.addProperty(new BACnetSingletProperty(PropertyIdentifier.VENDOR_NAME, ApplicationTag.CHARACTER_STRING, false, opts.vendorName));
-    this.addProperty(new BACnetSingletProperty(PropertyIdentifier.MODEL_NAME, ApplicationTag.CHARACTER_STRING, false, opts.vendorName));
-    this.addProperty(new BACnetSingletProperty(PropertyIdentifier.FIRMWARE_REVISION, ApplicationTag.CHARACTER_STRING, false, opts.vendorName));
-    this.addProperty(new BACnetSingletProperty(PropertyIdentifier.APPLICATION_SOFTWARE_VERSION, ApplicationTag.CHARACTER_STRING, false, opts.vendorName));
+    this.addProperty(new BACnetSingletProperty(PropertyIdentifier.MODEL_NAME, ApplicationTag.CHARACTER_STRING, false, opts.modelName));
+    this.addProperty(new BACnetSingletProperty(PropertyIdentifier.FIRMWARE_REVISION, ApplicationTag.CHARACTER_STRING, false, opts.firmwareRevision));
+    this.addProperty(new BACnetSingletProperty(PropertyIdentifier.APPLICATION_SOFTWARE_VERSION, ApplicationTag.CHARACTER_STRING, false, opts.applicationSoftwareVersion));
     this.addProperty(new BACnetSingletProperty(PropertyIdentifier.PROTOCOL_VERSION, ApplicationTag.UNSIGNED_INTEGER, false, 1));
-    this.addProperty(new BACnetSingletProperty(PropertyIdentifier.PROTOCOL_REVISION, ApplicationTag.UNSIGNED_INTEGER, false, 14));
-    
+    this.addProperty(new BACnetSingletProperty(PropertyIdentifier.PROTOCOL_REVISION, ApplicationTag.UNSIGNED_INTEGER, false, 28));
     this.addProperty(new BACnetSingletProperty(PropertyIdentifier.SEGMENTATION_SUPPORTED, ApplicationTag.ENUMERATED, false, Segmentation.NO_SEGMENTATION));
     this.addProperty(new BACnetSingletProperty(PropertyIdentifier.MAX_APDU_LENGTH_ACCEPTED, ApplicationTag.UNSIGNED_INTEGER, false, opts.apduMaxLength));
     this.addProperty(new BACnetSingletProperty(PropertyIdentifier.APDU_TIMEOUT, ApplicationTag.UNSIGNED_INTEGER, false, opts.apduTimeout));
@@ -207,6 +207,9 @@ export class BACnetDevice extends BACnetObject<BACnetDeviceEvents> {
       SupportedObjectTypesBit.ANALOG_OUTPUT,
     )));
     this.addProperty(new BACnetArrayProperty(PropertyIdentifier.ACTIVE_COV_SUBSCRIPTIONS, ApplicationTag.COV_SUBSCRIPTION, false, this.#subscriptionList));
+    
+    this.systemStatus = this.addProperty(new BACnetSingletProperty<ApplicationTag.ENUMERATED, DeviceStatus>(
+      PropertyIdentifier.SYSTEM_STATUS, ApplicationTag.ENUMERATED, false, DeviceStatus.OPERATIONAL));
   }
   
   // ==========================================================================

@@ -5,6 +5,16 @@ import { ApplicationTag, ObjectType, PropertyIdentifier } from '../enums/index.j
 import { EventState, EngineeringUnit, Reliability } from '../enums/index.js';
 import { StatusFlagsBitString } from '../bitstrings/index.js';
 
+export interface BACnetAnalogInputOpts { 
+  name: string, 
+  unit: EngineeringUnit, 
+  description?: string,
+  minPresentValue?: number,
+  maxPresentValue?: number,
+  presentValue?: number,
+  covIncrement?: number,
+}
+
 /**
  * Implements a BACnet Analog Input object
  * 
@@ -35,6 +45,10 @@ export class BACnetAnalogInput extends BACnetObject {
    * outOfService is set to true.
    */
   readonly presentValue: BACnetSingletProperty<ApplicationTag.REAL>;
+  
+  readonly maxPresentValue: BACnetSingletProperty<ApplicationTag.REAL>;
+  
+  readonly minPresentValue: BACnetSingletProperty<ApplicationTag.REAL>;
   
   /**
    * The current status flags for this object
@@ -85,11 +99,11 @@ export class BACnetAnalogInput extends BACnetObject {
    * @param name - The name of this object
    * @param unit - The engineering unit for this analog input's present value
    */
-  constructor(instance: number, name: string, unit: EngineeringUnit) {
-    super(ObjectType.ANALOG_INPUT, instance, name);
+  constructor(instance: number, opts: BACnetAnalogInputOpts) {
+    super(ObjectType.ANALOG_INPUT, instance, opts.name, opts.description);
     
     this.presentValue = this.addProperty(new BACnetSingletProperty(
-      PropertyIdentifier.PRESENT_VALUE, ApplicationTag.REAL, false, 0));
+      PropertyIdentifier.PRESENT_VALUE, ApplicationTag.REAL, false, opts.presentValue ?? 0));
     
     this.statusFlags = this.addProperty(new BACnetSingletProperty<ApplicationTag.BIT_STRING, StatusFlagsBitString>(
       PropertyIdentifier.STATUS_FLAGS, ApplicationTag.BIT_STRING, false, new StatusFlagsBitString()));
@@ -98,7 +112,7 @@ export class BACnetAnalogInput extends BACnetObject {
       PropertyIdentifier.EVENT_STATE, ApplicationTag.ENUMERATED, false, EventState.NORMAL));
     
     this.engineeringUnit = this.addProperty(new BACnetSingletProperty<ApplicationTag.ENUMERATED, EngineeringUnit>(
-      PropertyIdentifier.UNITS, ApplicationTag.ENUMERATED, false, unit));
+      PropertyIdentifier.UNITS, ApplicationTag.ENUMERATED, false, opts.unit));
     
     this.outOfService = this.addProperty(new BACnetSingletProperty(
       PropertyIdentifier.OUT_OF_SERVICE, ApplicationTag.BOOLEAN, false, false));
@@ -107,7 +121,13 @@ export class BACnetAnalogInput extends BACnetObject {
       PropertyIdentifier.RELIABILITY, ApplicationTag.ENUMERATED, false, Reliability.NO_FAULT_DETECTED));
     
     this.covIncrement = this.addProperty(new BACnetSingletProperty(
-      PropertyIdentifier.COV_INCREMENT, ApplicationTag.REAL, false, 0.1));
+      PropertyIdentifier.COV_INCREMENT, ApplicationTag.REAL, false, opts.covIncrement ?? 0.001));
+    
+    this.maxPresentValue = this.addProperty(new BACnetSingletProperty(
+      PropertyIdentifier.MAX_PRES_VALUE, ApplicationTag.REAL, false, opts.maxPresentValue ?? Number.MAX_SAFE_INTEGER));
+    
+    this.minPresentValue = this.addProperty(new BACnetSingletProperty(
+      PropertyIdentifier.MIN_PRES_VALUE, ApplicationTag.REAL, false, opts.minPresentValue ?? Number.MIN_SAFE_INTEGER));
     
   }
   

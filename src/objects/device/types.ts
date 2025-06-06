@@ -103,6 +103,11 @@ export type BACnetDeviceOpts = ClientOptions & {
   name: string;
   
   /**
+   * The device's description (Description property)
+   */
+  description: string;
+  
+  /**
    * Vendor identifier assigned by ASHRAE
    * @see https://bacnet.org/assigned-vendor-ids/
    */
