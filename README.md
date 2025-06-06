@@ -49,6 +49,7 @@ const device = new BACnetDevice({
   broadcastAddress: '255.255.255.255',
   instance: 1234,         // Must be unique on the network (0-4194303)
   name: 'My BACnet Device',
+  description: 'some description',
   vendorId: 42,           // Replace with your assigned vendor ID
   vendorName: 'My Company',
   modelName: 'Model XYZ',
@@ -61,14 +62,16 @@ const device = new BACnetDevice({
 });
 
 // Create and add an Analog Input object
-const temperatureSensor = device.addObject(
-  new BACnetAnalogInput(1, 'Zone Temperature', EngineeringUnit.DEGREES_CELSIUS)
-);
+const temperatureSensor = device.addObject(new BACnetAnalogInput(1, { 
+  name: 'Zone Temperature', 
+  unit: EngineeringUnit.DEGREES_CELSIUS,
+}));
 
 // Create and add an Analog Output object
-const damperControl = device.addObject(
-  new BACnetAnalogOutput(1, 'VAV Damper Control', EngineeringUnit.PERCENT)
-);
+const damperControl = device.addObject(new BACnetAnalogOutput(1, {
+  name: 'VAV Damper Control',
+  unit: EngineeringUnit.PERCENT,
+}));
 
 // Listen for BACnet events
 device.subscribe('listening', async () => {
