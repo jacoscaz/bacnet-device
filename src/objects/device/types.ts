@@ -152,4 +152,21 @@ export type BACnetDeviceOpts = ClientOptions & {
    * Current database revision number
    */
   databaseRevision: number;
+  
+  /**
+   * Integer value representing the offset from UTC in minutes.
+   */
+  timezoneOffset?: number;
+  
+  /**
+   * General description of the device's physical location
+   * e.g. "Room 101, Building A, Campus X"
+   */
+  location?: string;
+  
+  /**
+   * Serial number of the device
+   * e.g. "SN-12345-6789"
+   */
+  serialNumber?: string;
 }

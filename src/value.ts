@@ -59,8 +59,8 @@ export interface ApplicationTagValueType {
   [ApplicationTag.CHARACTER_STRING]: string;
   [ApplicationTag.BIT_STRING]: StatusFlagsBitString | SupportedObjectTypesBitString | SupportedServicesBitString;
   [ApplicationTag.ENUMERATED]: ObjectType | EventState | EngineeringUnit | PropertyIdentifier | DeviceStatus | Segmentation | Reliability;
-  [ApplicationTag.DATE]: never;
-  [ApplicationTag.TIME]: never;
+  [ApplicationTag.DATE]: Date;
+  [ApplicationTag.TIME]: Date;
   [ApplicationTag.OBJECTIDENTIFIER]: BACNetObjectID;
   [ApplicationTag.EMPTYLIST]: never;
   [ApplicationTag.WEEKNDAY]: never;

@@ -210,6 +210,50 @@ export class BACnetDevice extends BACnetObject<BACnetDeviceEvents> {
     
     this.systemStatus = this.addProperty(new BACnetSingletProperty<ApplicationTag.ENUMERATED, DeviceStatus>(
       PropertyIdentifier.SYSTEM_STATUS, ApplicationTag.ENUMERATED, false, DeviceStatus.OPERATIONAL));
+    
+    this.addProperty(new BACnetSingletProperty(
+      PropertyIdentifier.UTC_OFFSET, 
+      ApplicationTag.SIGNED_INTEGER, 
+      false,
+      opts.timezoneOffset ?? new Date().getTimezoneOffset() * -1,
+    ));
+    
+    // In your device constructor
+    this.addProperty(new BACnetSingletProperty(
+      PropertyIdentifier.LOCATION, 
+      ApplicationTag.CHARACTER_STRING, 
+      false,   // Typically writable so operators can update the location
+      opts.location ?? '',
+    ));
+    
+    this.addProperty(new BACnetSingletProperty(
+      PropertyIdentifier.SERIAL_NUMBER, 
+      ApplicationTag.CHARACTER_STRING, 
+      false,
+      opts.serialNumber ?? '',
+    ));
+    
+    // Accepter values: 2, 4, 8, 16, 32, 64 and 0 for "unspecified"
+    this.addProperty(new BACnetSingletProperty(
+      PropertyIdentifier.MAX_SEGMENTS_ACCEPTED, 
+      ApplicationTag.UNSIGNED_INTEGER, 
+      false,
+      0,    
+    ));
+    
+    this.addProperty(new BACnetSingletProperty(
+      PropertyIdentifier.LOCAL_DATE, 
+      ApplicationTag.DATE, 
+      false,  // Not writable
+      () => ({ type: ApplicationTag.DATE, value: new Date() }),
+    ));
+    
+    this.addProperty(new BACnetSingletProperty(
+      PropertyIdentifier.LOCAL_TIME, 
+      ApplicationTag.DATE, 
+      false,  // Not writable
+      () => ({ type: ApplicationTag.DATE, value: new Date() }),
+    ));
   }
   
   // ==========================================================================

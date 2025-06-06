@@ -56,6 +56,8 @@ export class BACnetSingletProperty<Tag extends ApplicationTag, Type extends Appl
   /** Whether this property can be written to */
   readonly writable: boolean;
   
+  readonly settable: boolean;
+  
   /** The BACnet property identifier */
   readonly identifier: PropertyIdentifier;
   
@@ -63,7 +65,7 @@ export class BACnetSingletProperty<Tag extends ApplicationTag, Type extends Appl
    * The current value of this property 
    * @private
    */
-  #value: BACnetValue<Tag, Type>;
+  #value: BACnetValue<Tag, Type> | (() => BACnetValue<Tag, Type>);
   
   /**
    * Queue for serializing value changes
@@ -79,13 +81,14 @@ export class BACnetSingletProperty<Tag extends ApplicationTag, Type extends Appl
    * @param writable - Whether this property can be written to
    * @param value - The initial value for this property
    */
-  constructor(identifier: PropertyIdentifier, type: Tag, writable: boolean, value: Type) {
+  constructor(identifier: PropertyIdentifier, type: Tag, writable: boolean, value: Type | (() => BACnetValue<Tag, Type>)) {
     super();
     this.list = false;
     this.type = type;
-    this.writable = writable;
+    this.writable = typeof value !== 'function' && writable;
+    this.settable = typeof value !== 'function';
     this.identifier = identifier;
-    this.#value = { type, value };
+    this.#value = typeof value === 'function' ? value :{ type, value };
     this.#queue = fastq.promise(this.#worker, 1)
   }
   
@@ -95,7 +98,7 @@ export class BACnetSingletProperty<Tag extends ApplicationTag, Type extends Appl
    * @returns The current property value
    */
   getValue(): Type {
-    return this.#value.value;
+    return typeof this.#value === 'function' ? this.#value().value : this.#value.value;
   }
   
   /**
@@ -108,7 +111,11 @@ export class BACnetSingletProperty<Tag extends ApplicationTag, Type extends Appl
    * @returns A promise that resolves when the value has been set
    */
   async setValue(value: Type): Promise<void> {
-    await this.#queue.push({ type: this.type, value });
+    if (this.settable) {
+      await this.#queue.push({ type: this.type, value });
+    } else { 
+      throw new Error(`Property ${this.identifier} is not settable`);
+    }
   }
   
   /**
@@ -121,7 +128,7 @@ export class BACnetSingletProperty<Tag extends ApplicationTag, Type extends Appl
    * @internal
    */
   ___readValue(): BACnetValue<Tag, Type> {
-    return this.#value;
+    return typeof this.#value === 'function' ? this.#value() : this.#value;
   }
   
   /**
@@ -136,7 +143,7 @@ export class BACnetSingletProperty<Tag extends ApplicationTag, Type extends Appl
    * @internal
    */
   async ___writeValue(value: BACnetValue<Tag, Type> | BACnetValue<Tag, Type>[]): Promise<void> { 
-    if (!this.writable) { 
+    if (!this.writable || !this.settable) { 
       throw new BACnetError('not writable', ErrorCode.WRITE_ACCESS_DENIED, ErrorClass.PROPERTY);
     }
     if (Array.isArray(value)) { 
