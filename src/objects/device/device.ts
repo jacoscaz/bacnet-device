@@ -174,25 +174,40 @@ export class BACnetDevice extends BACnetObject<BACnetDeviceEvents> {
       .on('removeListElement', this.#onBacnetRemoveListElement);
     
     this.addObject(this);
-    this.addProperty(new BACnetArrayProperty(PropertyIdentifier.OBJECT_LIST, ApplicationTag.OBJECTIDENTIFIER, false, this.#objectList));
-    this.addProperty(new BACnetArrayProperty(PropertyIdentifier.STRUCTURED_OBJECT_LIST, ApplicationTag.OBJECTIDENTIFIER, false, []));
-    this.addProperty(new BACnetSingletProperty(PropertyIdentifier.VENDOR_IDENTIFIER, ApplicationTag.UNSIGNED_INTEGER, false, this.#vendorId));
-    this.addProperty(new BACnetSingletProperty(PropertyIdentifier.VENDOR_NAME, ApplicationTag.CHARACTER_STRING, false, opts.vendorName ?? ''));
-    this.addProperty(new BACnetSingletProperty(PropertyIdentifier.MODEL_NAME, ApplicationTag.CHARACTER_STRING, false, opts.modelName));
-    this.addProperty(new BACnetSingletProperty(PropertyIdentifier.FIRMWARE_REVISION, ApplicationTag.CHARACTER_STRING, false, opts.firmwareRevision));
-    this.addProperty(new BACnetSingletProperty(PropertyIdentifier.APPLICATION_SOFTWARE_VERSION, ApplicationTag.CHARACTER_STRING, false, opts.applicationSoftwareVersion));
-    this.addProperty(new BACnetSingletProperty(PropertyIdentifier.PROTOCOL_VERSION, ApplicationTag.UNSIGNED_INTEGER, false, 1));
-    this.addProperty(new BACnetSingletProperty(PropertyIdentifier.PROTOCOL_REVISION, ApplicationTag.UNSIGNED_INTEGER, false, 28));
-    this.addProperty(new BACnetSingletProperty(PropertyIdentifier.SEGMENTATION_SUPPORTED, ApplicationTag.ENUMERATED, false, Segmentation.NO_SEGMENTATION));
-    this.addProperty(new BACnetSingletProperty(PropertyIdentifier.MAX_APDU_LENGTH_ACCEPTED, ApplicationTag.UNSIGNED_INTEGER, false, opts.apduMaxLength ?? 1476));
-    this.addProperty(new BACnetSingletProperty(PropertyIdentifier.APDU_TIMEOUT, ApplicationTag.UNSIGNED_INTEGER, false, opts.apduTimeout ?? 6000));
-    this.addProperty(new BACnetSingletProperty(PropertyIdentifier.NUMBER_OF_APDU_RETRIES, ApplicationTag.UNSIGNED_INTEGER, false, opts.apduRetries ?? 3));
-    this.addProperty(new BACnetSingletProperty(PropertyIdentifier.DATABASE_REVISION, ApplicationTag.UNSIGNED_INTEGER, false, opts.databaseRevision));
     
-    // Bindings can be discovered via the "Who-Is" and "I-Am" services. 
-    // This property represents a list of static bindings and we can leave it empty.
-    this.addProperty(new BACnetArrayProperty(PropertyIdentifier.DEVICE_ADDRESS_BINDING, ApplicationTag.NULL, false, []));
-    this.addProperty(new BACnetSingletProperty(PropertyIdentifier.PROTOCOL_SERVICES_SUPPORTED, ApplicationTag.BIT_STRING, false, new SupportedServicesBitString(
+    // ================== PROPERTIES RELATED TO CHILD OBJECTS =================
+    
+    this.addProperty(new BACnetArrayProperty(
+      PropertyIdentifier.OBJECT_LIST, 
+      ApplicationTag.OBJECTIDENTIFIER, 
+      false, 
+      this.#objectList,
+    ));
+    
+    this.addProperty(new BACnetArrayProperty(
+      PropertyIdentifier.STRUCTURED_OBJECT_LIST, 
+      ApplicationTag.OBJECTIDENTIFIER, 
+      false, 
+      [],
+    ));
+    
+    // ====================== PROTOCOL-RELATED PROPERTIES =====================
+    
+    this.addProperty(new BACnetSingletProperty(
+      PropertyIdentifier.PROTOCOL_VERSION, 
+      ApplicationTag.UNSIGNED_INTEGER, 
+      false, 
+      1,
+    ));
+    
+    this.addProperty(new BACnetSingletProperty(
+      PropertyIdentifier.PROTOCOL_REVISION, 
+      ApplicationTag.UNSIGNED_INTEGER, 
+      false, 
+      28,
+    ));
+    
+    const supportedServicesBitString = new SupportedServicesBitString(
       SupportedServicesBit.WHO_IS,
       SupportedServicesBit.I_AM,
       SupportedServicesBit.READ_PROPERTY,
@@ -200,16 +215,89 @@ export class BACnetDevice extends BACnetObject<BACnetDeviceEvents> {
       SupportedServicesBit.SUBSCRIBE_COV,
       SupportedServicesBit.CONFIRMED_COV_NOTIFICATION,
       SupportedServicesBit.UNCONFIRMED_COV_NOTIFICATION,
-    )));
-    this.addProperty(new BACnetSingletProperty(PropertyIdentifier.PROTOCOL_OBJECT_TYPES_SUPPORTED, ApplicationTag.BIT_STRING, false, new SupportedObjectTypesBitString(
+    );
+    
+    this.addProperty(new BACnetSingletProperty(
+      PropertyIdentifier.PROTOCOL_SERVICES_SUPPORTED, 
+      ApplicationTag.BIT_STRING, 
+      false, 
+      supportedServicesBitString,
+    ));
+    
+    const supportedObjectTypesBitString = new SupportedObjectTypesBitString(
       SupportedObjectTypesBit.DEVICE,
       SupportedObjectTypesBit.ANALOG_INPUT,
       SupportedObjectTypesBit.ANALOG_OUTPUT,
-    )));
-    this.addProperty(new BACnetArrayProperty(PropertyIdentifier.ACTIVE_COV_SUBSCRIPTIONS, ApplicationTag.COV_SUBSCRIPTION, false, this.#subscriptionList));
+    );
     
-    this.systemStatus = this.addProperty(new BACnetSingletProperty<ApplicationTag.ENUMERATED, DeviceStatus>(
-      PropertyIdentifier.SYSTEM_STATUS, ApplicationTag.ENUMERATED, false, DeviceStatus.OPERATIONAL));
+    this.addProperty(new BACnetSingletProperty(
+      PropertyIdentifier.PROTOCOL_OBJECT_TYPES_SUPPORTED, 
+      ApplicationTag.BIT_STRING, 
+      false, 
+      supportedObjectTypesBitString,
+    ));
+    
+    // ==================== SUBSCRIPTION-RELATED PROPERTIES ===================
+    
+    this.addProperty(new BACnetArrayProperty(
+      PropertyIdentifier.ACTIVE_COV_SUBSCRIPTIONS, 
+      ApplicationTag.COV_SUBSCRIPTION, 
+      false, 
+      this.#subscriptionList,
+    ));
+    
+    // ========================== METADATA PROPERTIES =========================
+    
+    this.addProperty(new BACnetSingletProperty(
+      PropertyIdentifier.VENDOR_IDENTIFIER, 
+      ApplicationTag.UNSIGNED_INTEGER, 
+      false, 
+      this.#vendorId,
+    ));
+    
+    this.addProperty(new BACnetSingletProperty(
+      PropertyIdentifier.VENDOR_NAME, 
+      ApplicationTag.CHARACTER_STRING, 
+      false, 
+      opts.vendorName ?? '',
+    ));
+    
+    this.addProperty(new BACnetSingletProperty(
+      PropertyIdentifier.MODEL_NAME, 
+      ApplicationTag.CHARACTER_STRING, 
+      false, 
+      opts.modelName,
+    ));
+    
+    this.addProperty(new BACnetSingletProperty(
+      PropertyIdentifier.FIRMWARE_REVISION, 
+      ApplicationTag.CHARACTER_STRING, 
+      false, 
+      opts.firmwareRevision,
+    ));
+    
+    this.addProperty(new BACnetSingletProperty(
+      PropertyIdentifier.APPLICATION_SOFTWARE_VERSION, 
+      ApplicationTag.CHARACTER_STRING, 
+      false, 
+      opts.applicationSoftwareVersion,
+    ));
+    
+    this.addProperty(new BACnetSingletProperty(
+      PropertyIdentifier.DATABASE_REVISION, 
+      ApplicationTag.UNSIGNED_INTEGER, 
+      false, 
+      opts.databaseRevision,
+    ));
+     
+    // Bindings can be discovered via the "Who-Is" and "I-Am" services. 
+    // This property represents a list of static bindings and we can leave it empty.
+    this.addProperty(new BACnetArrayProperty(
+      PropertyIdentifier.DEVICE_ADDRESS_BINDING, 
+      ApplicationTag.NULL, 
+      false, 
+      [],
+    ));
     
     // In your device constructor
     this.addProperty(new BACnetSingletProperty(
@@ -226,6 +314,45 @@ export class BACnetDevice extends BACnetObject<BACnetDeviceEvents> {
       opts.serialNumber ?? '',
     ));
     
+    // ======================== APDU-RELATED PROPERTIES =======================
+    
+    this.addProperty(new BACnetSingletProperty(
+      PropertyIdentifier.MAX_APDU_LENGTH_ACCEPTED, 
+      ApplicationTag.UNSIGNED_INTEGER, 
+      false, 
+      opts.apduMaxLength ?? 1476,
+    ));
+    
+    this.addProperty(new BACnetSingletProperty(
+      PropertyIdentifier.APDU_TIMEOUT, 
+      ApplicationTag.UNSIGNED_INTEGER, 
+      false, 
+      opts.apduTimeout ?? 6000,
+    ));
+    
+    this.addProperty(new BACnetSingletProperty(
+      PropertyIdentifier.NUMBER_OF_APDU_RETRIES, 
+      ApplicationTag.UNSIGNED_INTEGER, 
+      false, 
+      opts.apduRetries ?? 3,
+    ));
+    
+    this.addProperty(new BACnetSingletProperty(
+      PropertyIdentifier.APDU_SEGMENT_TIMEOUT,
+      ApplicationTag.UNSIGNED_INTEGER,
+      false,
+      opts.apduSegmentTimeout ?? 2000,
+    ));
+  
+    // ======================== SEGMENTATION PROPERTIES =======================
+
+    this.addProperty(new BACnetSingletProperty(
+      PropertyIdentifier.SEGMENTATION_SUPPORTED, 
+      ApplicationTag.ENUMERATED, 
+      false, 
+      Segmentation.NO_SEGMENTATION,
+    ));
+    
     // Accepter values: 2, 4, 8, 16, 32, 64 and 0 for "unspecified"
     this.addProperty(new BACnetSingletProperty(
       PropertyIdentifier.MAX_SEGMENTS_ACCEPTED, 
@@ -233,6 +360,8 @@ export class BACnetDevice extends BACnetObject<BACnetDeviceEvents> {
       false,
       0,    
     ));
+    
+    // ======================== TIME-RELATED PROPERTIES =======================
     
     this.addProperty(new BACnetSingletProperty(
       PropertyIdentifier.UTC_OFFSET, 
@@ -254,6 +383,16 @@ export class BACnetDevice extends BACnetObject<BACnetDeviceEvents> {
       false,
       () => ({ type: ApplicationTag.DATE, value: new Date() }),
     ));
+    
+    // ======================= STATUS-RELATED PROPERTIES ======================
+    
+    this.systemStatus = this.addProperty(new BACnetSingletProperty<ApplicationTag.ENUMERATED, DeviceStatus>(
+      PropertyIdentifier.SYSTEM_STATUS, 
+      ApplicationTag.ENUMERATED, 
+      false, 
+      DeviceStatus.OPERATIONAL,
+    ));
+    
   }
   
   // ==========================================================================

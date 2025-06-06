@@ -148,6 +148,8 @@ export type BACnetDeviceOpts = ClientOptions & {
    */
   apduRetries?: number;
   
+  apduSegmentTimeout?: number;
+  
   /**
    * Current database revision number
    */
