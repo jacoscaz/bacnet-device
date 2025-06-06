@@ -111,12 +111,12 @@ export type BACnetDeviceOpts = ClientOptions & {
    * Vendor identifier assigned by ASHRAE
    * @see https://bacnet.org/assigned-vendor-ids/
    */
-  vendorId: number;
+  vendorId?: number;
   
   /**
    * The name of the device's vendor
    */
-  vendorName: string;
+  vendorName?: string;
   
   /**
    * The device's model name
@@ -136,27 +136,22 @@ export type BACnetDeviceOpts = ClientOptions & {
   /**
    * Maximum APDU length this device can accept
    */
-  apduMaxLength: number;
+  apduMaxLength?: number;
   
   /**
    * APDU timeout in milliseconds
    */
-  apduTimeout: number;
+  apduTimeout?: number;
   
   /**
    * Number of APDU retries
    */
-  apduRetries: number;
+  apduRetries?: number;
   
   /**
    * Current database revision number
    */
   databaseRevision: number;
-  
-  /**
-   * Integer value representing the offset from UTC in minutes.
-   */
-  timezoneOffset?: number;
   
   /**
    * General description of the device's physical location

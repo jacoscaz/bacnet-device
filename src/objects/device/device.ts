@@ -147,7 +147,7 @@ export class BACnetDevice extends BACnetObject<BACnetDeviceEvents> {
   constructor(opts: BACnetDeviceOpts) {
     super(ObjectType.DEVICE, opts.instance, opts.name, opts.description);
   
-    this.#vendorId = opts.vendorId;
+    this.#vendorId = opts.vendorId ?? 0;
     this.#objects = new Map();
     this.#objectList = [];
     this.#subscriptionList = [];
@@ -176,17 +176,17 @@ export class BACnetDevice extends BACnetObject<BACnetDeviceEvents> {
     this.addObject(this);
     this.addProperty(new BACnetArrayProperty(PropertyIdentifier.OBJECT_LIST, ApplicationTag.OBJECTIDENTIFIER, false, this.#objectList));
     this.addProperty(new BACnetArrayProperty(PropertyIdentifier.STRUCTURED_OBJECT_LIST, ApplicationTag.OBJECTIDENTIFIER, false, []));
-    this.addProperty(new BACnetSingletProperty(PropertyIdentifier.VENDOR_IDENTIFIER, ApplicationTag.UNSIGNED_INTEGER, false, opts.vendorId));
-    this.addProperty(new BACnetSingletProperty(PropertyIdentifier.VENDOR_NAME, ApplicationTag.CHARACTER_STRING, false, opts.vendorName));
+    this.addProperty(new BACnetSingletProperty(PropertyIdentifier.VENDOR_IDENTIFIER, ApplicationTag.UNSIGNED_INTEGER, false, this.#vendorId));
+    this.addProperty(new BACnetSingletProperty(PropertyIdentifier.VENDOR_NAME, ApplicationTag.CHARACTER_STRING, false, opts.vendorName ?? ''));
     this.addProperty(new BACnetSingletProperty(PropertyIdentifier.MODEL_NAME, ApplicationTag.CHARACTER_STRING, false, opts.modelName));
     this.addProperty(new BACnetSingletProperty(PropertyIdentifier.FIRMWARE_REVISION, ApplicationTag.CHARACTER_STRING, false, opts.firmwareRevision));
     this.addProperty(new BACnetSingletProperty(PropertyIdentifier.APPLICATION_SOFTWARE_VERSION, ApplicationTag.CHARACTER_STRING, false, opts.applicationSoftwareVersion));
     this.addProperty(new BACnetSingletProperty(PropertyIdentifier.PROTOCOL_VERSION, ApplicationTag.UNSIGNED_INTEGER, false, 1));
     this.addProperty(new BACnetSingletProperty(PropertyIdentifier.PROTOCOL_REVISION, ApplicationTag.UNSIGNED_INTEGER, false, 28));
     this.addProperty(new BACnetSingletProperty(PropertyIdentifier.SEGMENTATION_SUPPORTED, ApplicationTag.ENUMERATED, false, Segmentation.NO_SEGMENTATION));
-    this.addProperty(new BACnetSingletProperty(PropertyIdentifier.MAX_APDU_LENGTH_ACCEPTED, ApplicationTag.UNSIGNED_INTEGER, false, opts.apduMaxLength));
-    this.addProperty(new BACnetSingletProperty(PropertyIdentifier.APDU_TIMEOUT, ApplicationTag.UNSIGNED_INTEGER, false, opts.apduTimeout));
-    this.addProperty(new BACnetSingletProperty(PropertyIdentifier.NUMBER_OF_APDU_RETRIES, ApplicationTag.UNSIGNED_INTEGER, false, opts.apduRetries));
+    this.addProperty(new BACnetSingletProperty(PropertyIdentifier.MAX_APDU_LENGTH_ACCEPTED, ApplicationTag.UNSIGNED_INTEGER, false, opts.apduMaxLength ?? 1476));
+    this.addProperty(new BACnetSingletProperty(PropertyIdentifier.APDU_TIMEOUT, ApplicationTag.UNSIGNED_INTEGER, false, opts.apduTimeout ?? 6000));
+    this.addProperty(new BACnetSingletProperty(PropertyIdentifier.NUMBER_OF_APDU_RETRIES, ApplicationTag.UNSIGNED_INTEGER, false, opts.apduRetries ?? 3));
     this.addProperty(new BACnetSingletProperty(PropertyIdentifier.DATABASE_REVISION, ApplicationTag.UNSIGNED_INTEGER, false, opts.databaseRevision));
     
     // Bindings can be discovered via the "Who-Is" and "I-Am" services. 
@@ -210,13 +210,6 @@ export class BACnetDevice extends BACnetObject<BACnetDeviceEvents> {
     
     this.systemStatus = this.addProperty(new BACnetSingletProperty<ApplicationTag.ENUMERATED, DeviceStatus>(
       PropertyIdentifier.SYSTEM_STATUS, ApplicationTag.ENUMERATED, false, DeviceStatus.OPERATIONAL));
-    
-    this.addProperty(new BACnetSingletProperty(
-      PropertyIdentifier.UTC_OFFSET, 
-      ApplicationTag.SIGNED_INTEGER, 
-      false,
-      opts.timezoneOffset ?? new Date().getTimezoneOffset() * -1,
-    ));
     
     // In your device constructor
     this.addProperty(new BACnetSingletProperty(
@@ -242,16 +235,23 @@ export class BACnetDevice extends BACnetObject<BACnetDeviceEvents> {
     ));
     
     this.addProperty(new BACnetSingletProperty(
+      PropertyIdentifier.UTC_OFFSET, 
+      ApplicationTag.SIGNED_INTEGER, 
+      false,
+      () => ({ type: ApplicationTag.SIGNED_INTEGER, value: new Date().getTimezoneOffset() * -1 }),
+    ));
+    
+    this.addProperty(new BACnetSingletProperty(
       PropertyIdentifier.LOCAL_DATE, 
       ApplicationTag.DATE, 
-      false,  // Not writable
+      false,
       () => ({ type: ApplicationTag.DATE, value: new Date() }),
     ));
     
     this.addProperty(new BACnetSingletProperty(
       PropertyIdentifier.LOCAL_TIME, 
       ApplicationTag.DATE, 
-      false,  // Not writable
+      false,
       () => ({ type: ApplicationTag.DATE, value: new Date() }),
     ));
   }
