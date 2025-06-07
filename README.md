@@ -50,14 +50,9 @@ const device = new BACnetDevice({
   instance: 1234,         // Must be unique on the network (0-4194303)
   name: 'My BACnet Device',
   description: 'some description',
-  vendorId: 42,           // Replace with your assigned vendor ID
-  vendorName: 'My Company',
   modelName: 'Model XYZ',
   firmwareRevision: '1.0.0',
   applicationSoftwareVersion: '1.0.0',
-  apduMaxLength: 1476,
-  apduTimeout: 3000,
-  apduRetries: 3,
   databaseRevision: 1
 });
 

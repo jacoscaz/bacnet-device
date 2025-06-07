@@ -102,11 +102,41 @@ export class BACnetObject<EM extends BACnetObjectEvents = BACnetObjectEvents> ex
     this.#properties = new Map();
     this.#propertyList = [];
     
-    this.addProperty(new BACnetSingletProperty(PropertyIdentifier.OBJECT_NAME, ApplicationTag.CHARACTER_STRING, false, name));
-    this.addProperty(new BACnetSingletProperty(PropertyIdentifier.OBJECT_TYPE, ApplicationTag.ENUMERATED, false, type));
-    this.addProperty(new BACnetSingletProperty(PropertyIdentifier.OBJECT_IDENTIFIER, ApplicationTag.OBJECTIDENTIFIER, false, this.identifier));
-    this.addProperty(new BACnetArrayProperty(PropertyIdentifier.PROPERTY_LIST, ApplicationTag.ENUMERATED, false, this.#propertyList));
-    this.addProperty(new BACnetSingletProperty(PropertyIdentifier.DESCRIPTION, ApplicationTag.CHARACTER_STRING, false, description));
+    this.addProperty(new BACnetSingletProperty(
+      PropertyIdentifier.OBJECT_NAME, 
+      ApplicationTag.CHARACTER_STRING, 
+      false, 
+      name,
+    ));
+    
+    this.addProperty(new BACnetSingletProperty(
+      PropertyIdentifier.OBJECT_TYPE, 
+      ApplicationTag.ENUMERATED, 
+      false, 
+      type,
+    ));
+    
+    this.addProperty(new BACnetSingletProperty(
+      PropertyIdentifier.OBJECT_IDENTIFIER, 
+      ApplicationTag.OBJECTIDENTIFIER, 
+      false, 
+      this.identifier,
+    ));
+    
+    this.addProperty(new BACnetArrayProperty(
+      PropertyIdentifier.PROPERTY_LIST, 
+      ApplicationTag.ENUMERATED, 
+      false, 
+      () => this.#propertyList,
+    ));
+    
+    this.addProperty(new BACnetSingletProperty(
+      PropertyIdentifier.DESCRIPTION, 
+      ApplicationTag.CHARACTER_STRING, 
+      false, 
+      description,
+    ));
+    
   }
   
   /**

@@ -66,7 +66,7 @@ export class BACnetArrayProperty<Tag extends ApplicationTag, Type extends Applic
    * The current values of this property 
    * @private
    */
-  #value: BACnetValue<Tag, Type>[];
+  #value: BACnetValue<Tag, Type>[] | (() => BACnetValue<Tag, Type>[]);
   
   /**
    * Queue for serializing value changes
@@ -82,14 +82,14 @@ export class BACnetArrayProperty<Tag extends ApplicationTag, Type extends Applic
    * @param writable - Whether this property can be written to
    * @param value - Optional initial values for this property. If provided, the property is not settable as a whole.
    */
-  constructor(identifier: PropertyIdentifier, type: Tag, writable: boolean, value?: BACnetValue<Tag, Type>[]) {
+  constructor(identifier: PropertyIdentifier, type: Tag, writable: boolean, value: BACnetValue<Tag, Type>[] | (() => BACnetValue<Tag, Type>[])) {
     super();
     this.list = false;
     this.type = type;
-    this.settable = !value;
-    this.writable = writable;
+    this.settable = typeof value !== 'function';
+    this.writable = typeof value !== 'function' && writable;
     this.identifier = identifier;
-    this.#value = value ?? [];
+    this.#value = value;
     this.#queue = fastq.promise(this.#worker, 1)
   }
   
@@ -99,7 +99,8 @@ export class BACnetArrayProperty<Tag extends ApplicationTag, Type extends Applic
    * @returns An array of the current property values
    */
   getValue(): Type[] {
-    return this.#value.map(v => v.value);
+    return (typeof this.#value === 'function' ? this.#value() : this.#value)
+      .map(v => v.value);
   }
   
   /**
@@ -129,7 +130,7 @@ export class BACnetArrayProperty<Tag extends ApplicationTag, Type extends Applic
    * @internal
    */
   ___readValue(): BACnetValue<Tag, Type>[] {
-    return this.#value;
+    return typeof this.#value === 'function' ? this.#value() : this.#value;
   }
   
   /**
@@ -144,7 +145,7 @@ export class BACnetArrayProperty<Tag extends ApplicationTag, Type extends Applic
    * @internal
    */
   async ___writeValue(value: BACnetValue<Tag, Type> | BACnetValue<Tag, Type>[]): Promise<void> { 
-    if (!this.writable) { 
+    if (!this.writable || !this.settable) { 
       throw new BACnetError('not writable', ErrorCode.WRITE_ACCESS_DENIED, ErrorClass.PROPERTY);
     }
     if (!Array.isArray(value)) { 

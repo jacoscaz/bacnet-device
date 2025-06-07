@@ -181,7 +181,7 @@ export class BACnetDevice extends BACnetObject<BACnetDeviceEvents> {
       PropertyIdentifier.OBJECT_LIST, 
       ApplicationTag.OBJECTIDENTIFIER, 
       false, 
-      this.#objectList,
+      () => this.#objectList,
     ));
     
     this.addProperty(new BACnetArrayProperty(
@@ -243,7 +243,7 @@ export class BACnetDevice extends BACnetObject<BACnetDeviceEvents> {
       PropertyIdentifier.ACTIVE_COV_SUBSCRIPTIONS, 
       ApplicationTag.COV_SUBSCRIPTION, 
       false, 
-      this.#subscriptionList,
+      () => this.#updateSubscriptionList(),
     ));
     
     // ========================== METADATA PROPERTIES =========================
@@ -479,6 +479,7 @@ export class BACnetDevice extends BACnetObject<BACnetDeviceEvents> {
         this.#subscriptions.delete(type);
       }
     }
+    return this.#subscriptionList;
   };
   
   /**
