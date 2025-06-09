@@ -717,9 +717,8 @@ export class BACnetDevice extends BACnetObject<BACnetDeviceEvents> {
    */
   #onBacnetIHave = (req: BaseEventContent) => {
     debug('new request: iHave');
-    const { header, service, invokeId } = req;
-    if (!header) return;
-    this.#client.errorResponse({ address: header.sender.address }, service!, invokeId!, ErrorClass.DEVICE, ErrorCode.INTERNAL_ERROR);
+    // const { header, service, invokeId } = req;
+    // TODO: implement
   };
   
   /**
