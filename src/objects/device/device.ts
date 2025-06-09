@@ -13,6 +13,8 @@ import {
 
 import { 
   type BACnetClientType,
+  isDstInEffect,
+  PROCESS_START_DATE,
   sendConfirmedCovNotification,
   sendUnconfirmedCovNotification,
 } from '../../utils.js';
@@ -70,6 +72,7 @@ import {
 import { device as debug } from '../../debug.js';
 
 import fastq from 'fastq';
+import { TimestampType } from '../../enums/time.js';
 
 const { default: BACnetClient } = bacnet;
 
@@ -138,6 +141,22 @@ export class BACnetDevice extends BACnetObject<BACnetDeviceEvents> {
   readonly #knownDevices: Map<number, IAMResult>;
   
   readonly systemStatus: BACnetSingletProperty<ApplicationTag.ENUMERATED, DeviceStatus>;
+  
+  readonly alignIntervals: BACnetSingletProperty<ApplicationTag.BOOLEAN>;
+  readonly backupFailureTimeout: BACnetSingletProperty<ApplicationTag.UNSIGNED_INTEGER>;
+  readonly backupPreparationTime: BACnetSingletProperty<ApplicationTag.UNSIGNED_INTEGER>;
+  readonly configurationFiles: BACnetArrayProperty<ApplicationTag.OBJECTIDENTIFIER>;
+  readonly daylightSavingsStatus: BACnetSingletProperty<ApplicationTag.BOOLEAN>;
+  readonly intervalOffset: BACnetSingletProperty<ApplicationTag.UNSIGNED_INTEGER>;
+  readonly lastRestoreTime: BACnetSingletProperty<ApplicationTag.TIMESTAMP>;
+  readonly maxInfoFrames: BACnetSingletProperty<ApplicationTag.UNSIGNED_INTEGER>;
+  readonly maxMaster: BACnetSingletProperty<ApplicationTag.UNSIGNED_INTEGER>;
+  readonly profileName: BACnetSingletProperty<ApplicationTag.CHARACTER_STRING>;
+  readonly restoreCompletionTime: BACnetSingletProperty<ApplicationTag.TIMESTAMP>;
+  readonly restorePreparationTime: BACnetSingletProperty<ApplicationTag.UNSIGNED_INTEGER>;
+  readonly timeSynchronizationInterval: BACnetSingletProperty<ApplicationTag.UNSIGNED_INTEGER>;
+  readonly timeSynchronizationRecipients: BACnetArrayProperty<ApplicationTag.RECIPIENT>;
+  readonly utcTimeSynchronizationRecipients: BACnetArrayProperty<ApplicationTag.RECIPIENT>;
   
   /**
    * Creates a new BACnet Device object
@@ -398,6 +417,24 @@ export class BACnetDevice extends BACnetObject<BACnetDeviceEvents> {
       false, 
       DeviceStatus.OPERATIONAL,
     ));
+    
+    // ================= PROPERTIES REQUIRED BY SCHNEIDER'S EBO ===============
+    
+    this.alignIntervals = this.addProperty(new BACnetSingletProperty(PropertyIdentifier.ALIGN_INTERVALS, ApplicationTag.BOOLEAN, false, false));
+    this.backupFailureTimeout = this.addProperty(new BACnetSingletProperty(PropertyIdentifier.BACKUP_FAILURE_TIMEOUT, ApplicationTag.UNSIGNED_INTEGER, false, 60));
+    this.backupPreparationTime = this.addProperty(new BACnetSingletProperty(PropertyIdentifier.BACKUP_PREPARATION_TIME, ApplicationTag.UNSIGNED_INTEGER, false, 60));
+    this.configurationFiles = this.addProperty(new BACnetArrayProperty(PropertyIdentifier.CONFIGURATION_FILES, ApplicationTag.OBJECTIDENTIFIER, false, []));
+    this.daylightSavingsStatus = this.addProperty(new BACnetSingletProperty(PropertyIdentifier.DAYLIGHT_SAVINGS_STATUS, ApplicationTag.BOOLEAN, false, () => ({ type: ApplicationTag.BOOLEAN, value: isDstInEffect(new Date()) })));
+    this.intervalOffset = this.addProperty(new BACnetSingletProperty(PropertyIdentifier.INTERVAL_OFFSET, ApplicationTag.UNSIGNED_INTEGER, false, 0));
+    this.lastRestoreTime = this.addProperty(new BACnetSingletProperty(PropertyIdentifier.LAST_RESTORE_TIME, ApplicationTag.TIMESTAMP, false, { type: TimestampType.DATETIME, value: PROCESS_START_DATE }));
+    this.maxInfoFrames = this.addProperty(new BACnetSingletProperty(PropertyIdentifier.MAX_INFO_FRAMES, ApplicationTag.UNSIGNED_INTEGER, false, 0));
+    this.maxMaster = this.addProperty(new BACnetSingletProperty(PropertyIdentifier.MAX_MASTER, ApplicationTag.UNSIGNED_INTEGER, false, 0));
+    this.profileName = this.addProperty(new BACnetSingletProperty(PropertyIdentifier.PROFILE_NAME, ApplicationTag.CHARACTER_STRING, false, 'BACnet Application Specific Controller'));
+    this.restoreCompletionTime = this.addProperty(new BACnetSingletProperty(PropertyIdentifier.RESTORE_COMPLETION_TIME, ApplicationTag.TIMESTAMP, false, { type: TimestampType.DATETIME, value: PROCESS_START_DATE }));
+    this.restorePreparationTime = this.addProperty(new BACnetSingletProperty(PropertyIdentifier.RESTORE_PREPARATION_TIME, ApplicationTag.UNSIGNED_INTEGER, false, 60));
+    this.timeSynchronizationInterval = this.addProperty(new BACnetSingletProperty(PropertyIdentifier.TIME_SYNCHRONIZATION_INTERVAL, ApplicationTag.UNSIGNED_INTEGER, false, 300));
+    this.timeSynchronizationRecipients = this.addProperty(new BACnetArrayProperty(PropertyIdentifier.TIME_SYNCHRONIZATION_RECIPIENTS, ApplicationTag.RECIPIENT, false, []));
+    this.utcTimeSynchronizationRecipients = this.addProperty(new BACnetArrayProperty(PropertyIdentifier.UTC_TIME_SYNCHRONIZATION_RECIPIENTS, ApplicationTag.RECIPIENT, false, []));
     
   }
   

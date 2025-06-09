@@ -2,6 +2,7 @@
 import type {
   BACNetAppData,
   BACNetObjectID,
+  BACNetTimestamp,
 } from '@innovation-system/node-bacnet';
 
 import type { 
@@ -18,6 +19,7 @@ import type {
 
 import type { SupportedObjectTypesBitString, SupportedServicesBitString, StatusFlagsBitString } from './bitstrings/index.js';
 import type { BACnetSubscription } from './objects/device/types.js';
+import type { TimestampType } from './enums/time.js';
 
 /**
  * Representation of a BACnet value.
@@ -37,6 +39,14 @@ export interface BACnetValue<Tag extends ApplicationTag = ApplicationTag, Type e
   
   /** Optional character string encoding, used only for CHARACTER_STRING type values */
   encoding?: CharacterStringEncoding;
+}
+
+export interface BACnetTimestamp<T extends TimestampType> extends BACNetTimestamp {
+  type: TimestampType,
+  value: T extends TimestampType.DATETIME ? Date
+    : T extends TimestampType.SEQUENCE_NUMBER ? number
+    : T extends TimestampType.TIME ? Date
+    : never;
 }
 
 /**
@@ -66,13 +76,13 @@ export interface ApplicationTagValueType {
   [ApplicationTag.WEEKNDAY]: never;
   [ApplicationTag.DATERANGE]: never;
   [ApplicationTag.DATETIME]: never;
-  [ApplicationTag.TIMESTAMP]: never;
+  [ApplicationTag.TIMESTAMP]: BACNetTimestamp;
   [ApplicationTag.ERROR]: never;
   [ApplicationTag.DEVICE_OBJECT_PROPERTY_REFERENCE]: never;
   [ApplicationTag.DEVICE_OBJECT_REFERENCE]: never;
   [ApplicationTag.OBJECT_PROPERTY_REFERENCE]: never;
   [ApplicationTag.DESTINATION]: never;
-  [ApplicationTag.RECIPIENT]: never;
+  [ApplicationTag.RECIPIENT]: { network: number; address: number[]; };
   [ApplicationTag.COV_SUBSCRIPTION]: BACnetSubscription;
   [ApplicationTag.CALENDAR_ENTRY]: never;
   [ApplicationTag.WEEKLY_SCHEDULE]: never;

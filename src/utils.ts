@@ -70,3 +70,15 @@ export const sendUnconfirmedCovNotification = async (client: BACnetClientType, e
     [ { property: { id: cov.property.identifier }, value: ensureArray(cov.value) } ],
   );
 }
+
+
+export const PROCESS_START_DATE = new Date();
+
+export const STD_TZ_OFFSET = Math.max(
+  new Date(PROCESS_START_DATE.getFullYear(), 0, 1).getTimezoneOffset(),
+  new Date(PROCESS_START_DATE.getFullYear(), 6, 1).getTimezoneOffset(),
+); 
+
+export const isDstInEffect = (date: Date): boolean => { 
+  return date.getTimezoneOffset() < STD_TZ_OFFSET;
+};
