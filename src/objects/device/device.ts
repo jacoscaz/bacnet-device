@@ -47,6 +47,7 @@ import bacnet, {
   type ListElementOperationPayload,
   type SubscribeCovPayload,
   type IAMResult,
+  type BACNetEventInformation,
 } from '@innovation-system/node-bacnet';
 
 import { 
@@ -175,7 +176,8 @@ export class BACnetDevice extends BACnetObject<BACnetDeviceEvents> {
       .on('readPropertyMultiple', this.#onBacnetReadPropertyMultiple)
       .on('writeProperty', this.#onBacnetWriteProperty)
       .on('addListElement', this.#onBacnetAddListElement)
-      .on('removeListElement', this.#onBacnetRemoveListElement);
+      .on('removeListElement', this.#onBacnetRemoveListElement)
+      .on('getEventInformation', this.#onBacnetGetEventInformation);
     
     this.addObject(this);
     
@@ -655,9 +657,7 @@ export class BACnetDevice extends BACnetObject<BACnetDeviceEvents> {
    */
   #onBacnetSubscribeProperty = async (req: Omit<BaseEventContent, 'payload'> & { payload: SubscribeCovPayload }) => { 
     debug('new request: subscribeProperty');
-    const { header, service, invokeId } = req;
-    if (!header) return;
-    this.#client.errorResponse({ address: header.sender.address }, service!, invokeId!, ErrorClass.DEVICE, ErrorCode.INTERNAL_ERROR);
+    this.#onBacnetUnsupportedService(req);
     // const { payload: { subscriberProcessId, monitoredObjectId, issueConfirmedNotifications, lifetime }, header, service, invokeId } = req;
   };
   
@@ -686,9 +686,6 @@ export class BACnetDevice extends BACnetObject<BACnetDeviceEvents> {
    */
   #onBacnetWhoHas = (req: BaseEventContent) => {
     debug('new request: whoHas');
-    const { header, service, invokeId } = req;
-    if (!header) return;
-    this.#client.errorResponse({ address: header.sender.address }, service!, invokeId!, ErrorClass.DEVICE, ErrorCode.INTERNAL_ERROR);
   };
   
   /**
@@ -731,9 +728,7 @@ export class BACnetDevice extends BACnetObject<BACnetDeviceEvents> {
    */
   #onBacnetReadRange = (req: BaseEventContent) => {
     debug('new request: readRange');
-    const { header, service, invokeId } = req;
-    if (!header) return;
-    this.#client.errorResponse({ address: header.sender.address }, service!, invokeId!, ErrorClass.DEVICE, ErrorCode.INTERNAL_ERROR);
+    this.#onBacnetUnsupportedService(req);
   };
   
   /**
@@ -746,9 +741,7 @@ export class BACnetDevice extends BACnetObject<BACnetDeviceEvents> {
    */
   #onBacnetDeviceCommunicationControl = (req: BaseEventContent) => {
     debug('new request: deviceCommunicationControl');
-    const { header, service, invokeId } = req;
-    if (!header) return;
-    this.#client.errorResponse({ address: header.sender.address }, service!, invokeId!, ErrorClass.DEVICE, ErrorCode.INTERNAL_ERROR);
+    this.#onBacnetUnsupportedService(req);
   };
   
   /**
@@ -816,11 +809,7 @@ export class BACnetDevice extends BACnetObject<BACnetDeviceEvents> {
    * @private
    */
   #onBacnetAddListElement = async (req: Omit<BaseEventContent, 'payload'> & { payload: ListElementOperationPayload }) => { 
-    const { payload: { } } = req;
-    // objectId
-    // propertyId
-    // arrayIndex
-    // listOfElements
+    this.#onBacnetUnsupportedService(req);
   };
   
   /**
@@ -832,7 +821,21 @@ export class BACnetDevice extends BACnetObject<BACnetDeviceEvents> {
    * @param req - The RemoveListElement request content
    * @private
    */
-  #onBacnetRemoveListElement = async (req: Omit<BaseEventContent, 'payload'> & { payload: ListElementOperationPayload }) => { };
+  #onBacnetRemoveListElement = async (req: Omit<BaseEventContent, 'payload'> & { payload: ListElementOperationPayload }) => {
+    this.#onBacnetUnsupportedService(req);
+  };
+  
+  #onBacnetGetEventInformation = async (req:  Omit<BaseEventContent, 'payload'> & { payload: BACNetEventInformation[];}) => { 
+    this.#onBacnetUnsupportedService(req);
+  };
+  
+  #onBacnetUnsupportedService = async (req: BaseEventContent) => { 
+    const { header, invokeId, service } = req;
+    if (!header || !invokeId || typeof service !== 'number') { 
+      return;
+    }
+    this.#client.errorResponse({ address: header.sender.address }, service, invokeId, ErrorClass.SERVICES, ErrorCode.SERVICE_REQUEST_DENIED);
+  };
   
   /**
    * Handles errors from the BACnet client
