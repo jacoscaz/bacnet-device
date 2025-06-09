@@ -46,6 +46,7 @@ import bacnet, {
   type BACNetReadAccess,
   type ListElementOperationPayload,
   type SubscribeCovPayload,
+  type IAMResult,
 } from '@innovation-system/node-bacnet';
 
 import { 
@@ -133,6 +134,8 @@ export class BACnetDevice extends BACnetObject<BACnetDeviceEvents> {
    */
   readonly #objectList: BACnetValue<ApplicationTag.OBJECTIDENTIFIER>[];
   
+  readonly #knownDevices: Map<number, IAMResult>;
+  
   readonly systemStatus: BACnetSingletProperty<ApplicationTag.ENUMERATED, DeviceStatus>;
   
   /**
@@ -150,6 +153,7 @@ export class BACnetDevice extends BACnetObject<BACnetDeviceEvents> {
     this.#vendorId = opts.vendorId ?? 0;
     this.#objects = new Map();
     this.#objectList = [];
+    this.#knownDevices = new Map();
     this.#subscriptionList = [];
     
     this.#covqueue = fastq.promise(null, this.#covQueueWorker, 1);
@@ -695,11 +699,12 @@ export class BACnetDevice extends BACnetObject<BACnetDeviceEvents> {
    * @param req - The IAm notification content
    * @private
    */
-  #onBacnetIAm = (req: BaseEventContent) => {
+  #onBacnetIAm = (req: Omit<BaseEventContent, 'payload'> & { payload: IAMResult }) => {
     debug('new request: iAm');
-    const { header, service, invokeId } = req;
-    if (!header) return;
-    this.#client.errorResponse({ address: header.sender.address }, service!, invokeId!, ErrorClass.DEVICE, ErrorCode.INTERNAL_ERROR);
+    const { payload } = req;
+    const { deviceId } = payload;
+    // TODO: handle duplicate deviceId(s)
+    this.#knownDevices.set(deviceId, payload);
   };
   
   /**
