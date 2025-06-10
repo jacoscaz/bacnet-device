@@ -152,7 +152,7 @@ export class BACnetDevice extends BACnetObject<BACnetDeviceEvents> {
   readonly maxInfoFrames: BACnetSingletProperty<ApplicationTag.UNSIGNED_INTEGER>;
   readonly maxMaster: BACnetSingletProperty<ApplicationTag.UNSIGNED_INTEGER>;
   readonly profileName: BACnetSingletProperty<ApplicationTag.CHARACTER_STRING>;
-  readonly restoreCompletionTime: BACnetSingletProperty<ApplicationTag.TIMESTAMP>;
+  readonly restoreCompletionTime: BACnetSingletProperty<ApplicationTag.UNSIGNED_INTEGER>;
   readonly restorePreparationTime: BACnetSingletProperty<ApplicationTag.UNSIGNED_INTEGER>;
   readonly timeSynchronizationInterval: BACnetSingletProperty<ApplicationTag.UNSIGNED_INTEGER>;
   readonly timeSynchronizationRecipients: BACnetArrayProperty<ApplicationTag.RECIPIENT>;
@@ -404,9 +404,9 @@ export class BACnetDevice extends BACnetObject<BACnetDeviceEvents> {
     
     this.addProperty(new BACnetSingletProperty(
       PropertyIdentifier.LOCAL_TIME, 
-      ApplicationTag.DATE, 
+      ApplicationTag.TIME, 
       false,
-      () => ({ type: ApplicationTag.DATE, value: new Date() }),
+      () => ({ type: ApplicationTag.TIME, value: new Date() }),
     ));
     
     // ======================= STATUS-RELATED PROPERTIES ======================
@@ -430,7 +430,7 @@ export class BACnetDevice extends BACnetObject<BACnetDeviceEvents> {
     this.maxInfoFrames = this.addProperty(new BACnetSingletProperty(PropertyIdentifier.MAX_INFO_FRAMES, ApplicationTag.UNSIGNED_INTEGER, false, 0));
     this.maxMaster = this.addProperty(new BACnetSingletProperty(PropertyIdentifier.MAX_MASTER, ApplicationTag.UNSIGNED_INTEGER, false, 0));
     this.profileName = this.addProperty(new BACnetSingletProperty(PropertyIdentifier.PROFILE_NAME, ApplicationTag.CHARACTER_STRING, false, 'BACnet Application Specific Controller'));
-    this.restoreCompletionTime = this.addProperty(new BACnetSingletProperty(PropertyIdentifier.RESTORE_COMPLETION_TIME, ApplicationTag.TIMESTAMP, false, { type: TimestampType.DATETIME, value: PROCESS_START_DATE }));
+    this.restoreCompletionTime = this.addProperty(new BACnetSingletProperty(PropertyIdentifier.RESTORE_COMPLETION_TIME, ApplicationTag.UNSIGNED_INTEGER, false, 60));
     this.restorePreparationTime = this.addProperty(new BACnetSingletProperty(PropertyIdentifier.RESTORE_PREPARATION_TIME, ApplicationTag.UNSIGNED_INTEGER, false, 60));
     this.timeSynchronizationInterval = this.addProperty(new BACnetSingletProperty(PropertyIdentifier.TIME_SYNCHRONIZATION_INTERVAL, ApplicationTag.UNSIGNED_INTEGER, false, 300));
     this.timeSynchronizationRecipients = this.addProperty(new BACnetArrayProperty(PropertyIdentifier.TIME_SYNCHRONIZATION_RECIPIENTS, ApplicationTag.RECIPIENT, false, []));
