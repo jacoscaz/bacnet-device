@@ -20,7 +20,7 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
-    "@innovation-system/node-bacnet": "^1.3.0",
+    "@innovation-system/node-bacnet": "git+https://github.com/jacoscaz/node-bacnet#with-built-files",
     "debug": "^4.4.1",
     "fastq": "^1.19.1"
   },
