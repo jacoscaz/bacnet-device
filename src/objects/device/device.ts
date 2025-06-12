@@ -14,7 +14,6 @@ import {
 import { 
   type BACNetClientType,
   isDstInEffect,
-  PROCESS_START_DATE,
   sendConfirmedCovNotification,
   sendUnconfirmedCovNotification,
 } from '../../utils.js';
@@ -33,6 +32,7 @@ import {
   BDPropertyIdentifier,
   BDSegmentation,
   BDDeviceStatus,
+  BDEventState,
 } from '../../enums/index.js';
 
 import { 
@@ -139,6 +139,7 @@ export class BDDevice extends BDObject<BDDeviceEvents> {
   readonly #knownDevices: Map<number, IAMResult>;
   
   readonly systemStatus: BDSingletProperty<BDApplicationTag.ENUMERATED, BDDeviceStatus>;
+  readonly eventState: BDSingletProperty<BDApplicationTag.ENUMERATED, BDEventState>
   
 
   
@@ -407,6 +408,13 @@ export class BDDevice extends BDObject<BDDeviceEvents> {
       BDApplicationTag.ENUMERATED, 
       false, 
       BDDeviceStatus.OPERATIONAL,
+    ));
+    
+    this.eventState = this.addProperty(new BDSingletProperty<BDApplicationTag.ENUMERATED, BDEventState>(
+      BDPropertyIdentifier.SYSTEM_STATUS, 
+      BDApplicationTag.ENUMERATED, 
+      false, 
+      BDEventState.NORMAL,
     ));
     
   }
