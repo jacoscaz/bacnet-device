@@ -9,7 +9,7 @@
  * Application tags are used in BACnet property values to indicate the data type
  * of the value being communicated.
  */
-export enum ApplicationTag {
+export enum BDApplicationTag {
   /** Represents a null value */
   NULL = 0,
   /** Represents a boolean value (true or false) */

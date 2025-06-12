@@ -24,7 +24,7 @@ export type EnumType = Record<string, string|number>
  * @typeParam E - An enum type that defines the bit positions
  * @implements BACNetBitString
  */
-export class BitString<E extends EnumType> implements BACNetBitString { 
+export class BDBitString<E extends EnumType> implements BACNetBitString { 
   /**
    * The number of bits in this bitstring
    */

@@ -6,20 +6,20 @@ import type {
 } from '@innovation-system/node-bacnet';
 
 import type { 
-  ApplicationTag, 
-  CharacterStringEncoding, 
-  ObjectType,
-  EventState,
-  EngineeringUnit,
-  PropertyIdentifier,
-  DeviceStatus,
-  Segmentation,
-  Reliability,
-  TimestampType,
+  BDApplicationTag, 
+  BDCharacterStringEncoding, 
+  BDObjectType,
+  BDEventState,
+  BDEngineeringUnit,
+  BDPropertyIdentifier,
+  BDDeviceStatus,
+  BDSegmentation,
+  BDReliability,
+  BDTimestampType,
 } from './enums/index.js';
 
-import type { SupportedObjectTypesBitString, SupportedServicesBitString, StatusFlagsBitString } from './bitstrings/index.js';
-import type { BACnetSubscription } from './objects/device/types.js';
+import type { BDSupportedObjectTypesBitString, BDSupportedServicesBitString, BDStatusFlagsBitString } from './bitstrings/index.js';
+import type { BDSubscription } from './objects/device/types.js';
 
 /**
  * Representation of a BACnet value.
@@ -30,7 +30,7 @@ import type { BACnetSubscription } from './objects/device/types.js';
  * @template Tag - The ApplicationTag that categorizes this value
  * @template Type - The JavaScript type associated with the Tag, derived from ApplicationTagValueType
  */
-export interface BACnetValue<Tag extends ApplicationTag = ApplicationTag, Type extends ApplicationTagValueType[Tag] = ApplicationTagValueType[Tag]> extends BACNetAppData { 
+export interface BDValue<Tag extends BDApplicationTag = BDApplicationTag, Type extends BDApplicationTagValueType[Tag] = BDApplicationTagValueType[Tag]> extends BACNetAppData { 
   /** The BACnet application tag for this value */
   type: Tag;
   
@@ -38,14 +38,14 @@ export interface BACnetValue<Tag extends ApplicationTag = ApplicationTag, Type e
   value: Type;
   
   /** Optional character string encoding, used only for CHARACTER_STRING type values */
-  encoding?: CharacterStringEncoding;
+  encoding?: BDCharacterStringEncoding;
 }
 
-export interface BACnetTimestamp<T extends TimestampType> extends BACNetTimestamp {
-  type: TimestampType,
-  value: T extends TimestampType.DATETIME ? Date
-    : T extends TimestampType.SEQUENCE_NUMBER ? number
-    : T extends TimestampType.TIME ? Date
+export interface BDTimestamp<T extends BDTimestampType> extends BACNetTimestamp {
+  type: BDTimestampType,
+  value: T extends BDTimestampType.DATETIME ? Date
+    : T extends BDTimestampType.SEQUENCE_NUMBER ? number
+    : T extends BDTimestampType.TIME ? Date
     : never;
 }
 
@@ -58,39 +58,39 @@ export interface BACnetTimestamp<T extends TimestampType> extends BACNetTimestam
  * 
  * Entries mapping to the `never` type are not yet supported by this implementation.
  */
-export interface ApplicationTagValueType { 
-  [ApplicationTag.NULL]: null;
-  [ApplicationTag.BOOLEAN]: boolean;
-  [ApplicationTag.UNSIGNED_INTEGER]: number;
-  [ApplicationTag.SIGNED_INTEGER]: number;
-  [ApplicationTag.REAL]: number;
-  [ApplicationTag.DOUBLE]: number;
-  [ApplicationTag.OCTET_STRING]: never;
-  [ApplicationTag.CHARACTER_STRING]: string;
-  [ApplicationTag.BIT_STRING]: StatusFlagsBitString | SupportedObjectTypesBitString | SupportedServicesBitString;
-  [ApplicationTag.ENUMERATED]: ObjectType | EventState | EngineeringUnit | PropertyIdentifier | DeviceStatus | Segmentation | Reliability;
-  [ApplicationTag.DATE]: Date;
-  [ApplicationTag.TIME]: Date;
-  [ApplicationTag.OBJECTIDENTIFIER]: BACNetObjectID;
-  [ApplicationTag.EMPTYLIST]: never;
-  [ApplicationTag.WEEKNDAY]: never;
-  [ApplicationTag.DATERANGE]: never;
-  [ApplicationTag.DATETIME]: never;
-  [ApplicationTag.TIMESTAMP]: BACNetTimestamp;
-  [ApplicationTag.ERROR]: never;
-  [ApplicationTag.DEVICE_OBJECT_PROPERTY_REFERENCE]: never;
-  [ApplicationTag.DEVICE_OBJECT_REFERENCE]: never;
-  [ApplicationTag.OBJECT_PROPERTY_REFERENCE]: never;
-  [ApplicationTag.DESTINATION]: never;
-  [ApplicationTag.RECIPIENT]: { network: number; address: number[]; };
-  [ApplicationTag.COV_SUBSCRIPTION]: BACnetSubscription;
-  [ApplicationTag.CALENDAR_ENTRY]: never;
-  [ApplicationTag.WEEKLY_SCHEDULE]: never;
-  [ApplicationTag.SPECIAL_EVENT]: never;
-  [ApplicationTag.READ_ACCESS_SPECIFICATION]: never;
-  [ApplicationTag.READ_ACCESS_RESULT]: never;
-  [ApplicationTag.LIGHTING_COMMAND]: never;
-  [ApplicationTag.CONTEXT_SPECIFIC_DECODED]: never;
-  [ApplicationTag.CONTEXT_SPECIFIC_ENCODED]: never;
-  [ApplicationTag.LOG_RECORD]: never;
+export interface BDApplicationTagValueType { 
+  [BDApplicationTag.NULL]: null;
+  [BDApplicationTag.BOOLEAN]: boolean;
+  [BDApplicationTag.UNSIGNED_INTEGER]: number;
+  [BDApplicationTag.SIGNED_INTEGER]: number;
+  [BDApplicationTag.REAL]: number;
+  [BDApplicationTag.DOUBLE]: number;
+  [BDApplicationTag.OCTET_STRING]: never;
+  [BDApplicationTag.CHARACTER_STRING]: string;
+  [BDApplicationTag.BIT_STRING]: BDStatusFlagsBitString | BDSupportedObjectTypesBitString | BDSupportedServicesBitString;
+  [BDApplicationTag.ENUMERATED]: BDObjectType | BDEventState | BDEngineeringUnit | BDPropertyIdentifier | BDDeviceStatus | BDSegmentation | BDReliability;
+  [BDApplicationTag.DATE]: Date;
+  [BDApplicationTag.TIME]: Date;
+  [BDApplicationTag.OBJECTIDENTIFIER]: BACNetObjectID;
+  [BDApplicationTag.EMPTYLIST]: never;
+  [BDApplicationTag.WEEKNDAY]: never;
+  [BDApplicationTag.DATERANGE]: never;
+  [BDApplicationTag.DATETIME]: never;
+  [BDApplicationTag.TIMESTAMP]: BACNetTimestamp;
+  [BDApplicationTag.ERROR]: never;
+  [BDApplicationTag.DEVICE_OBJECT_PROPERTY_REFERENCE]: never;
+  [BDApplicationTag.DEVICE_OBJECT_REFERENCE]: never;
+  [BDApplicationTag.OBJECT_PROPERTY_REFERENCE]: never;
+  [BDApplicationTag.DESTINATION]: never;
+  [BDApplicationTag.RECIPIENT]: { network: number; address: number[]; };
+  [BDApplicationTag.COV_SUBSCRIPTION]: BDSubscription;
+  [BDApplicationTag.CALENDAR_ENTRY]: never;
+  [BDApplicationTag.WEEKLY_SCHEDULE]: never;
+  [BDApplicationTag.SPECIAL_EVENT]: never;
+  [BDApplicationTag.READ_ACCESS_SPECIFICATION]: never;
+  [BDApplicationTag.READ_ACCESS_RESULT]: never;
+  [BDApplicationTag.LIGHTING_COMMAND]: never;
+  [BDApplicationTag.CONTEXT_SPECIFIC_DECODED]: never;
+  [BDApplicationTag.CONTEXT_SPECIFIC_ENCODED]: never;
+  [BDApplicationTag.LOG_RECORD]: never;
 }

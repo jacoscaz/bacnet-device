@@ -1,18 +1,18 @@
 
 import { 
-  BACnetError,
+  BDError,
 } from '../../errors.js';
 
 import { 
-  type BACnetValue,
+  type BDValue,
 } from '../../value.js';
 
 import { 
-  BACnetObject,
+  BDObject,
 } from '../../object.js';
 
 import { 
-  type BACnetClientType,
+  type BACNetClientType,
   isDstInEffect,
   PROCESS_START_DATE,
   sendConfirmedCovNotification,
@@ -20,30 +20,29 @@ import {
 } from '../../utils.js';
 
 import { 
-  type BACnetProperty,
-  BACnetArrayProperty, 
-  BACnetSingletProperty,
+  type BDProperty,
+  BDArrayProperty, 
+  BDSingletProperty,
 } from '../../properties/index.js';
 
 import {
-  ErrorCode,
-  ErrorClass,
-  ObjectType,
-  ApplicationTag,
-  PropertyIdentifier,
-  Segmentation,
-  DeviceStatus,
+  BDErrorCode,
+  BDErrorClass,
+  BDObjectType,
+  BDApplicationTag,
+  BDPropertyIdentifier,
+  BDSegmentation,
+  BDDeviceStatus,
 } from '../../enums/index.js';
 
 import { 
-  SupportedServicesBit, 
-  SupportedServicesBitString, 
-  SupportedObjectTypesBit, 
-  SupportedObjectTypesBitString,
+  BDSupportedServicesBit, 
+  BDSupportedServicesBitString, 
+  BDSupportedObjectTypesBit, 
+  BDSupportedObjectTypesBitString,
 } from '../../bitstrings/index.js';
 
-import bacnet, { 
-  type BACNetCovSubscription,
+import bacnet, {
   type BACNetObjectID,
   type BACNetReadAccess,
   type ListElementOperationPayload,
@@ -63,16 +62,15 @@ import {
 import { isDeepStrictEqual } from 'node:util';
 
 import { 
-  type BACnetDeviceOpts,
-  type BACnetDeviceEvents,
-  type QueuedCov,
-  type BACnetSubscription,
+  type BDDeviceOpts,
+  type BDDeviceEvents,
+  type BDQueuedCov,
+  type BDSubscription,
 } from './types.js';
 
 import { device as debug } from '../../debug.js';
 
 import fastq from 'fastq';
-import { TimestampType } from '../../enums/time.js';
 
 const { default: BACnetClient } = bacnet;
 
@@ -101,9 +99,9 @@ const { default: BACnetClient } = bacnet;
  * - Object_List
  * - And other properties related to device capabilities and configuration
  * 
- * @extends BACnetObject
+ * @extends BDObject
  */
-export class BACnetDevice extends BACnetObject<BACnetDeviceEvents> {
+export class BDDevice extends BDObject<BDDeviceEvents> {
   
   /**
    * @see https://bacnet.org/assigned-vendor-ids/
@@ -111,36 +109,36 @@ export class BACnetDevice extends BACnetObject<BACnetDeviceEvents> {
   readonly #vendorId: number;
   
   /** The underlying BACnet client from the bacnet library */
-  readonly #client: BACnetClientType;
+  readonly #client: BACNetClientType;
   
   /** Queue for processing COV notifications */
-  readonly #covqueue: fastq.queueAsPromised<QueuedCov>;
+  readonly #covqueue: fastq.queueAsPromised<BDQueuedCov>;
   
   /** Map of active subscriptions organized by object type and instance */
-  readonly #subscriptions: Map<ObjectType, Map<number, Set<BACnetSubscription>>>;
+  readonly #subscriptions: Map<BDObjectType, Map<number, Set<BDSubscription>>>;
 
   
   /** Timer for periodic maintenance tasks */
   #maintenanceInterval: NodeJS.Timer;
   
   /** List of active subscriptions */
-  #subscriptionList: BACnetValue<ApplicationTag.COV_SUBSCRIPTION, BACnetSubscription>[];
+  #subscriptionList: BDValue<BDApplicationTag.COV_SUBSCRIPTION, BDSubscription>[];
   
   /** 
    * Map of all objects in this device, organized by type and instance
    * @private
    */
-  readonly #objects: Map<ObjectType, Map<number, BACnetObject>>;
+  readonly #objects: Map<BDObjectType, Map<number, BDObject>>;
   
   /**
    * List of all object identifiers in this device (for OBJECT_LIST property)
    * @private
    */
-  readonly #objectList: BACnetValue<ApplicationTag.OBJECTIDENTIFIER>[];
+  readonly #objectList: BDValue<BDApplicationTag.OBJECTIDENTIFIER>[];
   
   readonly #knownDevices: Map<number, IAMResult>;
   
-  readonly systemStatus: BACnetSingletProperty<ApplicationTag.ENUMERATED, DeviceStatus>;
+  readonly systemStatus: BDSingletProperty<BDApplicationTag.ENUMERATED, BDDeviceStatus>;
   
 
   
@@ -153,8 +151,8 @@ export class BACnetDevice extends BACnetObject<BACnetDeviceEvents> {
    * 
    * @param opts - Configuration options for this device
    */
-  constructor(opts: BACnetDeviceOpts) {
-    super(ObjectType.DEVICE, opts.instance, opts.name, opts.description);
+  constructor(opts: BDDeviceOpts) {
+    super(BDObjectType.DEVICE, opts.instance, opts.name, opts.description);
   
     this.#vendorId = opts.vendorId ?? 0;
     this.#objects = new Map();
@@ -188,227 +186,227 @@ export class BACnetDevice extends BACnetObject<BACnetDeviceEvents> {
     
     // ================== PROPERTIES RELATED TO CHILD OBJECTS =================
     
-    this.addProperty(new BACnetArrayProperty(
-      PropertyIdentifier.OBJECT_LIST, 
-      ApplicationTag.OBJECTIDENTIFIER, 
+    this.addProperty(new BDArrayProperty(
+      BDPropertyIdentifier.OBJECT_LIST, 
+      BDApplicationTag.OBJECTIDENTIFIER, 
       false, 
       () => this.#objectList,
     ));
     
-    this.addProperty(new BACnetArrayProperty(
-      PropertyIdentifier.STRUCTURED_OBJECT_LIST, 
-      ApplicationTag.OBJECTIDENTIFIER, 
+    this.addProperty(new BDArrayProperty(
+      BDPropertyIdentifier.STRUCTURED_OBJECT_LIST, 
+      BDApplicationTag.OBJECTIDENTIFIER, 
       false, 
       [],
     ));
     
     // ====================== PROTOCOL-RELATED PROPERTIES =====================
     
-    this.addProperty(new BACnetSingletProperty(
-      PropertyIdentifier.PROTOCOL_VERSION, 
-      ApplicationTag.UNSIGNED_INTEGER, 
+    this.addProperty(new BDSingletProperty(
+      BDPropertyIdentifier.PROTOCOL_VERSION, 
+      BDApplicationTag.UNSIGNED_INTEGER, 
       false, 
       1,
     ));
     
-    this.addProperty(new BACnetSingletProperty(
-      PropertyIdentifier.PROTOCOL_REVISION, 
-      ApplicationTag.UNSIGNED_INTEGER, 
+    this.addProperty(new BDSingletProperty(
+      BDPropertyIdentifier.PROTOCOL_REVISION, 
+      BDApplicationTag.UNSIGNED_INTEGER, 
       false, 
       28,
     ));
     
-    const supportedServicesBitString = new SupportedServicesBitString(
-      SupportedServicesBit.WHO_IS,
-      SupportedServicesBit.I_AM,
-      SupportedServicesBit.READ_PROPERTY,
-      SupportedServicesBit.WRITE_PROPERTY,
-      SupportedServicesBit.SUBSCRIBE_COV,
-      SupportedServicesBit.CONFIRMED_COV_NOTIFICATION,
-      SupportedServicesBit.UNCONFIRMED_COV_NOTIFICATION,
+    const supportedServicesBitString = new BDSupportedServicesBitString(
+      BDSupportedServicesBit.WHO_IS,
+      BDSupportedServicesBit.I_AM,
+      BDSupportedServicesBit.READ_PROPERTY,
+      BDSupportedServicesBit.WRITE_PROPERTY,
+      BDSupportedServicesBit.SUBSCRIBE_COV,
+      BDSupportedServicesBit.CONFIRMED_COV_NOTIFICATION,
+      BDSupportedServicesBit.UNCONFIRMED_COV_NOTIFICATION,
     );
     
-    this.addProperty(new BACnetSingletProperty(
-      PropertyIdentifier.PROTOCOL_SERVICES_SUPPORTED, 
-      ApplicationTag.BIT_STRING, 
+    this.addProperty(new BDSingletProperty(
+      BDPropertyIdentifier.PROTOCOL_SERVICES_SUPPORTED, 
+      BDApplicationTag.BIT_STRING, 
       false, 
       supportedServicesBitString,
     ));
     
-    const supportedObjectTypesBitString = new SupportedObjectTypesBitString(
-      SupportedObjectTypesBit.DEVICE,
-      SupportedObjectTypesBit.ANALOG_INPUT,
-      SupportedObjectTypesBit.ANALOG_OUTPUT,
+    const supportedObjectTypesBitString = new BDSupportedObjectTypesBitString(
+      BDSupportedObjectTypesBit.DEVICE,
+      BDSupportedObjectTypesBit.ANALOG_INPUT,
+      BDSupportedObjectTypesBit.ANALOG_OUTPUT,
     );
     
-    this.addProperty(new BACnetSingletProperty(
-      PropertyIdentifier.PROTOCOL_OBJECT_TYPES_SUPPORTED, 
-      ApplicationTag.BIT_STRING, 
+    this.addProperty(new BDSingletProperty(
+      BDPropertyIdentifier.PROTOCOL_OBJECT_TYPES_SUPPORTED, 
+      BDApplicationTag.BIT_STRING, 
       false, 
       supportedObjectTypesBitString,
     ));
     
     // ==================== SUBSCRIPTION-RELATED PROPERTIES ===================
     
-    this.addProperty(new BACnetArrayProperty(
-      PropertyIdentifier.ACTIVE_COV_SUBSCRIPTIONS, 
-      ApplicationTag.COV_SUBSCRIPTION, 
+    this.addProperty(new BDArrayProperty(
+      BDPropertyIdentifier.ACTIVE_COV_SUBSCRIPTIONS, 
+      BDApplicationTag.COV_SUBSCRIPTION, 
       false, 
       () => this.#updateSubscriptionList(),
     ));
     
     // ========================== METADATA PROPERTIES =========================
     
-    this.addProperty(new BACnetSingletProperty(
-      PropertyIdentifier.VENDOR_IDENTIFIER, 
-      ApplicationTag.UNSIGNED_INTEGER, 
+    this.addProperty(new BDSingletProperty(
+      BDPropertyIdentifier.VENDOR_IDENTIFIER, 
+      BDApplicationTag.UNSIGNED_INTEGER, 
       false, 
       this.#vendorId,
     ));
     
-    this.addProperty(new BACnetSingletProperty(
-      PropertyIdentifier.VENDOR_NAME, 
-      ApplicationTag.CHARACTER_STRING, 
+    this.addProperty(new BDSingletProperty(
+      BDPropertyIdentifier.VENDOR_NAME, 
+      BDApplicationTag.CHARACTER_STRING, 
       false, 
       opts.vendorName ?? '',
     ));
     
-    this.addProperty(new BACnetSingletProperty(
-      PropertyIdentifier.MODEL_NAME, 
-      ApplicationTag.CHARACTER_STRING, 
+    this.addProperty(new BDSingletProperty(
+      BDPropertyIdentifier.MODEL_NAME, 
+      BDApplicationTag.CHARACTER_STRING, 
       false, 
       opts.modelName,
     ));
     
-    this.addProperty(new BACnetSingletProperty(
-      PropertyIdentifier.FIRMWARE_REVISION, 
-      ApplicationTag.CHARACTER_STRING, 
+    this.addProperty(new BDSingletProperty(
+      BDPropertyIdentifier.FIRMWARE_REVISION, 
+      BDApplicationTag.CHARACTER_STRING, 
       false, 
       opts.firmwareRevision,
     ));
     
-    this.addProperty(new BACnetSingletProperty(
-      PropertyIdentifier.APPLICATION_SOFTWARE_VERSION, 
-      ApplicationTag.CHARACTER_STRING, 
+    this.addProperty(new BDSingletProperty(
+      BDPropertyIdentifier.APPLICATION_SOFTWARE_VERSION, 
+      BDApplicationTag.CHARACTER_STRING, 
       false, 
       opts.applicationSoftwareVersion,
     ));
     
-    this.addProperty(new BACnetSingletProperty(
-      PropertyIdentifier.DATABASE_REVISION, 
-      ApplicationTag.UNSIGNED_INTEGER, 
+    this.addProperty(new BDSingletProperty(
+      BDPropertyIdentifier.DATABASE_REVISION, 
+      BDApplicationTag.UNSIGNED_INTEGER, 
       false, 
       opts.databaseRevision,
     ));
      
     // Bindings can be discovered via the "Who-Is" and "I-Am" services. 
     // This property represents a list of static bindings and we can leave it empty.
-    this.addProperty(new BACnetArrayProperty(
-      PropertyIdentifier.DEVICE_ADDRESS_BINDING, 
-      ApplicationTag.NULL, 
+    this.addProperty(new BDArrayProperty(
+      BDPropertyIdentifier.DEVICE_ADDRESS_BINDING, 
+      BDApplicationTag.NULL, 
       false, 
       [],
     ));
     
     // In your device constructor
-    this.addProperty(new BACnetSingletProperty(
-      PropertyIdentifier.LOCATION, 
-      ApplicationTag.CHARACTER_STRING, 
+    this.addProperty(new BDSingletProperty(
+      BDPropertyIdentifier.LOCATION, 
+      BDApplicationTag.CHARACTER_STRING, 
       false,   // Typically writable so operators can update the location
       opts.location ?? '',
     ));
     
-    this.addProperty(new BACnetSingletProperty(
-      PropertyIdentifier.SERIAL_NUMBER, 
-      ApplicationTag.CHARACTER_STRING, 
+    this.addProperty(new BDSingletProperty(
+      BDPropertyIdentifier.SERIAL_NUMBER, 
+      BDApplicationTag.CHARACTER_STRING, 
       false,
       opts.serialNumber ?? '',
     ));
     
     // ======================== APDU-RELATED PROPERTIES =======================
     
-    this.addProperty(new BACnetSingletProperty(
-      PropertyIdentifier.MAX_APDU_LENGTH_ACCEPTED, 
-      ApplicationTag.UNSIGNED_INTEGER, 
+    this.addProperty(new BDSingletProperty(
+      BDPropertyIdentifier.MAX_APDU_LENGTH_ACCEPTED, 
+      BDApplicationTag.UNSIGNED_INTEGER, 
       false, 
       opts.apduMaxLength ?? 1476,
     ));
     
-    this.addProperty(new BACnetSingletProperty(
-      PropertyIdentifier.APDU_TIMEOUT, 
-      ApplicationTag.UNSIGNED_INTEGER, 
+    this.addProperty(new BDSingletProperty(
+      BDPropertyIdentifier.APDU_TIMEOUT, 
+      BDApplicationTag.UNSIGNED_INTEGER, 
       false, 
       opts.apduTimeout ?? 6000,
     ));
     
-    this.addProperty(new BACnetSingletProperty(
-      PropertyIdentifier.NUMBER_OF_APDU_RETRIES, 
-      ApplicationTag.UNSIGNED_INTEGER, 
+    this.addProperty(new BDSingletProperty(
+      BDPropertyIdentifier.NUMBER_OF_APDU_RETRIES, 
+      BDApplicationTag.UNSIGNED_INTEGER, 
       false, 
       opts.apduRetries ?? 3,
     ));
     
-    this.addProperty(new BACnetSingletProperty(
-      PropertyIdentifier.APDU_SEGMENT_TIMEOUT,
-      ApplicationTag.UNSIGNED_INTEGER,
+    this.addProperty(new BDSingletProperty(
+      BDPropertyIdentifier.APDU_SEGMENT_TIMEOUT,
+      BDApplicationTag.UNSIGNED_INTEGER,
       false,
       opts.apduSegmentTimeout ?? 2000,
     ));
   
     // ======================== SEGMENTATION PROPERTIES =======================
 
-    this.addProperty(new BACnetSingletProperty(
-      PropertyIdentifier.SEGMENTATION_SUPPORTED, 
-      ApplicationTag.ENUMERATED, 
+    this.addProperty(new BDSingletProperty(
+      BDPropertyIdentifier.SEGMENTATION_SUPPORTED, 
+      BDApplicationTag.ENUMERATED, 
       false, 
-      Segmentation.NO_SEGMENTATION,
+      BDSegmentation.NO_SEGMENTATION,
     ));
     
     // Accepter values: 2, 4, 8, 16, 32, 64 and 0 for "unspecified"
-    this.addProperty(new BACnetSingletProperty(
-      PropertyIdentifier.MAX_SEGMENTS_ACCEPTED, 
-      ApplicationTag.UNSIGNED_INTEGER, 
+    this.addProperty(new BDSingletProperty(
+      BDPropertyIdentifier.MAX_SEGMENTS_ACCEPTED, 
+      BDApplicationTag.UNSIGNED_INTEGER, 
       false,
       0,    
     ));
     
     // ======================== TIME-RELATED PROPERTIES =======================
     
-    this.addProperty(new BACnetSingletProperty(
-      PropertyIdentifier.UTC_OFFSET, 
-      ApplicationTag.SIGNED_INTEGER, 
+    this.addProperty(new BDSingletProperty(
+      BDPropertyIdentifier.UTC_OFFSET, 
+      BDApplicationTag.SIGNED_INTEGER, 
       false,
-      () => ({ type: ApplicationTag.SIGNED_INTEGER, value: new Date().getTimezoneOffset() * -1 }),
+      () => ({ type: BDApplicationTag.SIGNED_INTEGER, value: new Date().getTimezoneOffset() * -1 }),
     ));
     
-    this.addProperty(new BACnetSingletProperty(
-      PropertyIdentifier.LOCAL_DATE, 
-      ApplicationTag.DATE, 
+    this.addProperty(new BDSingletProperty(
+      BDPropertyIdentifier.LOCAL_DATE, 
+      BDApplicationTag.DATE, 
       false,
-      () => ({ type: ApplicationTag.DATE, value: new Date() }),
+      () => ({ type: BDApplicationTag.DATE, value: new Date() }),
     ));
     
-    this.addProperty(new BACnetSingletProperty(
-      PropertyIdentifier.LOCAL_TIME, 
-      ApplicationTag.TIME, 
+    this.addProperty(new BDSingletProperty(
+      BDPropertyIdentifier.LOCAL_TIME, 
+      BDApplicationTag.TIME, 
       false,
-      () => ({ type: ApplicationTag.TIME, value: new Date() }),
+      () => ({ type: BDApplicationTag.TIME, value: new Date() }),
     ));
     
-    this.addProperty(new BACnetSingletProperty(
-      PropertyIdentifier.DAYLIGHT_SAVINGS_STATUS, 
-      ApplicationTag.BOOLEAN, 
+    this.addProperty(new BDSingletProperty(
+      BDPropertyIdentifier.DAYLIGHT_SAVINGS_STATUS, 
+      BDApplicationTag.BOOLEAN, 
       false, 
-      () => ({ type: ApplicationTag.BOOLEAN, value: isDstInEffect(new Date()) }),
+      () => ({ type: BDApplicationTag.BOOLEAN, value: isDstInEffect(new Date()) }),
     ));
     
     // ======================= STATUS-RELATED PROPERTIES ======================
     
-    this.systemStatus = this.addProperty(new BACnetSingletProperty<ApplicationTag.ENUMERATED, DeviceStatus>(
-      PropertyIdentifier.SYSTEM_STATUS, 
-      ApplicationTag.ENUMERATED, 
+    this.systemStatus = this.addProperty(new BDSingletProperty<BDApplicationTag.ENUMERATED, BDDeviceStatus>(
+      BDPropertyIdentifier.SYSTEM_STATUS, 
+      BDApplicationTag.ENUMERATED, 
       false, 
-      DeviceStatus.OPERATIONAL,
+      BDDeviceStatus.OPERATIONAL,
     ));
     
   }
@@ -428,7 +426,7 @@ export class BACnetDevice extends BACnetObject<BACnetDeviceEvents> {
    * @throws Error if an object with the same identifier already exists
    * @typeParam T - The specific BACnet object type
    */
-  addObject<T extends BACnetObject>(object: T): T { 
+  addObject<T extends BDObject>(object: T): T { 
     if (!this.#objects.has(object.identifier.type)) { 
       this.#objects.set(object.identifier.type, new Map());
     }
@@ -438,7 +436,7 @@ export class BACnetDevice extends BACnetObject<BACnetDeviceEvents> {
     object.subscribe('beforecov', this.#onChildBeforeCov);
     object.subscribe('aftercov', this.#onChildAfterCov);
     this.#objects.get(object.identifier.type)!.set(object.identifier.instance, object);
-    this.#objectList.push({ type: ApplicationTag.OBJECTIDENTIFIER, value: object.identifier });
+    this.#objectList.push({ type: BDApplicationTag.OBJECTIDENTIFIER, value: object.identifier });
     return object;
   }
   
@@ -461,12 +459,12 @@ export class BACnetDevice extends BACnetObject<BACnetDeviceEvents> {
    * @typeParam T - The type of the request content
    * @typeParam O - The type of the callback result
    */
-  async #handleObjectReq<T extends BaseEventContent, O>(req: T, objectId: BACNetObjectID, cb: (obj: BACnetObject, req: T) => Promise<O>): Promise<O> {
+  async #handleObjectReq<T extends BaseEventContent, O>(req: T, objectId: BACNetObjectID, cb: (obj: BDObject, req: T) => Promise<O>): Promise<O> {
     const object = this.#objects.get(objectId.type)?.get(objectId.instance);
     if (object) { 
       return await cb(object, req);
     }
-    throw new BACnetError('unknown object', ErrorCode.UNKNOWN_OBJECT, ErrorClass.DEVICE);
+    throw new BDError('unknown object', BDErrorCode.UNKNOWN_OBJECT, BDErrorClass.DEVICE);
   }
 
 
@@ -509,7 +507,7 @@ export class BACnetDevice extends BACnetObject<BACnetDeviceEvents> {
    * @param cov - The change of value data to process
    * @private
    */
-  #covQueueWorker = async (cov: QueuedCov) => { 
+  #covQueueWorker = async (cov: BDQueuedCov) => { 
     const now = Date.now();
     const subscriptions = this.#subscriptions.get(cov.object.identifier.type)?.get(cov.object.identifier.instance);
     if (subscriptions) {
@@ -542,7 +540,7 @@ export class BACnetDevice extends BACnetObject<BACnetDeviceEvents> {
    * @param value - The new value
    * @private
    */
-  #onChildBeforeCov = async (object: BACnetObject, property: BACnetProperty<any, any>, value: BACnetValue | BACnetValue[]) => { 
+  #onChildBeforeCov = async (object: BDObject, property: BDProperty<any, any>, value: BDValue | BDValue[]) => { 
     
   }
   
@@ -557,7 +555,7 @@ export class BACnetDevice extends BACnetObject<BACnetDeviceEvents> {
    * @param value - The new value
    * @private
    */
-  #onChildAfterCov = async (object: BACnetObject, property: BACnetProperty<any, any>, value: BACnetValue | BACnetValue[]) => { 
+  #onChildAfterCov = async (object: BDObject, property: BDProperty<any, any>, value: BDValue | BDValue[]) => { 
     await this.#covqueue.push({ object, property, value });
   }
 
@@ -578,7 +576,7 @@ export class BACnetDevice extends BACnetObject<BACnetDeviceEvents> {
    */
   #onBacnetReadProperty = async (req: ReadPropertyContent) => {
     const { payload: { objectId, property }, address, header, service, invokeId } = req;
-    debug('req #%s: readProperty, object %s %s, property %s', invokeId, ObjectType[objectId.type as ObjectType], objectId.instance, PropertyIdentifier[property.id as PropertyIdentifier]);
+    debug('req #%s: readProperty, object %s %s, property %s', invokeId, BDObjectType[objectId.type as BDObjectType], objectId.instance, BDPropertyIdentifier[property.id as BDPropertyIdentifier]);
     if (!header) return;
     try {
       const { payload: { objectId } } = req;
@@ -587,10 +585,10 @@ export class BACnetDevice extends BACnetObject<BACnetDeviceEvents> {
       });
       this.#client.readPropertyResponse({ address: header.sender.address }, invokeId!, objectId, property, data);
     } catch (err) { 
-      if (err instanceof BACnetError) {
+      if (err instanceof BDError) {
         this.#client.errorResponse({ address: header.sender.address }, service!, invokeId!, err.errorClass, err.errorCode);
       } else { 
-        this.#client.errorResponse({ address: header.sender.address }, service!, invokeId!, ErrorClass.DEVICE, ErrorCode.INTERNAL_ERROR);
+        this.#client.errorResponse({ address: header.sender.address }, service!, invokeId!, BDErrorClass.DEVICE, BDErrorCode.INTERNAL_ERROR);
       }
     }
   }
@@ -606,7 +604,7 @@ export class BACnetDevice extends BACnetObject<BACnetDeviceEvents> {
    */
   #onBacnetSubscribeCov = async (req: SubscribeCovContent) => {
     const { payload: { subscriberProcessId, monitoredObjectId, issueConfirmedNotifications, lifetime }, header, service, invokeId } = req;
-    debug('new subscription: object %s %s', ObjectType[monitoredObjectId.type as ObjectType], monitoredObjectId.instance);
+    debug('new subscription: object %s %s', BDObjectType[monitoredObjectId.type as BDObjectType], monitoredObjectId.instance);
     if (!header) return;
     let typeSubs = this.#subscriptions.get(monitoredObjectId.type);
     if (!typeSubs) { 
@@ -618,7 +616,7 @@ export class BACnetDevice extends BACnetObject<BACnetDeviceEvents> {
       instanceSubs = new Set();
       typeSubs.set(monitoredObjectId.instance, instanceSubs);
     }
-    let previous: BACnetSubscription | null = null;
+    let previous: BDSubscription | null = null;
     for (const sub of instanceSubs) { 
       if (sub.subscriber.address === header.sender.address
         && isDeepStrictEqual(monitoredObjectId, sub.monitoredObjectId)
@@ -637,7 +635,7 @@ export class BACnetDevice extends BACnetObject<BACnetDeviceEvents> {
         issueConfirmedNotifications,
         expiresAt: Date.now() + (lifetime * 1000),
         // TODO: handle value-specific subscriptions when index > 0
-        monitoredProperty: { id: PropertyIdentifier.PRESENT_VALUE, index: 0 },
+        monitoredProperty: { id: BDPropertyIdentifier.PRESENT_VALUE, index: 0 },
         monitoredObjectId,
         subscriber: header.sender,
         covIncrement: 0,
@@ -645,7 +643,7 @@ export class BACnetDevice extends BACnetObject<BACnetDeviceEvents> {
         recipient: { address: [0], network: 0 },
       };
       instanceSubs.add(sub);
-      this.#subscriptionList.push({ type: ApplicationTag.COV_SUBSCRIPTION, value: sub });
+      this.#subscriptionList.push({ type: BDApplicationTag.COV_SUBSCRIPTION, value: sub });
     }
     this.#client.simpleAckResponse({ address: header.sender.address }, service!, invokeId!);
   };
@@ -685,7 +683,7 @@ export class BACnetDevice extends BACnetObject<BACnetDeviceEvents> {
     debug('new request: whoIs');
     const { header } = req;
     if (!header) return;
-    this.#client.iAmResponse({ address: header.sender.address }, this.identifier.instance, Segmentation.NO_SEGMENTATION, this.#vendorId);
+    this.#client.iAmResponse({ address: header.sender.address }, this.identifier.instance, BDSegmentation.NO_SEGMENTATION, this.#vendorId);
   }
   
   /**
@@ -803,10 +801,10 @@ export class BACnetDevice extends BACnetObject<BACnetDeviceEvents> {
       });  
       this.#client.simpleAckResponse({ address: header.sender.address }, service!, invokeId!);
     } catch (err) { 
-      if (err instanceof BACnetError) {
+      if (err instanceof BDError) {
         this.#client.errorResponse({ address: header.sender.address }, service!, invokeId!, err.errorClass, err.errorCode);
       } else { 
-        this.#client.errorResponse({ address: header.sender.address }, service!, invokeId!, ErrorClass.DEVICE, ErrorCode.INTERNAL_ERROR);
+        this.#client.errorResponse({ address: header.sender.address }, service!, invokeId!, BDErrorClass.DEVICE, BDErrorCode.INTERNAL_ERROR);
       }
     }
   };
@@ -846,7 +844,7 @@ export class BACnetDevice extends BACnetObject<BACnetDeviceEvents> {
     if (!header || !invokeId || typeof service !== 'number') { 
       return;
     }
-    this.#client.errorResponse({ address: header.sender.address }, service, invokeId, ErrorClass.SERVICES, ErrorCode.SERVICE_REQUEST_DENIED);
+    this.#client.errorResponse({ address: header.sender.address }, service, invokeId, BDErrorClass.SERVICES, BDErrorCode.SERVICE_REQUEST_DENIED);
   };
   
   /**

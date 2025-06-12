@@ -9,7 +9,7 @@
  * The object type is a fundamental component of an object identifier, which
  * uniquely identifies objects in a BACnet network.
  */
-export enum ObjectType {
+export enum BDObjectType {
   /** Represents an analog input point (e.g., temperature sensor) */
   ANALOG_INPUT = 0,
   /** Represents an analog output point (e.g., control valve) */

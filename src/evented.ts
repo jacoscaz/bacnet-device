@@ -57,7 +57,7 @@ export type Listener<T, K extends Key<T>> = T[K] extends unknown[] ? (...args: T
  * 
  * @typeParam T - An interface mapping event names to their argument arrays
  */
-export class Evented<T extends EventMap<T>> { 
+export class BDEvented<T extends EventMap<T>> { 
   
   /** 
    * Internal mapping of event names to their registered listeners

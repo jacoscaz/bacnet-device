@@ -1,15 +1,15 @@
 
 import { 
-  type BACnetValue 
+  type BDValue 
 } from '../../value.js';
 
 import {
-  type BACnetObject,
-  type BACnetObjectEvents,
+  type BDObject,
+  type BDObjectEvents,
 } from '../../object.js';
 
 import {
-  type BACnetProperty,
+  type BDProperty,
 } from '../../properties/index.js';
 
 import {
@@ -26,7 +26,7 @@ import {
  * This interface defines the details of a COV subscription from another
  * BACnet device.
  */
-export interface BACnetSubscription extends BACNetCovSubscription { 
+export interface BDSubscription extends BACNetCovSubscription { 
   
   recipient: {
     network: number;
@@ -61,21 +61,21 @@ export interface BACnetSubscription extends BACNetCovSubscription {
  * This interface defines the data needed to send a COV notification
  * to subscribed devices.
  */
-export interface QueuedCov {
+export interface BDQueuedCov {
   /** The BACnet object that changed */
-  object: BACnetObject;
+  object: BDObject;
   
   /** The property within the object that changed */
-  property: BACnetProperty<any, any>;
+  property: BDProperty<any, any>;
   
   /** The new value of the property */
-  value: BACnetValue | BACnetValue[];
+  value: BDValue | BDValue[];
 }
 
 /**
  * Events that can be emitted by a BACnet node
  */
-export interface BACnetDeviceEvents extends BACnetObjectEvents { 
+export interface BDDeviceEvents extends BDObjectEvents { 
   /** Emitted when an error occurs in the BACnet node */
   error: [err: Error];
   
@@ -89,7 +89,7 @@ export interface BACnetDeviceEvents extends BACnetObjectEvents {
  * This interface defines the parameters required to initialize a BACnet Device,
  * including identification, vendor information, and protocol configuration.
  */
-export type BACnetDeviceOpts = ClientOptions & {
+export type BDDeviceOpts = ClientOptions & {
   /**
    * Device instance number (0-4194303)
    * Device instance numbers must be unique on a BACnet network

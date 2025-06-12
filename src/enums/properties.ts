@@ -12,7 +12,7 @@
  * This comprehensive enumeration includes all standard properties defined in the
  * BACnet specification, though not all properties are applicable to all object types.
  */
-export enum PropertyIdentifier {
+export enum BDPropertyIdentifier {
   ABSENTEE_LIMIT = 244,
   ACCEPTED_MODES = 175,
   ACCESS_ALARM_EVENTS = 245,

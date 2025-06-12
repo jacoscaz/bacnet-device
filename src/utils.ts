@@ -1,6 +1,6 @@
 
-import type { BACnetSubscription,  QueuedCov } from './objects/device/types.js';
-import type { BACnetDevice } from './objects/device/device.js';
+import type { BDSubscription,  BDQueuedCov } from './objects/device/types.js';
+import type { BDDevice } from './objects/device/device.js';
 
 import bacnet from '@innovation-system/node-bacnet';
 
@@ -9,7 +9,7 @@ const { default: BACnetClient } = bacnet;
 /**
  * Type representing the BACnet client instance from the underlying library
  */
-export type BACnetClientType = InstanceType<typeof BACnetClient>;
+export type BACNetClientType = InstanceType<typeof BACnetClient>;
 
 /**
  * Ensures that a value or array of values is returned as an array
@@ -34,7 +34,7 @@ export const ensureArray = <T>(val: T | T[]): T[] => {
  * @param cov - The change of value data to send
  * @returns A promise that resolves when the notification is confirmed or rejects on error
  */
-export const sendConfirmedCovNotification = async (client: BACnetClientType, emitter: BACnetDevice, subscription: BACnetSubscription, cov: QueuedCov) => {
+export const sendConfirmedCovNotification = async (client: BACNetClientType, emitter: BDDevice, subscription: BDSubscription, cov: BDQueuedCov) => {
   return new Promise<void>((resolve, reject) => {
     client.confirmedCOVNotification(
       { address: subscription.subscriber.address },
@@ -60,7 +60,7 @@ export const sendConfirmedCovNotification = async (client: BACnetClientType, emi
  * @param cov - The change of value data to send
  * @returns A promise that resolves when the notification is sent
  */
-export const sendUnconfirmedCovNotification = async (client: BACnetClientType, emitter: BACnetDevice, subscription: BACnetSubscription, cov: QueuedCov) => {
+export const sendUnconfirmedCovNotification = async (client: BACNetClientType, emitter: BDDevice, subscription: BDSubscription, cov: BDQueuedCov) => {
   client.unconfirmedCOVNotification(
     subscription.subscriber,
     subscription.subscriptionProcessId,

@@ -6,7 +6,7 @@
  * as defined in the BACnet standard. It is used in the SYSTEM_STATUS property
  * of a Device object.
  */
-export enum DeviceStatus { 
+export enum BDDeviceStatus { 
   /** Device is fully operational */
   OPERATIONAL = 0,
   /** Device is operational but only read operations are permitted */
@@ -28,7 +28,7 @@ export enum DeviceStatus {
  * as defined in the BACnet standard. It is used in the SEGMENTATION_SUPPORTED property
  * of a Device object to indicate the device's ability to send and receive segmented messages.
  */
-export enum Segmentation {
+export enum BDSegmentation {
   /** Device can both transmit and receive segmented messages */
   SEGMENTED_BOTH = 0,
   /** Device can transmit segmented messages but cannot receive them */

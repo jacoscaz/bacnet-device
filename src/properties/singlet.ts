@@ -11,12 +11,12 @@
 import fastq from 'fastq';
 
 import { 
-  type BACnetValue, 
-  type ApplicationTagValueType,
+  type BDValue, 
+  type BDApplicationTagValueType,
 } from '../value.js';
-import { Evented } from '../evented.js';
-import { BACnetError } from '../errors.js';
-import { PropertyIdentifier, ErrorCode, ErrorClass, ApplicationTag } from '../enums/index.js';
+import { BDEvented } from '../evented.js';
+import { BDError } from '../errors.js';
+import { BDPropertyIdentifier, BDErrorCode, BDErrorClass, BDApplicationTag } from '../enums/index.js';
 
 /**
  * Events that can be emitted by a BACnet singlet property
@@ -27,12 +27,12 @@ import { PropertyIdentifier, ErrorCode, ErrorClass, ApplicationTag } from '../en
  * @typeParam Tag - The BACnet application tag for the property values
  * @typeParam Type - The JavaScript type corresponding to the application tag
  */
-export interface ScalarPropertyEvents<Tag extends ApplicationTag, Type extends ApplicationTagValueType[Tag] = ApplicationTagValueType[Tag]> { 
+export interface BDSingletPropertyEvents<Tag extends BDApplicationTag, Type extends BDApplicationTagValueType[Tag] = BDApplicationTagValueType[Tag]> { 
   /** Emitted before a property value changes */
-  beforecov: [property: BACnetSingletProperty<Tag, Type>, value: BACnetValue<Tag, Type>],
+  beforecov: [property: BDSingletProperty<Tag, Type>, value: BDValue<Tag, Type>],
   
   /** Emitted after a property value has changed */
-  aftercov: [property: BACnetSingletProperty<Tag, Type>, value: BACnetValue<Tag, Type>],
+  aftercov: [property: BDSingletProperty<Tag, Type>, value: BDValue<Tag, Type>],
 }
 
 /**
@@ -43,9 +43,9 @@ export interface ScalarPropertyEvents<Tag extends ApplicationTag, Type extends A
  * 
  * @typeParam Tag - The BACnet application tag for the property value
  * @typeParam Type - The JavaScript type corresponding to the application tag
- * @extends Evented<ScalarPropertyEvents<Tag, Type>>
+ * @extends BDEvented<BDSingletPropertyEvents<Tag, Type>>
  */
-export class BACnetSingletProperty<Tag extends ApplicationTag, Type extends ApplicationTagValueType[Tag] = ApplicationTagValueType[Tag]> extends Evented<ScalarPropertyEvents<Tag, Type>> {
+export class BDSingletProperty<Tag extends BDApplicationTag, Type extends BDApplicationTagValueType[Tag] = BDApplicationTagValueType[Tag]> extends BDEvented<BDSingletPropertyEvents<Tag, Type>> {
   
   /** Indicates this is not a list/array property */
   readonly list: false;
@@ -59,19 +59,19 @@ export class BACnetSingletProperty<Tag extends ApplicationTag, Type extends Appl
   readonly settable: boolean;
   
   /** The BACnet property identifier */
-  readonly identifier: PropertyIdentifier;
+  readonly identifier: BDPropertyIdentifier;
   
   /** 
    * The current value of this property 
    * @private
    */
-  #value: BACnetValue<Tag, Type> | (() => BACnetValue<Tag, Type>);
+  #value: BDValue<Tag, Type> | (() => BDValue<Tag, Type>);
   
   /**
    * Queue for serializing value changes
    * @private
    */
-  #queue: fastq.queueAsPromised<BACnetValue<Tag, Type>>;
+  #queue: fastq.queueAsPromised<BDValue<Tag, Type>>;
   
   /**
    * Creates a new BACnet singlet property
@@ -81,7 +81,7 @@ export class BACnetSingletProperty<Tag extends ApplicationTag, Type extends Appl
    * @param writable - Whether this property can be written to
    * @param value - The initial value for this property
    */
-  constructor(identifier: PropertyIdentifier, type: Tag, writable: boolean, value: Type | (() => BACnetValue<Tag, Type>)) {
+  constructor(identifier: BDPropertyIdentifier, type: Tag, writable: boolean, value: Type | (() => BDValue<Tag, Type>)) {
     super();
     this.list = false;
     this.type = type;
@@ -127,7 +127,7 @@ export class BACnetSingletProperty<Tag extends ApplicationTag, Type extends Appl
    * @returns The current property value in BACnet format
    * @internal
    */
-  ___readValue(): BACnetValue<Tag, Type> {
+  ___readValue(): BDValue<Tag, Type> {
     return typeof this.#value === 'function' ? this.#value() : this.#value;
   }
   
@@ -142,19 +142,19 @@ export class BACnetSingletProperty<Tag extends ApplicationTag, Type extends Appl
    * @throws BACnetError if the property is not writable or the value type is invalid
    * @internal
    */
-  async ___writeValue(value: BACnetValue<Tag, Type> | BACnetValue<Tag, Type>[]): Promise<void> { 
+  async ___writeValue(value: BDValue<Tag, Type> | BDValue<Tag, Type>[]): Promise<void> { 
     if (!this.writable || !this.settable) { 
-      throw new BACnetError('not writable', ErrorCode.WRITE_ACCESS_DENIED, ErrorClass.PROPERTY);
+      throw new BDError('not writable', BDErrorCode.WRITE_ACCESS_DENIED, BDErrorClass.PROPERTY);
     }
     if (Array.isArray(value)) { 
       if (value.length !== 1) {
-        throw new BACnetError('not a list', ErrorCode.REJECT_INVALID_PARAMETER_DATA_TYPE, ErrorClass.PROPERTY);
+        throw new BDError('not a list', BDErrorCode.REJECT_INVALID_PARAMETER_DATA_TYPE, BDErrorClass.PROPERTY);
       } else { 
         value = value[0];
       }
     }
     if (value.type !== this.type) { 
-      throw new BACnetError('not a list', ErrorCode.REJECT_INVALID_PARAMETER_DATA_TYPE, ErrorClass.PROPERTY);
+      throw new BDError('not a list', BDErrorCode.REJECT_INVALID_PARAMETER_DATA_TYPE, BDErrorClass.PROPERTY);
     }
     await this.#queue.push(value);
   }
@@ -167,7 +167,7 @@ export class BACnetSingletProperty<Tag extends ApplicationTag, Type extends Appl
    * @param value - The new value to set
    * @private
    */
-  #worker = async (value: BACnetValue<Tag, Type>) => { 
+  #worker = async (value: BDValue<Tag, Type>) => { 
     await this.trigger('beforecov', this, value);
     this.#value = value;
     await this.trigger('aftercov', this, value);

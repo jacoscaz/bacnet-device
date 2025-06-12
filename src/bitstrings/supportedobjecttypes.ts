@@ -1,5 +1,5 @@
 
-import { BitString } from './bitstring.js'; 
+import { BDBitString } from './bitstring.js'; 
 
 /**
  * Enumeration of the standard BACnet object type bit positions
@@ -8,7 +8,7 @@ import { BitString } from './bitstring.js';
  * as defined in the BACnet standard. Each bit corresponds to a specific object type that
  * a BACnet device may support.
  */
-export enum SupportedObjectTypesBit {
+export enum BDSupportedObjectTypesBit {
   /** Analog Input object type */
   ANALOG_INPUT = 0,
   /** Analog Output object type */
@@ -142,15 +142,15 @@ export enum SupportedObjectTypesBit {
  * allocates 112 bits to accommodate all standard object types, even though the current
  * highest-numbered object type is 59 (LIFT).
  * 
- * @extends BitString<typeof SupportedObjectTypesBit>
+ * @extends BDBitString<typeof BDSupportedObjectTypesBit>
  */
-export class SupportedObjectTypesBitString extends BitString<typeof SupportedObjectTypesBit> {
+export class BDSupportedObjectTypesBitString extends BDBitString<typeof BDSupportedObjectTypesBit> {
   /**
    * Creates a new SupportedObjectTypes bitstring with the specified bits set to 1
    * 
    * @param trueBits - Array of SupportedObjectTypesBit values representing the object types supported by the device
    */
-  constructor(...trueBits: SupportedObjectTypesBit[]) { 
+  constructor(...trueBits: BDSupportedObjectTypesBit[]) { 
     super(112, trueBits);
   }
 }

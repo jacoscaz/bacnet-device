@@ -1,15 +1,15 @@
 
-import type { BACnetValue } from '../value.js';
+import type { BDValue } from '../value.js';
 
-import { BACnetSingletProperty, BACnetArrayProperty } from '../properties/index.js';
-import { BACnetObject } from '../object.js';
-import { ApplicationTag, ObjectType, PropertyIdentifier } from '../enums/index.js';
-import { EventState, EngineeringUnit } from '../enums/index.js';
-import { StatusFlagsBitString } from '../bitstrings/index.js';
+import { BDSingletProperty, BDArrayProperty } from '../properties/index.js';
+import { BDObject } from '../object.js';
+import { BDApplicationTag, BDObjectType, BDPropertyIdentifier } from '../enums/index.js';
+import { BDEventState, BDEngineeringUnit } from '../enums/index.js';
+import { BDStatusFlagsBitString } from '../bitstrings/index.js';
 
-export interface BACnetAnalogOutputOpts { 
+export interface BDAnalogOutputOpts { 
   name: string, 
-  unit: EngineeringUnit, 
+  unit: BDEngineeringUnit, 
   description?: string,
   minPresentValue?: number,
   maxPresentValue?: number,
@@ -36,9 +36,9 @@ export interface BACnetAnalogOutputOpts {
  * - Priority_Array
  * - Relinquish_Default
  * 
- * @extends BACnetObject
+ * @extends BDObject
  */
-export class BACnetAnalogOutput extends BACnetObject {
+export class BDAnalogOutput extends BDObject {
   
   /** 
    * The current value of the analog output
@@ -47,11 +47,11 @@ export class BACnetAnalogOutput extends BACnetObject {
    * units specified by the engineeringUnit property. The actual value is determined
    * by the priority array mechanism.
    */
-  readonly presentValue: BACnetSingletProperty<ApplicationTag.REAL>;
+  readonly presentValue: BDSingletProperty<BDApplicationTag.REAL>;
   
-  readonly maxPresentValue: BACnetSingletProperty<ApplicationTag.REAL>;
+  readonly maxPresentValue: BDSingletProperty<BDApplicationTag.REAL>;
   
-  readonly minPresentValue: BACnetSingletProperty<ApplicationTag.REAL>;
+  readonly minPresentValue: BDSingletProperty<BDApplicationTag.REAL>;
   
   /**
    * The current status flags for this object
@@ -59,7 +59,7 @@ export class BACnetAnalogOutput extends BACnetObject {
    * This property contains four flags: IN_ALARM, FAULT, OVERRIDDEN, and OUT_OF_SERVICE.
    * These flags provide a summary of the object's current status.
    */
-  readonly statusFlags: BACnetSingletProperty<ApplicationTag.BIT_STRING>;
+  readonly statusFlags: BDSingletProperty<BDApplicationTag.BIT_STRING>;
   
   /**
    * The current event state of this object
@@ -67,7 +67,7 @@ export class BACnetAnalogOutput extends BACnetObject {
    * This property indicates whether the object is in an alarm condition.
    * For objects that do not support event reporting, this is typically NORMAL.
    */
-  readonly eventState: BACnetSingletProperty<ApplicationTag.ENUMERATED, EventState>;
+  readonly eventState: BDSingletProperty<BDApplicationTag.ENUMERATED, BDEventState>;
   
   /**
    * The engineering units for the present value
@@ -75,7 +75,7 @@ export class BACnetAnalogOutput extends BACnetObject {
    * This property specifies the units of measurement for the present value,
    * such as degrees Celsius, Pascal, etc.
    */
-  readonly engineeringUnit: BACnetSingletProperty<ApplicationTag.ENUMERATED, EngineeringUnit>;
+  readonly engineeringUnit: BDSingletProperty<BDApplicationTag.ENUMERATED, BDEngineeringUnit>;
   
   /**
    * Indicates whether this object is out of service
@@ -83,7 +83,7 @@ export class BACnetAnalogOutput extends BACnetObject {
    * When true, the Present_Value property is decoupled from the physical output
    * and can be modified directly for testing or other purposes.
    */
-  readonly outOfService: BACnetSingletProperty<ApplicationTag.BOOLEAN>;
+  readonly outOfService: BDSingletProperty<BDApplicationTag.BOOLEAN>;
   
   /**
    * The default value for the present value when all priority array slots are NULL
@@ -91,7 +91,7 @@ export class BACnetAnalogOutput extends BACnetObject {
    * This property represents the value to be used for the Present_Value property
    * when all entries in the Priority_Array property are NULL.
    */
-  readonly relinquishDefault: BACnetSingletProperty<ApplicationTag.REAL>;
+  readonly relinquishDefault: BDSingletProperty<BDApplicationTag.REAL>;
   
   /**
    * The priority array for command arbitration
@@ -100,7 +100,7 @@ export class BACnetAnalogOutput extends BACnetObject {
    * BACnet devices use this mechanism to determine which command source has control
    * over the output value at any given time.
    */
-  readonly priorityArray: BACnetArrayProperty<ApplicationTag.REAL | ApplicationTag.NULL>;
+  readonly priorityArray: BDArrayProperty<BDApplicationTag.REAL | BDApplicationTag.NULL>;
   
   /**
    * The current command priority that is controlling the Present_Value
@@ -109,9 +109,9 @@ export class BACnetAnalogOutput extends BACnetObject {
    * has control of the Present_Value property, or NULL if the Relinquish_Default
    * is being used.
    */
-  readonly currentCommandPriority: BACnetSingletProperty<ApplicationTag.UNSIGNED_INTEGER | ApplicationTag.NULL>;
+  readonly currentCommandPriority: BDSingletProperty<BDApplicationTag.UNSIGNED_INTEGER | BDApplicationTag.NULL>;
   
-  readonly covIncrement: BACnetSingletProperty<ApplicationTag.REAL>;
+  readonly covIncrement: BDSingletProperty<BDApplicationTag.REAL>;
   
   /**
    * Creates a new BACnet Analog Output object
@@ -121,45 +121,45 @@ export class BACnetAnalogOutput extends BACnetObject {
    * @param unit - The engineering unit for this analog output's present value
    * @param description - The description of this object
    */
-  constructor(instance: number, opts: BACnetAnalogOutputOpts) {
-    super(ObjectType.ANALOG_OUTPUT, instance, opts.name, opts.description);
+  constructor(instance: number, opts: BDAnalogOutputOpts) {
+    super(BDObjectType.ANALOG_OUTPUT, instance, opts.name, opts.description);
     
-    this.presentValue = this.addProperty(new BACnetSingletProperty(
-      PropertyIdentifier.PRESENT_VALUE, ApplicationTag.REAL, true, opts.presentValue ?? 0));
+    this.presentValue = this.addProperty(new BDSingletProperty(
+      BDPropertyIdentifier.PRESENT_VALUE, BDApplicationTag.REAL, true, opts.presentValue ?? 0));
     
-    this.statusFlags = this.addProperty(new BACnetSingletProperty<ApplicationTag.BIT_STRING, StatusFlagsBitString>(
-      PropertyIdentifier.STATUS_FLAGS, ApplicationTag.BIT_STRING, false, new StatusFlagsBitString()));
+    this.statusFlags = this.addProperty(new BDSingletProperty<BDApplicationTag.BIT_STRING, BDStatusFlagsBitString>(
+      BDPropertyIdentifier.STATUS_FLAGS, BDApplicationTag.BIT_STRING, false, new BDStatusFlagsBitString()));
     
-    this.eventState = this.addProperty(new BACnetSingletProperty<ApplicationTag.ENUMERATED, EventState>(
-      PropertyIdentifier.EVENT_STATE, ApplicationTag.ENUMERATED, false, EventState.NORMAL));
+    this.eventState = this.addProperty(new BDSingletProperty<BDApplicationTag.ENUMERATED, BDEventState>(
+      BDPropertyIdentifier.EVENT_STATE, BDApplicationTag.ENUMERATED, false, BDEventState.NORMAL));
     
-    this.engineeringUnit = this.addProperty(new BACnetSingletProperty<ApplicationTag.ENUMERATED, EngineeringUnit>(
-      PropertyIdentifier.UNITS, ApplicationTag.ENUMERATED, false, opts.unit));
+    this.engineeringUnit = this.addProperty(new BDSingletProperty<BDApplicationTag.ENUMERATED, BDEngineeringUnit>(
+      BDPropertyIdentifier.UNITS, BDApplicationTag.ENUMERATED, false, opts.unit));
     
-    this.outOfService  = this.addProperty(new BACnetSingletProperty(
-      PropertyIdentifier.OUT_OF_SERVICE, ApplicationTag.BOOLEAN, false, false));
+    this.outOfService  = this.addProperty(new BDSingletProperty(
+      BDPropertyIdentifier.OUT_OF_SERVICE, BDApplicationTag.BOOLEAN, false, false));
     
-    this.relinquishDefault = this.addProperty(new BACnetSingletProperty(
-      PropertyIdentifier.RELINQUISH_DEFAULT, ApplicationTag.REAL, false, 0));
+    this.relinquishDefault = this.addProperty(new BDSingletProperty(
+      BDPropertyIdentifier.RELINQUISH_DEFAULT, BDApplicationTag.REAL, false, 0));
     
-    this.priorityArray = this.addProperty(new BACnetArrayProperty(
-      PropertyIdentifier.PRIORITY_ARRAY,
-      ApplicationTag.REAL | ApplicationTag.NULL,
+    this.priorityArray = this.addProperty(new BDArrayProperty(
+      BDPropertyIdentifier.PRIORITY_ARRAY,
+      BDApplicationTag.REAL | BDApplicationTag.NULL,
       false,
-      new Array(16).fill({ type: ApplicationTag.NULL, value: null } as BACnetValue<ApplicationTag.REAL | ApplicationTag.NULL>),
+      new Array(16).fill({ type: BDApplicationTag.NULL, value: null } as BDValue<BDApplicationTag.REAL | BDApplicationTag.NULL>),
     ));
     
-    this.covIncrement = this.addProperty(new BACnetSingletProperty(
-      PropertyIdentifier.COV_INCREMENT, ApplicationTag.REAL, false, opts.covIncrement ?? 0.001));
+    this.covIncrement = this.addProperty(new BDSingletProperty(
+      BDPropertyIdentifier.COV_INCREMENT, BDApplicationTag.REAL, false, opts.covIncrement ?? 0.001));
    
-    this.maxPresentValue = this.addProperty(new BACnetSingletProperty(
-      PropertyIdentifier.MAX_PRES_VALUE, ApplicationTag.REAL, false, opts.maxPresentValue ?? Number.MAX_SAFE_INTEGER));
+    this.maxPresentValue = this.addProperty(new BDSingletProperty(
+      BDPropertyIdentifier.MAX_PRES_VALUE, BDApplicationTag.REAL, false, opts.maxPresentValue ?? Number.MAX_SAFE_INTEGER));
     
-    this.minPresentValue = this.addProperty(new BACnetSingletProperty(
-      PropertyIdentifier.MIN_PRES_VALUE, ApplicationTag.REAL, false, opts.minPresentValue ?? Number.MIN_SAFE_INTEGER));
+    this.minPresentValue = this.addProperty(new BDSingletProperty(
+      BDPropertyIdentifier.MIN_PRES_VALUE, BDApplicationTag.REAL, false, opts.minPresentValue ?? Number.MIN_SAFE_INTEGER));
     
-    this.currentCommandPriority = this.addProperty(new BACnetSingletProperty(
-      PropertyIdentifier.CURRENT_COMMAND_PRIORITY, ApplicationTag.UNSIGNED_INTEGER | ApplicationTag.NULL, false, null as number | null));
+    this.currentCommandPriority = this.addProperty(new BDSingletProperty(
+      BDPropertyIdentifier.CURRENT_COMMAND_PRIORITY, BDApplicationTag.UNSIGNED_INTEGER | BDApplicationTag.NULL, false, null as number | null));
     
   }
   

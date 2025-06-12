@@ -9,7 +9,7 @@
  * Error classes are used in conjunction with error codes to provide detailed
  * information about the nature of an error that has occurred.
  */
-export enum ErrorClass {
+export enum BDErrorClass {
   /** Error related to the device object */
   DEVICE = 0,
   /** Error related to an object other than the device object */
@@ -38,7 +38,7 @@ export enum ErrorClass {
  * Error codes are used in conjunction with error classes to provide detailed
  * information about the nature of an error that has occurred.
  */
-export enum ErrorCode {
+export enum BDErrorCode {
   ABORT_APDU_TOO_LONG = 123,
   ABORT_APPLICATION_EXCEEDED_REPLY_TIME = 124,
   ABORT_BUFFER_OVERFLOW = 51,

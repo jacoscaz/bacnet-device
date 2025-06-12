@@ -13,7 +13,7 @@
  * This comprehensive enumeration includes all standard units defined in the
  * BACnet specification, organized by measurement type (length, area, volume, etc.).
  */
-export enum EngineeringUnit {
+export enum BDEngineeringUnit {
   METERS_PER_SECOND_PER_SECOND = 166,
   SQUARE_METERS = 0,
   SQUARE_CENTIMETERS = 116,

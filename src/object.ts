@@ -8,17 +8,17 @@
  * @module
  */
 
-import { Evented, type EventMap } from './evented.js';
+import { BDEvented, type EventMap } from './evented.js';
 
-import { type BACnetValue } from './value.js';
-import { BACnetError } from './errors.js';
+import { type BDValue } from './value.js';
+import { BDError } from './errors.js';
 
 import {
-  ErrorCode,
-  ErrorClass,
-  ObjectType,
-  ApplicationTag,
-  PropertyIdentifier,
+  BDErrorCode,
+  BDErrorClass,
+  BDObjectType,
+  BDApplicationTag,
+  BDPropertyIdentifier,
 } from './enums/index.js';
 
 import type {
@@ -33,21 +33,21 @@ import type {
 } from '@innovation-system/node-bacnet/dist/lib/EventTypes.js';
 
 import {
-  BACnetSingletProperty,
-  BACnetArrayProperty,
-  type BACnetProperty,
+  BDSingletProperty,
+  BDArrayProperty,
+  type BDProperty,
 } from './properties/index.js';
 import { ensureArray } from './utils.js';
 
 /**
  * Events that can be emitted by a BACnet object
  */
-export interface BACnetObjectEvents extends EventMap<any> { 
+export interface BDObjectEvents extends EventMap<any> { 
   /** Emitted before a property value changes */
-  beforecov: [object: BACnetObject, property: BACnetProperty<any, any>, nextValue: BACnetValue | BACnetValue[]],
+  beforecov: [object: BDObject, property: BDProperty<any, any>, nextValue: BDValue | BDValue[]],
   
   /** Emitted after a property value has changed */
-  aftercov: [object: BACnetObject, property: BACnetProperty<any, any>, newValue: BACnetValue | BACnetValue[]],
+  aftercov: [object: BDObject, property: BDProperty<any, any>, newValue: BDValue | BDValue[]],
 }
 
 /**
@@ -56,11 +56,11 @@ export interface BACnetObjectEvents extends EventMap<any> {
  * 
  * @see section 12.1.1.4.1 "Property_List"
  */
-const unlistedProperties: PropertyIdentifier[] = [
-  PropertyIdentifier.OBJECT_NAME,
-  PropertyIdentifier.OBJECT_TYPE,
-  PropertyIdentifier.OBJECT_IDENTIFIER,
-  PropertyIdentifier.PROPERTY_LIST,
+const unlistedProperties: BDPropertyIdentifier[] = [
+  BDPropertyIdentifier.OBJECT_NAME,
+  BDPropertyIdentifier.OBJECT_TYPE,
+  BDPropertyIdentifier.OBJECT_IDENTIFIER,
+  BDPropertyIdentifier.PROPERTY_LIST,
 ];
 
 /**
@@ -70,9 +70,9 @@ const unlistedProperties: PropertyIdentifier[] = [
  * according to the BACnet specification. It manages object properties and
  * handles property read/write operations and CoV notifications.
  * 
- * @extends Evented<BACnetObjectEvents>
+ * @extends BDEvented<BDObjectEvents>
  */
-export class BACnetObject<EM extends BACnetObjectEvents = BACnetObjectEvents> extends Evented<EM> { 
+export class BDObject<EM extends BDObjectEvents = BDObjectEvents> extends BDEvented<EM> { 
   
   /** The unique identifier for this object (type and instance number) */
   readonly identifier: BACNetObjectID;
@@ -81,13 +81,13 @@ export class BACnetObject<EM extends BACnetObjectEvents = BACnetObjectEvents> ex
    * The list of properties in this object (used for PROPERTY_LIST property)
    * @private
    */
-  readonly #propertyList: BACnetValue<ApplicationTag.ENUMERATED, PropertyIdentifier>[];
+  readonly #propertyList: BDValue<BDApplicationTag.ENUMERATED, BDPropertyIdentifier>[];
   
   /**
    * Map of all properties in this object by their identifier
    * @private
    */
-  readonly #properties: Map<PropertyIdentifier, BACnetProperty<any, any>>;
+  readonly #properties: Map<BDPropertyIdentifier, BDProperty<any, any>>;
   
   /**
    * Creates a new BACnet object
@@ -96,43 +96,43 @@ export class BACnetObject<EM extends BACnetObjectEvents = BACnetObjectEvents> ex
    * @param instance - The instance number for this object
    * @param name - The name of this object
    */
-  constructor(type: ObjectType, instance: number, name: string, description: string = '') {
+  constructor(type: BDObjectType, instance: number, name: string, description: string = '') {
     super();
     this.identifier = Object.freeze({ type, instance });
     this.#properties = new Map();
     this.#propertyList = [];
     
-    this.addProperty(new BACnetSingletProperty(
-      PropertyIdentifier.OBJECT_NAME, 
-      ApplicationTag.CHARACTER_STRING, 
+    this.addProperty(new BDSingletProperty(
+      BDPropertyIdentifier.OBJECT_NAME, 
+      BDApplicationTag.CHARACTER_STRING, 
       false, 
       name,
     ));
     
-    this.addProperty(new BACnetSingletProperty(
-      PropertyIdentifier.OBJECT_TYPE, 
-      ApplicationTag.ENUMERATED, 
+    this.addProperty(new BDSingletProperty(
+      BDPropertyIdentifier.OBJECT_TYPE, 
+      BDApplicationTag.ENUMERATED, 
       false, 
       type,
     ));
     
-    this.addProperty(new BACnetSingletProperty(
-      PropertyIdentifier.OBJECT_IDENTIFIER, 
-      ApplicationTag.OBJECTIDENTIFIER, 
+    this.addProperty(new BDSingletProperty(
+      BDPropertyIdentifier.OBJECT_IDENTIFIER, 
+      BDApplicationTag.OBJECTIDENTIFIER, 
       false, 
       this.identifier,
     ));
     
-    this.addProperty(new BACnetArrayProperty(
-      PropertyIdentifier.PROPERTY_LIST, 
-      ApplicationTag.ENUMERATED, 
+    this.addProperty(new BDArrayProperty(
+      BDPropertyIdentifier.PROPERTY_LIST, 
+      BDApplicationTag.ENUMERATED, 
       false, 
       () => this.#propertyList,
     ));
     
-    this.addProperty(new BACnetSingletProperty(
-      PropertyIdentifier.DESCRIPTION, 
-      ApplicationTag.CHARACTER_STRING, 
+    this.addProperty(new BDSingletProperty(
+      BDPropertyIdentifier.DESCRIPTION, 
+      BDApplicationTag.CHARACTER_STRING, 
       false, 
       description,
     ));
@@ -150,13 +150,13 @@ export class BACnetObject<EM extends BACnetObjectEvents = BACnetObjectEvents> ex
    * @throws Error if a property with the same identifier already exists
    * @typeParam T - The specific BACnet property type
    */
-  addProperty<T extends BACnetProperty<any, any>>(property: T): T { 
+  addProperty<T extends BDProperty<any, any>>(property: T): T { 
     if (this.#properties.has(property.identifier)) { 
       throw new Error('Cannot register property: duplicate property identifier');
     }
     this.#properties.set(property.identifier, property);
     if (!unlistedProperties.includes(property.identifier)) { 
-      this.#propertyList.push({ type: ApplicationTag.ENUMERATED, value: property.identifier });
+      this.#propertyList.push({ type: BDApplicationTag.ENUMERATED, value: property.identifier });
     }
     property.subscribe('beforecov', this.#onPropertyBeforeCov);
     property.subscribe('aftercov', this.#onPropertyAfterCov);
@@ -173,13 +173,13 @@ export class BACnetObject<EM extends BACnetObjectEvents = BACnetObjectEvents> ex
    * @throws BACnetError if the property does not exist
    * @internal
    */
-  async ___writeProperty(identifier: BACNetPropertyID, value: BACnetValue | BACnetValue[]): Promise<void> {
-    const property = this.#properties.get(identifier.id as PropertyIdentifier);
+  async ___writeProperty(identifier: BACNetPropertyID, value: BDValue | BDValue[]): Promise<void> {
+    const property = this.#properties.get(identifier.id as BDPropertyIdentifier);
     // TODO: test/validate value before setting it!
     if (property) {
       await property.___writeValue(value);
     } else { 
-      throw new BACnetError('unknown property', ErrorCode.UNKNOWN_PROPERTY, ErrorClass.PROPERTY);    
+      throw new BDError('unknown property', BDErrorCode.UNKNOWN_PROPERTY, BDErrorClass.PROPERTY);    
     }
   }
   
@@ -193,13 +193,13 @@ export class BACnetObject<EM extends BACnetObjectEvents = BACnetObjectEvents> ex
    * @throws BACnetError if the property does not exist
    * @internal
    */
-  async ___readProperty(req: ReadPropertyContent): Promise<BACnetValue | BACnetValue[]> {
+  async ___readProperty(req: ReadPropertyContent): Promise<BDValue | BDValue[]> {
     const { payload: { property } } = req;
-    if (this.#properties.has(property.id as PropertyIdentifier)) { 
-      return this.#properties.get(property.id as PropertyIdentifier)!
+    if (this.#properties.has(property.id as BDPropertyIdentifier)) { 
+      return this.#properties.get(property.id as BDPropertyIdentifier)!
         .___readValue();
     }
-    throw new BACnetError('unknown property', ErrorCode.UNKNOWN_PROPERTY, ErrorClass.PROPERTY);
+    throw new BDError('unknown property', BDErrorCode.UNKNOWN_PROPERTY, BDErrorClass.PROPERTY);
   }
   
   /**
@@ -231,7 +231,7 @@ export class BACnetObject<EM extends BACnetObjectEvents = BACnetObjectEvents> ex
    */
   async ___readPropertyMultiple(properties: ReadPropertyMultipleContent['payload']['properties'][number]['properties']): Promise<BACNetReadAccess> { 
     const values: BACNetReadAccess['values'] = [];
-    if (properties.length === 1 && properties[0].id === PropertyIdentifier.ALL) { 
+    if (properties.length === 1 && properties[0].id === BDPropertyIdentifier.ALL) { 
       return this.___readPropertyMultipleAll();
     }
     for (const property of properties) {
@@ -252,7 +252,7 @@ export class BACnetObject<EM extends BACnetObjectEvents = BACnetObjectEvents> ex
    * @param nextValue - The new value being set
    * @private
    */
-  #onPropertyBeforeCov = async (property: BACnetProperty<any, any>, nextValue: BACnetValue | BACnetValue[]) => { 
+  #onPropertyBeforeCov = async (property: BDProperty<any, any>, nextValue: BDValue | BDValue[]) => { 
     await this.trigger('beforecov', this, property, nextValue);
   };
   
@@ -266,7 +266,7 @@ export class BACnetObject<EM extends BACnetObjectEvents = BACnetObjectEvents> ex
    * @param nextValue - The new value that was set
    * @private
    */
-  #onPropertyAfterCov = async (property: BACnetProperty<any, any>, nextValue: BACnetValue | BACnetValue[]) => { 
+  #onPropertyAfterCov = async (property: BDProperty<any, any>, nextValue: BDValue | BDValue[]) => { 
     await this.trigger('aftercov', this, property, nextValue);
   };
     

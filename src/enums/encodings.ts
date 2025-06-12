@@ -6,7 +6,7 @@
  * in BACnet as defined in the BACnet standard. It is used to specify the
  * encoding for CHARACTER_STRING values.
  */
-export enum CharacterStringEncoding {
+export enum BDCharacterStringEncoding {
   /** UTF-8 encoding (default) */
   UTF_8 = 0,
   /** Microsoft Double Byte Character Set */

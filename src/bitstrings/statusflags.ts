@@ -1,5 +1,5 @@
 
-import { BitString } from './bitstring.js'; 
+import { BDBitString } from './bitstring.js'; 
 
 /**
  * Enumeration of the standard BACnet status flag bit positions
@@ -7,7 +7,7 @@ import { BitString } from './bitstring.js';
  * These values represent the bit positions in a StatusFlags bitstring
  * as defined in the BACnet standard.
  */
-export enum StatusFlagsBit {
+export enum BDStatusFlagsBit {
   /**
    * Indicates the object has an active alarm
    */
@@ -40,15 +40,15 @@ export enum StatusFlagsBit {
  * This implementation extends the generic BitString class with the
  * StatusFlagsBit enumeration.
  * 
- * @extends BitString<typeof StatusFlagsBit>
+ * @extends BDBitString<typeof BDStatusFlagsBit>
  */
-export class StatusFlagsBitString extends BitString<typeof StatusFlagsBit> {
+export class BDStatusFlagsBitString extends BDBitString<typeof BDStatusFlagsBit> {
   /**
    * Creates a new StatusFlags bitstring with the specified bits set to 1
    * 
    * @param trueBits - Array of StatusFlagsBit values representing the positions of bits to set to 1
    */
-  constructor(...trueBits: StatusFlagsBit[]) { 
+  constructor(...trueBits: BDStatusFlagsBit[]) { 
     super(4, trueBits);
   }
 }

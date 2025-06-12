@@ -6,7 +6,7 @@
  * as defined in the BACnet standard. It is used in the EVENT_STATE property
  * of BACnet objects to indicate their current alarm or event condition.
  */
-export enum EventState { 
+export enum BDEventState { 
   /** Object is in a normal state */
   NORMAL = 0,
   /** Object is in a fault state */
@@ -29,7 +29,7 @@ export enum EventState {
  * of BACnet objects to indicate whether the Present_Value property is reliable
  * and, if not, why it is unreliable.
  */
-export enum Reliability {
+export enum BDReliability {
   /** No fault has been detected */
   NO_FAULT_DETECTED = 0,
   /** The sensor is missing or not responding */

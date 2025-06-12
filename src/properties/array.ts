@@ -11,12 +11,12 @@
 import fastq from 'fastq';
 
 import { 
-  type BACnetValue, 
-  type ApplicationTagValueType,
+  type BDValue, 
+  type BDApplicationTagValueType,
 } from '../value.js';
-import { Evented } from '../evented.js';
-import { BACnetError } from '../errors.js';
-import { PropertyIdentifier, ErrorCode, ErrorClass, ApplicationTag } from '../enums/index.js';
+import { BDEvented } from '../evented.js';
+import { BDError } from '../errors.js';
+import { BDPropertyIdentifier, BDErrorCode, BDErrorClass, BDApplicationTag } from '../enums/index.js';
 
 /**
  * Events that can be emitted by a BACnet array property
@@ -27,12 +27,12 @@ import { PropertyIdentifier, ErrorCode, ErrorClass, ApplicationTag } from '../en
  * @typeParam Tag - The BACnet application tag for the property values
  * @typeParam Type - The JavaScript type corresponding to the application tag
  */
-export interface ListPropertyEvents<Tag extends ApplicationTag, Type extends ApplicationTagValueType[Tag] = ApplicationTagValueType[Tag]> { 
+export interface BDArrayPropertyEvents<Tag extends BDApplicationTag, Type extends BDApplicationTagValueType[Tag] = BDApplicationTagValueType[Tag]> { 
   /** Emitted before a property value changes */
-  beforecov: [property: BACnetArrayProperty<Tag, Type>, raw: BACnetValue<Tag, Type>[]],
+  beforecov: [property: BDArrayProperty<Tag, Type>, raw: BDValue<Tag, Type>[]],
   
   /** Emitted after a property value has changed */
-  aftercov: [property: BACnetArrayProperty<Tag, Type>, raw: BACnetValue<Tag, Type>[]],
+  aftercov: [property: BDArrayProperty<Tag, Type>, raw: BDValue<Tag, Type>[]],
 }
 
 /**
@@ -43,9 +43,9 @@ export interface ListPropertyEvents<Tag extends ApplicationTag, Type extends App
  * 
  * @typeParam Tag - The BACnet application tag for the property values
  * @typeParam Type - The JavaScript type corresponding to the application tag
- * @extends Evented<ListPropertyEvents<Tag, Type>>
+ * @extends BDEvented<BDArrayPropertyEvents<Tag, Type>>
  */
-export class BACnetArrayProperty<Tag extends ApplicationTag, Type extends ApplicationTagValueType[Tag] = ApplicationTagValueType[Tag]> extends Evented<ListPropertyEvents<Tag, Type>> {
+export class BDArrayProperty<Tag extends BDApplicationTag, Type extends BDApplicationTagValueType[Tag] = BDApplicationTagValueType[Tag]> extends BDEvented<BDArrayPropertyEvents<Tag, Type>> {
   
   /** Indicates this is not a list/array property (BACnet semantic, not JavaScript array) */
   readonly list: false;
@@ -60,19 +60,19 @@ export class BACnetArrayProperty<Tag extends ApplicationTag, Type extends Applic
   readonly settable: boolean;
   
   /** The BACnet property identifier */
-  readonly identifier: PropertyIdentifier;
+  readonly identifier: BDPropertyIdentifier;
   
   /** 
    * The current values of this property 
    * @private
    */
-  #value: BACnetValue<Tag, Type>[] | (() => BACnetValue<Tag, Type>[]);
+  #value: BDValue<Tag, Type>[] | (() => BDValue<Tag, Type>[]);
   
   /**
    * Queue for serializing value changes
    * @private
    */
-  #queue: fastq.queueAsPromised<BACnetValue<Tag, Type>[]>;
+  #queue: fastq.queueAsPromised<BDValue<Tag, Type>[]>;
   
   /**
    * Creates a new BACnet array property
@@ -82,7 +82,7 @@ export class BACnetArrayProperty<Tag extends ApplicationTag, Type extends Applic
    * @param writable - Whether this property can be written to
    * @param value - Optional initial values for this property. If provided, the property is not settable as a whole.
    */
-  constructor(identifier: PropertyIdentifier, type: Tag, writable: boolean, value: BACnetValue<Tag, Type>[] | (() => BACnetValue<Tag, Type>[])) {
+  constructor(identifier: BDPropertyIdentifier, type: Tag, writable: boolean, value: BDValue<Tag, Type>[] | (() => BDValue<Tag, Type>[])) {
     super();
     this.list = false;
     this.type = type;
@@ -115,7 +115,7 @@ export class BACnetArrayProperty<Tag extends ApplicationTag, Type extends Applic
    */
   async setValue(value: Type[]): Promise<void> {
     if (!this.settable) { 
-      throw new BACnetError('not settable', ErrorCode.WRITE_ACCESS_DENIED, ErrorClass.PROPERTY);
+      throw new BDError('not settable', BDErrorCode.WRITE_ACCESS_DENIED, BDErrorClass.PROPERTY);
     }
     await this.#queue.push(value.map(v => ({ type: this.type, value: v })));
   }
@@ -129,7 +129,7 @@ export class BACnetArrayProperty<Tag extends ApplicationTag, Type extends Applic
    * @returns The current property values in BACnet format
    * @internal
    */
-  ___readValue(): BACnetValue<Tag, Type>[] {
+  ___readValue(): BDValue<Tag, Type>[] {
     return typeof this.#value === 'function' ? this.#value() : this.#value;
   }
   
@@ -144,16 +144,16 @@ export class BACnetArrayProperty<Tag extends ApplicationTag, Type extends Applic
    * @throws BACnetError if the property is not writable or the value types are invalid
    * @internal
    */
-  async ___writeValue(value: BACnetValue<Tag, Type> | BACnetValue<Tag, Type>[]): Promise<void> { 
+  async ___writeValue(value: BDValue<Tag, Type> | BDValue<Tag, Type>[]): Promise<void> { 
     if (!this.writable || !this.settable) { 
-      throw new BACnetError('not writable', ErrorCode.WRITE_ACCESS_DENIED, ErrorClass.PROPERTY);
+      throw new BDError('not writable', BDErrorCode.WRITE_ACCESS_DENIED, BDErrorClass.PROPERTY);
     }
     if (!Array.isArray(value)) { 
       value = [value];
     }
     for (const { type } of value) { 
       if (type !== this.type) { 
-        throw new BACnetError('type mismatch', ErrorCode.REJECT_INVALID_PARAMETER_DATA_TYPE, ErrorClass.PROPERTY);
+        throw new BDError('type mismatch', BDErrorCode.REJECT_INVALID_PARAMETER_DATA_TYPE, BDErrorClass.PROPERTY);
       }  
     }
     await this.#queue.push(value);
@@ -167,7 +167,7 @@ export class BACnetArrayProperty<Tag extends ApplicationTag, Type extends Applic
    * @param value - The new values to set
    * @private
    */
-  #worker = async (value: BACnetValue<Tag, Type>[]) => { 
+  #worker = async (value: BDValue<Tag, Type>[]) => { 
     await this.trigger('beforecov', this, value);
     this.#value = value;
     await this.trigger('aftercov', this, value);

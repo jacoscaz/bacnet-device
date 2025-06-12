@@ -1,5 +1,5 @@
 
-import { BitString } from './bitstring.js'; 
+import { BDBitString } from './bitstring.js'; 
 
 /**
  * Enumeration of the standard BACnet service bit positions
@@ -8,7 +8,7 @@ import { BitString } from './bitstring.js';
  * as defined in the BACnet standard. Each bit corresponds to a specific BACnet service
  * that a device may support.
  */
-export enum SupportedServicesBit {
+export enum BDSupportedServicesBit {
   /** Acknowledge Alarm service */
   ACKNOWLEDGE_ALARM = 0,
   /** Confirmed COV Notification service */
@@ -110,15 +110,15 @@ export enum SupportedServicesBit {
  * allocates 112 bits to accommodate all standard services, including those that might
  * be added in future versions of the standard.
  * 
- * @extends BitString<typeof SupportedServicesBit>
+ * @extends BDBitString<typeof BDSupportedServicesBit>
  */
-export class SupportedServicesBitString extends BitString<typeof SupportedServicesBit> {
+export class BDSupportedServicesBitString extends BDBitString<typeof BDSupportedServicesBit> {
   /**
    * Creates a new SupportedServices bitstring with the specified bits set to 1
    * 
    * @param trueBits - Array of SupportedServicesBit values representing the services supported by the device
    */
-  constructor(...trueBits: SupportedServicesBit[]) { 
+  constructor(...trueBits: BDSupportedServicesBit[]) { 
     super(112, trueBits);
   }
 }

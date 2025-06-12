@@ -1,14 +1,14 @@
 import { 
-  BACnetDevice,
-  BACnetAnalogInput,
-  BACnetAnalogOutput,
-  EngineeringUnit,
-  StatusFlagsBit,
-  StatusFlagsBitString
+  BDDevice,
+  BDAnalogInput,
+  BDAnalogOutput,
+  BDEngineeringUnit,
+  BDStatusFlagsBit,
+  BDStatusFlagsBitString
 } from './index.js';
 
 // Create a BACnet node (network interface)
-const device = new BACnetDevice({
+const device = new BDDevice({
   port: 47808,            // Standard BACnet/IP port
   interface: '0.0.0.0',   // Listen on all interfaces
   broadcastAddress: '255.255.255.255',
@@ -22,15 +22,15 @@ const device = new BACnetDevice({
 });
 
 // Create and add an Analog Input object
-const temperatureSensor = device.addObject(new BACnetAnalogInput(1, { 
+const temperatureSensor = device.addObject(new BDAnalogInput(1, { 
   name: 'Zone Temperature', 
-  unit: EngineeringUnit.DEGREES_CELSIUS,
+  unit: BDEngineeringUnit.DEGREES_CELSIUS,
 }));
 
 // Create and add an Analog Output object
-const damperControl = device.addObject(new BACnetAnalogOutput(1, {
+const damperControl = device.addObject(new BDAnalogOutput(1, {
   name: 'VAV Damper Control',
-  unit: EngineeringUnit.PERCENT,
+  unit: BDEngineeringUnit.PERCENT,
 }));
 
 // Listen for BACnet events
@@ -46,7 +46,7 @@ device.subscribe('listening', async () => {
   
   // You can also manipulate status flags
   temperatureSensor.statusFlags.setValue(
-    new StatusFlagsBitString(StatusFlagsBit.OVERRIDDEN)
+    new BDStatusFlagsBitString(BDStatusFlagsBit.OVERRIDDEN)
   );
 });
 
