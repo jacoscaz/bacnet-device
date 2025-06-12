@@ -12,7 +12,7 @@
 /**
  * Re-export of the {@link BACnetValue} type that represents values in BACnet properties
  */
-export type { BACnetValue } from './value.js';
+export type { BACnetValue, BACnetTimestamp } from './value.js';
 
 /**
  * Re-export of the {@link BACnetError} type for handling BACnet-specific errors
@@ -23,6 +23,11 @@ export type { BACnetError } from './errors.js';
  * Re-export of the {@link BACnetProperty} interface for BACnet property implementations
  */
 export type { BACnetProperty } from './properties/index.js';
+
+/**
+ * Re-export of the {@link BACnetDeviceOpts} interface for BACnet device implementations
+ */
+export type { BACnetDeviceOpts } from './objects/device/types.js';
 
 /**
  * Export all BACnet enumeration values

@@ -15,11 +15,11 @@ import type {
   DeviceStatus,
   Segmentation,
   Reliability,
+  TimestampType,
 } from './enums/index.js';
 
 import type { SupportedObjectTypesBitString, SupportedServicesBitString, StatusFlagsBitString } from './bitstrings/index.js';
 import type { BACnetSubscription } from './objects/device/types.js';
-import type { TimestampType } from './enums/time.js';
 
 /**
  * Representation of a BACnet value.
