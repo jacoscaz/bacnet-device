@@ -11,13 +11,18 @@
 
 import { type BDApplicationTagValueType } from '../value.js';
 import { type BDApplicationTag } from '../enums/index.js';
-import { BDSingletProperty } from './singlet.js';
-import { BDArrayProperty } from './array.js';
+import { type BDSingletPropertyEvents, BDSingletProperty } from './singlet.js';
+import { type BDArrayPropertyEvents, BDArrayProperty } from './array.js';
 
 /**
  * Export the concrete property implementations
  */
-export { BDSingletProperty, BDArrayProperty };
+export { 
+  type BDSingletPropertyEvents,
+  type BDArrayPropertyEvents,
+  BDSingletProperty, 
+  BDArrayProperty, 
+};
 
 /**
  * Union type representing any BACnet property

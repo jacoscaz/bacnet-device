@@ -4,7 +4,7 @@ import type { BACNetBitString } from '@innovation-system/node-bacnet';
 /**
  * Represents a single bit value (0 or 1) in a BACnet bitstring
  */
-export type Bit = 1 | 0;
+export type BDBitStringBit = 1 | 0;
 
 /**
  * Type constraint for enumeration types used with BitString
@@ -12,7 +12,7 @@ export type Bit = 1 | 0;
  * This type represents a mapping of string keys to string or number values,
  * which is the structure of TypeScript enums.
  */
-export type EnumType = Record<string, string|number>
+export type BDEnumType = Record<string, string|number>
 
 /**
  * Generic implementation of a BACnet bitstring
@@ -22,9 +22,8 @@ export type EnumType = Record<string, string|number>
  * The class is generic over an enum type that defines the bit positions.
  * 
  * @typeParam E - An enum type that defines the bit positions
- * @implements BACNetBitString
  */
-export class BDBitString<E extends EnumType> implements BACNetBitString { 
+export class BDBitString<E extends BDEnumType> implements BACNetBitString { 
   /**
    * The number of bits in this bitstring
    */
@@ -33,7 +32,7 @@ export class BDBitString<E extends EnumType> implements BACNetBitString {
   /**
    * The array of bit values (0 or 1)
    */
-  readonly value: Bit[];
+  readonly value: BDBitStringBit[];
   
   /**
    * Creates a new bitstring with the specified bits set to 1

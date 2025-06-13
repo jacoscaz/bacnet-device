@@ -94,10 +94,6 @@ export class BDAnalogInput extends BDObject {
   
   /**
    * Creates a new BACnet Analog Input object
-   * 
-   * @param instance - The instance number for this object (must be unique for this type)
-   * @param name - The name of this object
-   * @param unit - The engineering unit for this analog input's present value
    */
   constructor(instance: number, opts: BDAnalogInputOpts) {
     super(BDObjectType.ANALOG_INPUT, instance, opts.name, opts.description);

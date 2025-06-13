@@ -8,7 +8,7 @@
  * @module
  */
 
-import { BDEvented, type EventMap } from './evented.js';
+import { BDEvented, type BDEventMap } from './evented.js';
 
 import { type BDValue } from './value.js';
 import { BDError } from './errors.js';
@@ -42,7 +42,7 @@ import { ensureArray } from './utils.js';
 /**
  * Events that can be emitted by a BACnet object
  */
-export interface BDObjectEvents extends EventMap<any> { 
+export interface BDObjectEvents extends BDEventMap<any> { 
   /** Emitted before a property value changes */
   beforecov: [object: BDObject, property: BDProperty<any, any>, nextValue: BDValue | BDValue[]],
   

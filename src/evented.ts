@@ -18,15 +18,7 @@
  * @typeParam T - An interface mapping event names to their argument arrays
  * @private 
  */
-export type EventMap<T> = Record<keyof T, any[]>;
-
-/** 
- * Extracts the event names from an event map
- * 
- * @typeParam T - An event map interface
- * @private 
- */
-export type Key<T> = keyof T;
+export type BDEventMap<T> = Record<keyof T, any[]>;
 
 /** 
  * Extracts the argument types for a specific event
@@ -35,7 +27,7 @@ export type Key<T> = keyof T;
  * @typeParam K - The event name to extract arguments for
  * @private 
  */
-export type Args<T, K extends Key<T>> = T[K];
+export type BDEventArgs<T, K extends keyof T> = T[K];
 
 /** 
  * Type for event listeners/handlers
@@ -44,7 +36,7 @@ export type Args<T, K extends Key<T>> = T[K];
  * @typeParam K - The event name this listener handles
  * @private 
  */
-export type Listener<T, K extends Key<T>> = T[K] extends unknown[] ? (...args: T[K]) => Promise<void> : never;
+export type BDEventListener<T, K extends keyof T> = T[K] extends unknown[] ? (...args: T[K]) => Promise<void> : never;
 
 
 /**
@@ -57,13 +49,13 @@ export type Listener<T, K extends Key<T>> = T[K] extends unknown[] ? (...args: T
  * 
  * @typeParam T - An interface mapping event names to their argument arrays
  */
-export class BDEvented<T extends EventMap<T>> { 
+export class BDEvented<T extends BDEventMap<T>> { 
   
   /** 
    * Internal mapping of event names to their registered listeners
    * @private 
    */
-  #callbacks: { [K in Key<T>]: Listener<T, K>[] };
+  #callbacks: { [K in keyof T]: BDEventListener<T, K>[] };
   
   /**
    * Creates a new Evented instance with no registered listeners
@@ -79,7 +71,7 @@ export class BDEvented<T extends EventMap<T>> {
    * @param cb - The callback function to execute when the event is triggered
    * @returns The callback function for chaining
    */
-  subscribe<K extends Key<T>>(event: K, cb: Listener<T, K>) { 
+  subscribe<K extends keyof T>(event: K, cb: BDEventListener<T, K>) { 
     if (!this.#callbacks[event]) {
       this.#callbacks[event] = [];
     }
@@ -93,7 +85,7 @@ export class BDEvented<T extends EventMap<T>> {
    * @param args - The arguments to pass to each listener
    * @returns A promise that resolves when all listeners have completed
    */
-  async trigger<K extends Key<T>>(event: K, ...args: Args<T, K>) {
+  async trigger<K extends keyof T>(event: K, ...args: BDEventArgs<T, K>) {
     if (this.#callbacks[event]) { 
       // TODO: consider whether to call listeners in series.
       await Promise.all(this.#callbacks[event].map(cb => cb.apply(this, args)));  

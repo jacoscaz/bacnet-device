@@ -115,11 +115,6 @@ export class BDAnalogOutput extends BDObject {
   
   /**
    * Creates a new BACnet Analog Output object
-   * 
-   * @param instance - The instance number for this object (must be unique for this type)
-   * @param name - The name of this object
-   * @param unit - The engineering unit for this analog output's present value
-   * @param description - The description of this object
    */
   constructor(instance: number, opts: BDAnalogOutputOpts) {
     super(BDObjectType.ANALOG_OUTPUT, instance, opts.name, opts.description);
