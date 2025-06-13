@@ -411,7 +411,7 @@ export class BDDevice extends BDObject<BDDeviceEvents> {
     ));
     
     this.eventState = this.addProperty(new BDSingletProperty<BDApplicationTag.ENUMERATED, BDEventState>(
-      BDPropertyIdentifier.SYSTEM_STATUS, 
+      BDPropertyIdentifier.EVENT_STATE, 
       BDApplicationTag.ENUMERATED, 
       false, 
       BDEventState.NORMAL,
