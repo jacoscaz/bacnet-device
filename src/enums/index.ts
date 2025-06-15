@@ -7,13 +7,18 @@
  * 
  * @module
  */
-
-export * from './errors.js';
-export * from './objects.js';
-export * from './tags.js';
-export * from './properties.js';
-export * from './encodings.js';
-export * from './units.js';
-export * from './events.js';
-export * from './devices.js';
-export * from './time.js';
+ 
+export { 
+  TimeStamp as BDTimestampType,
+  ErrorCode as BDErrorCode,
+  ErrorClass as BDErrorClass,
+  EventState as BDEventState,
+  ObjectType as BDObjectType,
+  Reliability as BDReliability,
+  Segmentation as BDSegmentation,
+  DeviceStatus as BDDeviceStatus,
+  ApplicationTag as BDApplicationTag,
+  EngineeringUnits as BDEngineeringUnit,
+  PropertyIdentifier as BDPropertyIdentifier,
+  CharacterStringEncoding as BDCharacterStringEncoding,
+} from '@innovation-system/node-bacnet'

@@ -7,12 +7,11 @@ import type { BACNetBitString } from '@innovation-system/node-bacnet';
 export type BDBitStringBit = 1 | 0;
 
 /**
- * Type constraint for enumeration types used with BitString
- * 
- * This type represents a mapping of string keys to string or number values,
- * which is the structure of TypeScript enums.
+ * Generic type for TypeScript enums. I admit I'm still not entirely clear as
+ * to how or why this works the way it does. There's an element of recursivity
+ * that feels like black magic.
  */
-export type BDEnumType = Record<string, string|number>
+export type BDEnum<E> = Record<keyof E, number | string> & { [k: number]: string }
 
 /**
  * Generic implementation of a BACnet bitstring
@@ -23,7 +22,7 @@ export type BDEnumType = Record<string, string|number>
  * 
  * @typeParam E - An enum type that defines the bit positions
  */
-export class BDBitString<E extends BDEnumType> implements BACNetBitString { 
+export class BDBitString<E extends BDEnum<E>> implements BACNetBitString { 
   /**
    * The number of bits in this bitstring
    */

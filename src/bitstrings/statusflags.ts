@@ -1,33 +1,8 @@
 
-import { BDBitString } from './bitstring.js'; 
+import { BDBitString } from './bitstring.js';
+import { StatusFlags as BDStatusFlagsBit } from '@innovation-system/node-bacnet';
 
-/**
- * Enumeration of the standard BACnet status flag bit positions
- * 
- * These values represent the bit positions in a StatusFlags bitstring
- * as defined in the BACnet standard.
- */
-export enum BDStatusFlagsBit {
-  /**
-   * Indicates the object has an active alarm
-   */
-  IN_ALARM = 0,
-  
-  /**
-   * Indicates the object has detected a fault
-   */
-  FAULT = 1,
-  
-  /**
-   * Indicates the property has been overridden by a local action
-   */
-  OVERRIDDEN = 2,
-  
-  /**
-   * Indicates the property is out of service
-   */
-  OUT_OF_SERVICE = 3,
-}
+export { BDStatusFlagsBit }
 
 /**
  * Implementation of the StatusFlags bitstring

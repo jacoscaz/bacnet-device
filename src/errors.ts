@@ -7,7 +7,7 @@
  * @module
  */
 
-import type { BDErrorCode, BDErrorClass } from './enums/errors.js';
+import type { BDErrorCode, BDErrorClass } from './enums/index.js';
 
 /**
  * Represents a BACnet-specific error with associated error code and error class.

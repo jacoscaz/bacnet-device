@@ -217,7 +217,7 @@ export class BDDevice extends BDObject<BDDeviceEvents> {
       28,
     ));
     
-    const supportedServicesBitString = new BDSupportedServicesBitString(
+    const supportedServicesBitString = new BDSupportedServicesBitString([
       BDSupportedServicesBit.WHO_IS,
       BDSupportedServicesBit.I_AM,
       BDSupportedServicesBit.READ_PROPERTY,
@@ -225,7 +225,7 @@ export class BDDevice extends BDObject<BDDeviceEvents> {
       BDSupportedServicesBit.SUBSCRIBE_COV,
       BDSupportedServicesBit.CONFIRMED_COV_NOTIFICATION,
       BDSupportedServicesBit.UNCONFIRMED_COV_NOTIFICATION,
-    );
+    ]);
     
     this.addProperty(new BDSingletProperty(
       BDPropertyIdentifier.PROTOCOL_SERVICES_SUPPORTED, 
@@ -234,11 +234,11 @@ export class BDDevice extends BDObject<BDDeviceEvents> {
       supportedServicesBitString,
     ));
     
-    const supportedObjectTypesBitString = new BDSupportedObjectTypesBitString(
+    const supportedObjectTypesBitString = new BDSupportedObjectTypesBitString([
       BDSupportedObjectTypesBit.DEVICE,
       BDSupportedObjectTypesBit.ANALOG_INPUT,
       BDSupportedObjectTypesBit.ANALOG_OUTPUT,
-    );
+    ]);
     
     this.addProperty(new BDSingletProperty(
       BDPropertyIdentifier.PROTOCOL_OBJECT_TYPES_SUPPORTED, 
