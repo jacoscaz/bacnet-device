@@ -11,12 +11,10 @@
 
 export { 
   type BDValue, 
-  type BDTimestamp,
   type BDApplicationTagValueType,
 } from './value.js';
 
 export { BDError } from './errors.js';
-
 
 export { 
   type BDEventMap,
@@ -24,10 +22,6 @@ export {
   type BDEventListener,
   BDEvented, 
 } from './evented.js';
-
-export * from './enums/index.js';
-
-export * from './bitstrings/index.js';
 
 export { 
   type BDProperty,
@@ -40,6 +34,7 @@ export {
 export { type BDObjectEvents, BDObject } from './object.js';
 
 export { BDDevice } from './objects/device/device.js';
+
 export { 
   type BDDeviceOpts, 
   type BDSubscription,

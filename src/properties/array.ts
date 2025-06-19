@@ -16,7 +16,7 @@ import {
 } from '../value.js';
 import { BDEvented } from '../evented.js';
 import { BDError } from '../errors.js';
-import { BDPropertyIdentifier, BDErrorCode, BDErrorClass, BDApplicationTag } from '../enums/index.js';
+import { PropertyIdentifier, ErrorCode, ErrorClass, ApplicationTag } from '@innovation-system/node-bacnet';
 
 /**
  * Events that can be emitted by a BACnet array property
@@ -27,7 +27,7 @@ import { BDPropertyIdentifier, BDErrorCode, BDErrorClass, BDApplicationTag } fro
  * @typeParam Tag - The BACnet application tag for the property values
  * @typeParam Type - The JavaScript type corresponding to the application tag
  */
-export interface BDArrayPropertyEvents<Tag extends BDApplicationTag, Type extends BDApplicationTagValueType[Tag] = BDApplicationTagValueType[Tag]> { 
+export interface BDArrayPropertyEvents<Tag extends ApplicationTag, Type extends BDApplicationTagValueType[Tag] = BDApplicationTagValueType[Tag]> { 
   /** Emitted before a property value changes */
   beforecov: [property: BDArrayProperty<Tag, Type>, raw: BDValue<Tag, Type>[]],
   
@@ -45,7 +45,7 @@ export interface BDArrayPropertyEvents<Tag extends BDApplicationTag, Type extend
  * @typeParam Type - The JavaScript type corresponding to the application tag
  * @extends BDEvented<BDArrayPropertyEvents<Tag, Type>>
  */
-export class BDArrayProperty<Tag extends BDApplicationTag, Type extends BDApplicationTagValueType[Tag] = BDApplicationTagValueType[Tag]> extends BDEvented<BDArrayPropertyEvents<Tag, Type>> {
+export class BDArrayProperty<Tag extends ApplicationTag, Type extends BDApplicationTagValueType[Tag] = BDApplicationTagValueType[Tag]> extends BDEvented<BDArrayPropertyEvents<Tag, Type>> {
   
   /** Indicates this is not a list/array property (BACnet semantic, not JavaScript array) */
   readonly list: false;
@@ -60,7 +60,7 @@ export class BDArrayProperty<Tag extends BDApplicationTag, Type extends BDApplic
   readonly settable: boolean;
   
   /** The BACnet property identifier */
-  readonly identifier: BDPropertyIdentifier;
+  readonly identifier: PropertyIdentifier;
   
   /** 
    * The current values of this property 
@@ -82,7 +82,7 @@ export class BDArrayProperty<Tag extends BDApplicationTag, Type extends BDApplic
    * @param writable - Whether this property can be written to
    * @param value - Optional initial values for this property. If provided, the property is not settable as a whole.
    */
-  constructor(identifier: BDPropertyIdentifier, type: Tag, writable: boolean, value: BDValue<Tag, Type>[] | (() => BDValue<Tag, Type>[])) {
+  constructor(identifier: PropertyIdentifier, type: Tag, writable: boolean, value: BDValue<Tag, Type>[] | (() => BDValue<Tag, Type>[])) {
     super();
     this.list = false;
     this.type = type;
@@ -115,7 +115,7 @@ export class BDArrayProperty<Tag extends BDApplicationTag, Type extends BDApplic
    */
   async setValue(value: Type[]): Promise<void> {
     if (!this.settable) { 
-      throw new BDError('not settable', BDErrorCode.WRITE_ACCESS_DENIED, BDErrorClass.PROPERTY);
+      throw new BDError('not settable', ErrorCode.WRITE_ACCESS_DENIED, ErrorClass.PROPERTY);
     }
     await this.#queue.push(value.map(v => ({ type: this.type, value: v })));
   }
@@ -146,14 +146,14 @@ export class BDArrayProperty<Tag extends BDApplicationTag, Type extends BDApplic
    */
   async ___writeValue(value: BDValue<Tag, Type> | BDValue<Tag, Type>[]): Promise<void> { 
     if (!this.writable || !this.settable) { 
-      throw new BDError('not writable', BDErrorCode.WRITE_ACCESS_DENIED, BDErrorClass.PROPERTY);
+      throw new BDError('not writable', ErrorCode.WRITE_ACCESS_DENIED, ErrorClass.PROPERTY);
     }
     if (!Array.isArray(value)) { 
       value = [value];
     }
     for (const { type } of value) { 
       if (type !== this.type) { 
-        throw new BDError('type mismatch', BDErrorCode.REJECT_INVALID_PARAMETER_DATA_TYPE, BDErrorClass.PROPERTY);
+        throw new BDError('type mismatch', ErrorCode.REJECT_INVALID_PARAMETER_DATA_TYPE, ErrorClass.PROPERTY);
       }  
     }
     await this.#queue.push(value);

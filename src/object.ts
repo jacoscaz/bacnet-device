@@ -14,12 +14,12 @@ import { type BDValue } from './value.js';
 import { BDError } from './errors.js';
 
 import {
-  BDErrorCode,
-  BDErrorClass,
-  BDObjectType,
-  BDApplicationTag,
-  BDPropertyIdentifier,
-} from './enums/index.js';
+  ErrorCode,
+  ErrorClass,
+  ObjectType,
+  ApplicationTag,
+  PropertyIdentifier,
+} from '@innovation-system/node-bacnet';
 
 import type {
   BACNetObjectID,
@@ -56,11 +56,11 @@ export interface BDObjectEvents extends BDEventMap<any> {
  * 
  * @see section 12.1.1.4.1 "Property_List"
  */
-const unlistedProperties: BDPropertyIdentifier[] = [
-  BDPropertyIdentifier.OBJECT_NAME,
-  BDPropertyIdentifier.OBJECT_TYPE,
-  BDPropertyIdentifier.OBJECT_IDENTIFIER,
-  BDPropertyIdentifier.PROPERTY_LIST,
+const unlistedProperties: PropertyIdentifier[] = [
+  PropertyIdentifier.OBJECT_NAME,
+  PropertyIdentifier.OBJECT_TYPE,
+  PropertyIdentifier.OBJECT_IDENTIFIER,
+  PropertyIdentifier.PROPERTY_LIST,
 ];
 
 /**
@@ -81,13 +81,13 @@ export class BDObject<EM extends BDObjectEvents = BDObjectEvents> extends BDEven
    * The list of properties in this object (used for PROPERTY_LIST property)
    * @private
    */
-  readonly #propertyList: BDValue<BDApplicationTag.ENUMERATED, BDPropertyIdentifier>[];
+  readonly #propertyList: BDValue<ApplicationTag.ENUMERATED, PropertyIdentifier>[];
   
   /**
    * Map of all properties in this object by their identifier
    * @private
    */
-  readonly #properties: Map<BDPropertyIdentifier, BDProperty<any, any>>;
+  readonly #properties: Map<PropertyIdentifier, BDProperty<any, any>>;
   
   /**
    * Creates a new BACnet object
@@ -96,43 +96,43 @@ export class BDObject<EM extends BDObjectEvents = BDObjectEvents> extends BDEven
    * @param instance - The instance number for this object
    * @param name - The name of this object
    */
-  constructor(type: BDObjectType, instance: number, name: string, description: string = '') {
+  constructor(type: ObjectType, instance: number, name: string, description: string = '') {
     super();
     this.identifier = Object.freeze({ type, instance });
     this.#properties = new Map();
     this.#propertyList = [];
     
     this.addProperty(new BDSingletProperty(
-      BDPropertyIdentifier.OBJECT_NAME, 
-      BDApplicationTag.CHARACTER_STRING, 
+      PropertyIdentifier.OBJECT_NAME, 
+      ApplicationTag.CHARACTER_STRING, 
       false, 
       name,
     ));
     
     this.addProperty(new BDSingletProperty(
-      BDPropertyIdentifier.OBJECT_TYPE, 
-      BDApplicationTag.ENUMERATED, 
+      PropertyIdentifier.OBJECT_TYPE, 
+      ApplicationTag.ENUMERATED, 
       false, 
       type,
     ));
     
     this.addProperty(new BDSingletProperty(
-      BDPropertyIdentifier.OBJECT_IDENTIFIER, 
-      BDApplicationTag.OBJECTIDENTIFIER, 
+      PropertyIdentifier.OBJECT_IDENTIFIER, 
+      ApplicationTag.OBJECTIDENTIFIER, 
       false, 
       this.identifier,
     ));
     
     this.addProperty(new BDArrayProperty(
-      BDPropertyIdentifier.PROPERTY_LIST, 
-      BDApplicationTag.ENUMERATED, 
+      PropertyIdentifier.PROPERTY_LIST, 
+      ApplicationTag.ENUMERATED, 
       false, 
       () => this.#propertyList,
     ));
     
     this.addProperty(new BDSingletProperty(
-      BDPropertyIdentifier.DESCRIPTION, 
-      BDApplicationTag.CHARACTER_STRING, 
+      PropertyIdentifier.DESCRIPTION, 
+      ApplicationTag.CHARACTER_STRING, 
       false, 
       description,
     ));
@@ -156,7 +156,7 @@ export class BDObject<EM extends BDObjectEvents = BDObjectEvents> extends BDEven
     }
     this.#properties.set(property.identifier, property);
     if (!unlistedProperties.includes(property.identifier)) { 
-      this.#propertyList.push({ type: BDApplicationTag.ENUMERATED, value: property.identifier });
+      this.#propertyList.push({ type: ApplicationTag.ENUMERATED, value: property.identifier });
     }
     property.subscribe('beforecov', this.#onPropertyBeforeCov);
     property.subscribe('aftercov', this.#onPropertyAfterCov);
@@ -174,12 +174,12 @@ export class BDObject<EM extends BDObjectEvents = BDObjectEvents> extends BDEven
    * @internal
    */
   async ___writeProperty(identifier: BACNetPropertyID, value: BDValue | BDValue[]): Promise<void> {
-    const property = this.#properties.get(identifier.id as BDPropertyIdentifier);
+    const property = this.#properties.get(identifier.id as PropertyIdentifier);
     // TODO: test/validate value before setting it!
     if (property) {
       await property.___writeValue(value);
     } else { 
-      throw new BDError('unknown property', BDErrorCode.UNKNOWN_PROPERTY, BDErrorClass.PROPERTY);    
+      throw new BDError('unknown property', ErrorCode.UNKNOWN_PROPERTY, ErrorClass.PROPERTY);    
     }
   }
   
@@ -195,11 +195,11 @@ export class BDObject<EM extends BDObjectEvents = BDObjectEvents> extends BDEven
    */
   async ___readProperty(req: ReadPropertyContent): Promise<BDValue | BDValue[]> {
     const { payload: { property } } = req;
-    if (this.#properties.has(property.id as BDPropertyIdentifier)) { 
-      return this.#properties.get(property.id as BDPropertyIdentifier)!
+    if (this.#properties.has(property.id as PropertyIdentifier)) { 
+      return this.#properties.get(property.id as PropertyIdentifier)!
         .___readValue();
     }
-    throw new BDError('unknown property', BDErrorCode.UNKNOWN_PROPERTY, BDErrorClass.PROPERTY);
+    throw new BDError('unknown property', ErrorCode.UNKNOWN_PROPERTY, ErrorClass.PROPERTY);
   }
   
   /**
@@ -231,7 +231,7 @@ export class BDObject<EM extends BDObjectEvents = BDObjectEvents> extends BDEven
    */
   async ___readPropertyMultiple(properties: ReadPropertyMultipleContent['payload']['properties'][number]['properties']): Promise<BACNetReadAccess> { 
     const values: BACNetReadAccess['values'] = [];
-    if (properties.length === 1 && properties[0].id === BDPropertyIdentifier.ALL) { 
+    if (properties.length === 1 && properties[0].id === PropertyIdentifier.ALL) { 
       return this.___readPropertyMultipleAll();
     }
     for (const property of properties) {

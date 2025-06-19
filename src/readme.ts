@@ -2,10 +2,13 @@ import {
   BDDevice,
   BDAnalogInput,
   BDAnalogOutput,
-  BDEngineeringUnit,
-  BDStatusFlagsBit,
-  BDStatusFlagsBitString
 } from './index.js';
+
+import { 
+  StatusFlags,
+  StatusFlagsBitString,
+  EngineeringUnits,
+} from '@innovation-system/node-bacnet';
 
 // Create a BACnet node (network interface)
 const device = new BDDevice({
@@ -24,13 +27,13 @@ const device = new BDDevice({
 // Create and add an Analog Input object
 const temperatureSensor = device.addObject(new BDAnalogInput(1, { 
   name: 'Zone Temperature', 
-  unit: BDEngineeringUnit.DEGREES_CELSIUS,
+  unit: EngineeringUnits.DEGREES_CELSIUS,
 }));
 
 // Create and add an Analog Output object
 const damperControl = device.addObject(new BDAnalogOutput(1, {
   name: 'VAV Damper Control',
-  unit: BDEngineeringUnit.PERCENT,
+  unit: EngineeringUnits.PERCENT,
 }));
 
 // Listen for BACnet events
@@ -46,7 +49,7 @@ device.subscribe('listening', async () => {
   
   // You can also manipulate status flags
   temperatureSensor.statusFlags.setValue(
-    new BDStatusFlagsBitString(BDStatusFlagsBit.OVERRIDDEN)
+    new StatusFlagsBitString(StatusFlags.OVERRIDDEN)
   );
 });
 

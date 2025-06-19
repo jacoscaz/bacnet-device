@@ -1,13 +1,5 @@
 
-/**
- * Error handling module for BACnet devices
- * 
- * This module provides specialized error classes for BACnet-related error conditions.
- * 
- * @module
- */
-
-import type { BDErrorCode, BDErrorClass } from './enums/index.js';
+import type { ErrorCode, ErrorClass } from '@innovation-system/node-bacnet';
 
 /**
  * Represents a BACnet-specific error with associated error code and error class.
@@ -17,10 +9,10 @@ import type { BDErrorCode, BDErrorClass } from './enums/index.js';
  */
 export class BDError extends Error { 
   /** The specific BACnet error code */
-  errorCode: BDErrorCode;
+  errorCode: ErrorCode;
   
   /** The BACnet error class that categorizes this error */
-  errorClass: BDErrorClass;
+  errorClass: ErrorClass;
   
   /**
    * Creates a new BACnet error instance
@@ -29,7 +21,7 @@ export class BDError extends Error {
    * @param errorCode - BACnet error code from the ErrorCode enum
    * @param errorClass - BACnet error class from the ErrorClass enum
    */
-  constructor(message: string, errorCode: BDErrorCode, errorClass: BDErrorClass) {
+  constructor(message: string, errorCode: ErrorCode, errorClass: ErrorClass) {
     super(message);
     this.errorCode = errorCode;
     this.errorClass = errorClass;

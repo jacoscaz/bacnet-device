@@ -16,7 +16,8 @@ import {
 } from '../value.js';
 import { BDEvented } from '../evented.js';
 import { BDError } from '../errors.js';
-import { BDPropertyIdentifier, BDErrorCode, BDErrorClass, BDApplicationTag } from '../enums/index.js';
+
+import { PropertyIdentifier, ErrorCode, ErrorClass, ApplicationTag } from '@innovation-system/node-bacnet';
 
 /**
  * Events that can be emitted by a BACnet singlet property
@@ -27,7 +28,7 @@ import { BDPropertyIdentifier, BDErrorCode, BDErrorClass, BDApplicationTag } fro
  * @typeParam Tag - The BACnet application tag for the property values
  * @typeParam Type - The JavaScript type corresponding to the application tag
  */
-export interface BDSingletPropertyEvents<Tag extends BDApplicationTag, Type extends BDApplicationTagValueType[Tag] = BDApplicationTagValueType[Tag]> { 
+export interface BDSingletPropertyEvents<Tag extends ApplicationTag, Type extends BDApplicationTagValueType[Tag] = BDApplicationTagValueType[Tag]> { 
   /** Emitted before a property value changes */
   beforecov: [property: BDSingletProperty<Tag, Type>, value: BDValue<Tag, Type>],
   
@@ -45,7 +46,7 @@ export interface BDSingletPropertyEvents<Tag extends BDApplicationTag, Type exte
  * @typeParam Type - The JavaScript type corresponding to the application tag
  * @extends BDEvented<BDSingletPropertyEvents<Tag, Type>>
  */
-export class BDSingletProperty<Tag extends BDApplicationTag, Type extends BDApplicationTagValueType[Tag] = BDApplicationTagValueType[Tag]> extends BDEvented<BDSingletPropertyEvents<Tag, Type>> {
+export class BDSingletProperty<Tag extends ApplicationTag, Type extends BDApplicationTagValueType[Tag] = BDApplicationTagValueType[Tag]> extends BDEvented<BDSingletPropertyEvents<Tag, Type>> {
   
   /** Indicates this is not a list/array property */
   readonly list: false;
@@ -59,7 +60,7 @@ export class BDSingletProperty<Tag extends BDApplicationTag, Type extends BDAppl
   readonly settable: boolean;
   
   /** The BACnet property identifier */
-  readonly identifier: BDPropertyIdentifier;
+  readonly identifier: PropertyIdentifier;
   
   /** 
    * The current value of this property 
@@ -81,7 +82,7 @@ export class BDSingletProperty<Tag extends BDApplicationTag, Type extends BDAppl
    * @param writable - Whether this property can be written to
    * @param value - The initial value for this property
    */
-  constructor(identifier: BDPropertyIdentifier, type: Tag, writable: boolean, value: Type | (() => BDValue<Tag, Type>)) {
+  constructor(identifier: PropertyIdentifier, type: Tag, writable: boolean, value: Type | (() => BDValue<Tag, Type>)) {
     super();
     this.list = false;
     this.type = type;
@@ -144,17 +145,17 @@ export class BDSingletProperty<Tag extends BDApplicationTag, Type extends BDAppl
    */
   async ___writeValue(value: BDValue<Tag, Type> | BDValue<Tag, Type>[]): Promise<void> { 
     if (!this.writable || !this.settable) { 
-      throw new BDError('not writable', BDErrorCode.WRITE_ACCESS_DENIED, BDErrorClass.PROPERTY);
+      throw new BDError('not writable', ErrorCode.WRITE_ACCESS_DENIED, ErrorClass.PROPERTY);
     }
     if (Array.isArray(value)) { 
       if (value.length !== 1) {
-        throw new BDError('not a list', BDErrorCode.REJECT_INVALID_PARAMETER_DATA_TYPE, BDErrorClass.PROPERTY);
+        throw new BDError('not a list', ErrorCode.REJECT_INVALID_PARAMETER_DATA_TYPE, ErrorClass.PROPERTY);
       } else { 
         value = value[0];
       }
     }
     if (value.type !== this.type) { 
-      throw new BDError('not a list', BDErrorCode.REJECT_INVALID_PARAMETER_DATA_TYPE, BDErrorClass.PROPERTY);
+      throw new BDError('not a list', ErrorCode.REJECT_INVALID_PARAMETER_DATA_TYPE, ErrorClass.PROPERTY);
     }
     await this.#queue.push(value);
   }
