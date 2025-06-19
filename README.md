@@ -9,20 +9,28 @@ Under heavy development as of June 2025. For more information, [get in touch][1]
 
 ## Characteristics
 
-1. **Detailed types**: maintains well-defined interfaces, generics, and type
-   definitions  that accurately model BACnet's complex data structures.
+This library provides a high-level API that simplifies the instantiation and
+management of BACnet objects by abstracting network operations (subscription
+management, CoV propagation, value updates) and offering classes specific to
+individual BACnet object types that automatically instantiate all properties
+required by the BACnet specification.
+
+1. **Detailed types**: uses and contributes to [`node-bacnet`][2]'s
+   well-defined interfaces, generics, and type definitions that accurately
+   model BACnet's complex data structures.
 2. **Separation of concerns**: maintains separate classes for BACnet objects,
    properties, and network operations, loosely coupled via events.
 3. **Backpressure management**: operations return Promises that resolve only
-   after full processing and acknowledgment, creating natural throttling - for 
+   after full processing and acknowledgment, creating natural throttling; for 
    example, COV notifications wait for subscriber confirmation before processing
    the next change.
 4. **Sequential property updates**: value change operations, whether internal
    or coming in via the BACnet network, are processed through FIFO queues,
    preventing race conditions.
 
-This library provides a high-level, type-safe API built on top of the wonderful
-[`@innovation-system/node-bacnet`][2].
+This library is built on top of the wonderful [`node-bacnet`][2], a TypeScript
+implementation of BACnet's protocol stack maintained by [Innovation System][6].
+Any improvement that is applicable to [`node-bacnet`][2] is contributed upstream.
 
 ## Documentation
 
@@ -34,16 +42,19 @@ This library provides a high-level, type-safe API built on top of the wonderful
 
 ```typescript
 import { 
-  BACnetDevice,
-  BACnetAnalogInput,
-  BACnetAnalogOutput,
-  EngineeringUnit,
-  StatusFlagsBit,
-  StatusFlagsBitString
+  BDDevice,
+  BDAnalogInput,
+  BDAnalogOutput,
 } from './index.js';
 
+import { 
+  StatusFlags,
+  StatusFlagsBitString,
+  EngineeringUnits,
+} from '@innovation-system/node-bacnet';
+
 // Create a BACnet node (network interface)
-const device = new BACnetDevice({
+const device = new BDDevice({
   port: 47808,            // Standard BACnet/IP port
   interface: '0.0.0.0',   // Listen on all interfaces
   broadcastAddress: '255.255.255.255',
@@ -57,15 +68,15 @@ const device = new BACnetDevice({
 });
 
 // Create and add an Analog Input object
-const temperatureSensor = device.addObject(new BACnetAnalogInput(1, { 
+const temperatureSensor = device.addObject(new BDAnalogInput(1, { 
   name: 'Zone Temperature', 
-  unit: EngineeringUnit.DEGREES_CELSIUS,
+  unit: EngineeringUnits.DEGREES_CELSIUS,
 }));
 
 // Create and add an Analog Output object
-const damperControl = device.addObject(new BACnetAnalogOutput(1, {
+const damperControl = device.addObject(new BDAnalogOutput(1, {
   name: 'VAV Damper Control',
-  unit: EngineeringUnit.PERCENT,
+  unit: EngineeringUnits.PERCENT,
 }));
 
 // Listen for BACnet events
@@ -81,7 +92,7 @@ device.subscribe('listening', async () => {
   
   // You can also manipulate status flags
   temperatureSensor.statusFlags.setValue(
-    new StatusFlagsBitString(StatusFlagsBit.OVERRIDDEN)
+    new StatusFlagsBitString(StatusFlags.OVERRIDDEN)
   );
 });
 
@@ -106,3 +117,4 @@ device.subscribe('error', async (err) => {
 [3]: https://jacoscaz.github.io/bacnet-device
 [4]: https://github.com/jacoscaz/bacnet-device/blob/main/SUPPORTED_OBJECT_TYPES.md
 [5]: https://github.com/jacoscaz/bacnet-device
+[6]: https://www.innovation-system.it
