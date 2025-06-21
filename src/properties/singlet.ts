@@ -157,9 +157,6 @@ export class BDSingletProperty<Tag extends ApplicationTag, Type extends Applicat
         value = value[0];
       }
     }
-    if (value.type !== this.type) { 
-      throw new BACNetError('not a list', ErrorCode.REJECT_INVALID_PARAMETER_DATA_TYPE, ErrorClass.PROPERTY);
-    }
     await this.#queue.push(value);
   }
   
@@ -172,6 +169,9 @@ export class BDSingletProperty<Tag extends ApplicationTag, Type extends Applicat
    * @private
    */
   #worker = async (value: BACNetAppData<Tag, Type>) => { 
+    if (value.type !== this.type) { 
+      throw new BACNetError('not a list', ErrorCode.REJECT_INVALID_PARAMETER_DATA_TYPE, ErrorClass.PROPERTY);
+    }
     await this.___asyncEmitSeries(false, 'beforecov', this, value);
     this.#value = value;
     await this.___asyncEmitSeries(true, 'aftercov', this, value);

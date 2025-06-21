@@ -155,11 +155,6 @@ export class BDArrayProperty<Tag extends ApplicationTag, Type extends Applicatio
     if (!Array.isArray(value)) { 
       value = [value];
     }
-    for (const { type } of value) { 
-      if (type !== this.type) { 
-        throw new BACNetError('type mismatch', ErrorCode.REJECT_INVALID_PARAMETER_DATA_TYPE, ErrorClass.PROPERTY);
-      }  
-    }
     await this.#queue.push(value);
   }
   
@@ -171,7 +166,12 @@ export class BDArrayProperty<Tag extends ApplicationTag, Type extends Applicatio
    * @param value - The new values to set
    * @private
    */
-  #worker = async (value: BACNetAppData<Tag, Type>[]) => { 
+  #worker = async (value: BACNetAppData<Tag, Type>[]) => {
+    for (const { type } of value) { 
+      if (type !== this.type) { 
+        throw new BACNetError('type mismatch', ErrorCode.REJECT_INVALID_PARAMETER_DATA_TYPE, ErrorClass.PROPERTY);
+      }  
+    }
     await this.___asyncEmitSeries(false, 'beforecov', this, value);
     this.#value = value;
     await this.___asyncEmitSeries(true, 'aftercov', this, value);
