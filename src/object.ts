@@ -10,10 +10,10 @@
 
 import { BDEvented, type BDEventMap } from './evented.js';
 
-import { type BDValue } from './value.js';
 import { BDError } from './errors.js';
 
 import {
+  type BACNetAppData,
   ErrorCode,
   ErrorClass,
   ObjectType,
@@ -44,10 +44,10 @@ import { ensureArray } from './utils.js';
  */
 export interface BDObjectEvents extends BDEventMap<any> { 
   /** Emitted before a property value changes */
-  beforecov: [object: BDObject, property: BDProperty<any, any>, nextValue: BDValue | BDValue[]],
+  beforecov: [object: BDObject, property: BDProperty<any, any>, nextValue: BACNetAppData | BACNetAppData[]],
   
   /** Emitted after a property value has changed */
-  aftercov: [object: BDObject, property: BDProperty<any, any>, newValue: BDValue | BDValue[]],
+  aftercov: [object: BDObject, property: BDProperty<any, any>, newValue: BACNetAppData | BACNetAppData[]],
 }
 
 /**
@@ -81,7 +81,7 @@ export class BDObject<EM extends BDObjectEvents = BDObjectEvents> extends BDEven
    * The list of properties in this object (used for PROPERTY_LIST property)
    * @private
    */
-  readonly #propertyList: BDValue<ApplicationTag.ENUMERATED, PropertyIdentifier>[];
+  readonly #propertyList: BACNetAppData<ApplicationTag.ENUMERATED, PropertyIdentifier>[];
   
   /**
    * Map of all properties in this object by their identifier
@@ -173,7 +173,7 @@ export class BDObject<EM extends BDObjectEvents = BDObjectEvents> extends BDEven
    * @throws BACnetError if the property does not exist
    * @internal
    */
-  async ___writeProperty(identifier: BACNetPropertyID, value: BDValue | BDValue[]): Promise<void> {
+  async ___writeProperty(identifier: BACNetPropertyID, value: BACNetAppData | BACNetAppData[]): Promise<void> {
     const property = this.#properties.get(identifier.id as PropertyIdentifier);
     // TODO: test/validate value before setting it!
     if (property) {
@@ -193,7 +193,7 @@ export class BDObject<EM extends BDObjectEvents = BDObjectEvents> extends BDEven
    * @throws BACnetError if the property does not exist
    * @internal
    */
-  async ___readProperty(req: ReadPropertyContent): Promise<BDValue | BDValue[]> {
+  async ___readProperty(req: ReadPropertyContent): Promise<BACNetAppData | BACNetAppData[]> {
     const { payload: { property } } = req;
     if (this.#properties.has(property.id as PropertyIdentifier)) { 
       return this.#properties.get(property.id as PropertyIdentifier)!
@@ -252,7 +252,7 @@ export class BDObject<EM extends BDObjectEvents = BDObjectEvents> extends BDEven
    * @param nextValue - The new value being set
    * @private
    */
-  #onPropertyBeforeCov = async (property: BDProperty<any, any>, nextValue: BDValue | BDValue[]) => { 
+  #onPropertyBeforeCov = async (property: BDProperty<any, any>, nextValue: BACNetAppData | BACNetAppData[]) => { 
     await this.trigger('beforecov', this, property, nextValue);
   };
   
@@ -266,7 +266,7 @@ export class BDObject<EM extends BDObjectEvents = BDObjectEvents> extends BDEven
    * @param nextValue - The new value that was set
    * @private
    */
-  #onPropertyAfterCov = async (property: BDProperty<any, any>, nextValue: BDValue | BDValue[]) => { 
+  #onPropertyAfterCov = async (property: BDProperty<any, any>, nextValue: BACNetAppData | BACNetAppData[]) => { 
     await this.trigger('aftercov', this, property, nextValue);
   };
     

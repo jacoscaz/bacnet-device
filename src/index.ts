@@ -9,11 +9,6 @@
  * @packageDocumentation
  */
 
-export { 
-  type BDValue, 
-  type BDApplicationTagValueType,
-} from './value.js';
-
 export { BDError } from './errors.js';
 
 export { 

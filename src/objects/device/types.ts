@@ -1,8 +1,4 @@
 
-import { 
-  type BDValue 
-} from '../../value.js';
-
 import {
   type BDObject,
   type BDObjectEvents,
@@ -18,6 +14,7 @@ import {
   type ClientOptions,
   type BACNetPropertyID,
   type BACNetCovSubscription,
+  type BACNetAppData,
 } from '@innovation-system/node-bacnet';
 
 /**
@@ -69,7 +66,7 @@ export interface BDQueuedCov {
   property: BDProperty<any, any>;
   
   /** The new value of the property */
-  value: BDValue | BDValue[];
+  value: BACNetAppData | BACNetAppData[];
 }
 
 /**

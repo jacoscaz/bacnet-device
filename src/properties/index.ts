@@ -9,8 +9,10 @@
  * @module
  */
  
-import { type ApplicationTag } from '@innovation-system/node-bacnet';
-import { type BDApplicationTagValueType } from '../value.js';
+import { 
+  type ApplicationTag,
+  type ApplicationTagValueTypeMap,
+} from '@innovation-system/node-bacnet';
 import { type BDSingletPropertyEvents, BDSingletProperty } from './singlet.js';
 import { type BDArrayPropertyEvents, BDArrayProperty } from './array.js';
 
@@ -33,6 +35,6 @@ export {
  * @typeParam Tag - The BACnet application tag for the property values
  * @typeParam Type - The JavaScript type corresponding to the application tag
  */
-export type BDProperty<Tag extends ApplicationTag, Type extends BDApplicationTagValueType[Tag] = BDApplicationTagValueType[Tag]> = 
+export type BDProperty<Tag extends ApplicationTag, Type extends ApplicationTagValueTypeMap[Tag] = ApplicationTagValueTypeMap[Tag]> = 
   | BDSingletProperty<Tag, Type> 
   | BDArrayProperty<Tag, Type>;

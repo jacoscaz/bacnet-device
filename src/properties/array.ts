@@ -10,13 +10,16 @@
 
 import fastq from 'fastq';
 
-import { 
-  type BDValue, 
-  type BDApplicationTagValueType,
-} from '../value.js';
 import { BDEvented } from '../evented.js';
 import { BDError } from '../errors.js';
-import { PropertyIdentifier, ErrorCode, ErrorClass, ApplicationTag } from '@innovation-system/node-bacnet';
+import { 
+  type BACNetAppData,
+  type ApplicationTagValueTypeMap,
+  PropertyIdentifier, 
+  ErrorCode, 
+  ErrorClass, 
+  ApplicationTag,
+} from '@innovation-system/node-bacnet';
 
 /**
  * Events that can be emitted by a BACnet array property
@@ -27,12 +30,12 @@ import { PropertyIdentifier, ErrorCode, ErrorClass, ApplicationTag } from '@inno
  * @typeParam Tag - The BACnet application tag for the property values
  * @typeParam Type - The JavaScript type corresponding to the application tag
  */
-export interface BDArrayPropertyEvents<Tag extends ApplicationTag, Type extends BDApplicationTagValueType[Tag] = BDApplicationTagValueType[Tag]> { 
+export interface BDArrayPropertyEvents<Tag extends ApplicationTag, Type extends ApplicationTagValueTypeMap[Tag] = ApplicationTagValueTypeMap[Tag]> { 
   /** Emitted before a property value changes */
-  beforecov: [property: BDArrayProperty<Tag, Type>, raw: BDValue<Tag, Type>[]],
+  beforecov: [property: BDArrayProperty<Tag, Type>, raw: BACNetAppData<Tag, Type>[]],
   
   /** Emitted after a property value has changed */
-  aftercov: [property: BDArrayProperty<Tag, Type>, raw: BDValue<Tag, Type>[]],
+  aftercov: [property: BDArrayProperty<Tag, Type>, raw: BACNetAppData<Tag, Type>[]],
 }
 
 /**
@@ -45,7 +48,7 @@ export interface BDArrayPropertyEvents<Tag extends ApplicationTag, Type extends 
  * @typeParam Type - The JavaScript type corresponding to the application tag
  * @extends BDEvented<BDArrayPropertyEvents<Tag, Type>>
  */
-export class BDArrayProperty<Tag extends ApplicationTag, Type extends BDApplicationTagValueType[Tag] = BDApplicationTagValueType[Tag]> extends BDEvented<BDArrayPropertyEvents<Tag, Type>> {
+export class BDArrayProperty<Tag extends ApplicationTag, Type extends ApplicationTagValueTypeMap[Tag] = ApplicationTagValueTypeMap[Tag]> extends BDEvented<BDArrayPropertyEvents<Tag, Type>> {
   
   /** Indicates this is not a list/array property (BACnet semantic, not JavaScript array) */
   readonly list: false;
@@ -66,13 +69,13 @@ export class BDArrayProperty<Tag extends ApplicationTag, Type extends BDApplicat
    * The current values of this property 
    * @private
    */
-  #value: BDValue<Tag, Type>[] | (() => BDValue<Tag, Type>[]);
+  #value: BACNetAppData<Tag, Type>[] | (() => BACNetAppData<Tag, Type>[]);
   
   /**
    * Queue for serializing value changes
    * @private
    */
-  #queue: fastq.queueAsPromised<BDValue<Tag, Type>[]>;
+  #queue: fastq.queueAsPromised<BACNetAppData<Tag, Type>[]>;
   
   /**
    * Creates a new BACnet array property
@@ -82,7 +85,7 @@ export class BDArrayProperty<Tag extends ApplicationTag, Type extends BDApplicat
    * @param writable - Whether this property can be written to
    * @param value - Optional initial values for this property. If provided, the property is not settable as a whole.
    */
-  constructor(identifier: PropertyIdentifier, type: Tag, writable: boolean, value: BDValue<Tag, Type>[] | (() => BDValue<Tag, Type>[])) {
+  constructor(identifier: PropertyIdentifier, type: Tag, writable: boolean, value: BACNetAppData<Tag, Type>[] | (() => BACNetAppData<Tag, Type>[])) {
     super();
     this.list = false;
     this.type = type;
@@ -129,7 +132,7 @@ export class BDArrayProperty<Tag extends ApplicationTag, Type extends BDApplicat
    * @returns The current property values in BACnet format
    * @internal
    */
-  ___readValue(): BDValue<Tag, Type>[] {
+  ___readValue(): BACNetAppData<Tag, Type>[] {
     return typeof this.#value === 'function' ? this.#value() : this.#value;
   }
   
@@ -144,7 +147,7 @@ export class BDArrayProperty<Tag extends ApplicationTag, Type extends BDApplicat
    * @throws BACnetError if the property is not writable or the value types are invalid
    * @internal
    */
-  async ___writeValue(value: BDValue<Tag, Type> | BDValue<Tag, Type>[]): Promise<void> { 
+  async ___writeValue(value: BACNetAppData<Tag, Type> | BACNetAppData<Tag, Type>[]): Promise<void> { 
     if (!this.writable || !this.settable) { 
       throw new BDError('not writable', ErrorCode.WRITE_ACCESS_DENIED, ErrorClass.PROPERTY);
     }
@@ -167,7 +170,7 @@ export class BDArrayProperty<Tag extends ApplicationTag, Type extends BDApplicat
    * @param value - The new values to set
    * @private
    */
-  #worker = async (value: BDValue<Tag, Type>[]) => { 
+  #worker = async (value: BACNetAppData<Tag, Type>[]) => { 
     await this.trigger('beforecov', this, value);
     this.#value = value;
     await this.trigger('aftercov', this, value);

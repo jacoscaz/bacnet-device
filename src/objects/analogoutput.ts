@@ -1,14 +1,12 @@
 
-import type { BDValue } from '../value.js';
-
 import { BDSingletProperty, BDArrayProperty } from '../properties/index.js';
 import { BDObject } from '../object.js';
 import { 
+  type BACNetAppData,
   ObjectType,
   ApplicationTag,
   EventState,
   EngineeringUnits,
-  Reliability,
   PropertyIdentifier,
   StatusFlagsBitString,
 } from '@innovation-system/node-bacnet';
@@ -147,7 +145,7 @@ export class BDAnalogOutput extends BDObject {
       PropertyIdentifier.PRIORITY_ARRAY,
       ApplicationTag.REAL | ApplicationTag.NULL,
       false,
-      new Array(16).fill({ type: ApplicationTag.NULL, value: null } as BDValue<ApplicationTag.REAL | ApplicationTag.NULL>),
+      new Array(16).fill({ type: ApplicationTag.NULL, value: null } as BACNetAppData<ApplicationTag.REAL | ApplicationTag.NULL>),
     ));
     
     this.covIncrement = this.addProperty(new BDSingletProperty(

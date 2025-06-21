@@ -4,10 +4,6 @@ import {
 } from '../../errors.js';
 
 import { 
-  type BDValue,
-} from '../../value.js';
-
-import { 
   BDObject,
 } from '../../object.js';
 
@@ -31,6 +27,7 @@ import bacnet, {
   type SubscribeCovPayload,
   type IAMResult,
   type BACNetEventInformation,
+  type BACNetAppData,
   ErrorCode,
   ErrorClass,
   ObjectType,
@@ -116,7 +113,7 @@ export class BDDevice extends BDObject<BDDeviceEvents> {
   #maintenanceInterval: NodeJS.Timer;
   
   /** List of active subscriptions */
-  #subscriptionList: BDValue<ApplicationTag.COV_SUBSCRIPTION, BDSubscription>[];
+  #subscriptionList: BACNetAppData<ApplicationTag.COV_SUBSCRIPTION, BDSubscription>[];
   
   /** 
    * Map of all objects in this device, organized by type and instance
@@ -128,7 +125,7 @@ export class BDDevice extends BDObject<BDDeviceEvents> {
    * List of all object identifiers in this device (for OBJECT_LIST property)
    * @private
    */
-  readonly #objectList: BDValue<ApplicationTag.OBJECTIDENTIFIER>[];
+  readonly #objectList: BACNetAppData<ApplicationTag.OBJECTIDENTIFIER>[];
   
   readonly #knownDevices: Map<number, IAMResult>;
   
@@ -542,7 +539,7 @@ export class BDDevice extends BDObject<BDDeviceEvents> {
    * @param value - The new value
    * @private
    */
-  #onChildBeforeCov = async (object: BDObject, property: BDProperty<any, any>, value: BDValue | BDValue[]) => { 
+  #onChildBeforeCov = async (object: BDObject, property: BDProperty<any, any>, value: BACNetAppData | BACNetAppData[]) => { 
     
   }
   
@@ -557,7 +554,7 @@ export class BDDevice extends BDObject<BDDeviceEvents> {
    * @param value - The new value
    * @private
    */
-  #onChildAfterCov = async (object: BDObject, property: BDProperty<any, any>, value: BDValue | BDValue[]) => { 
+  #onChildAfterCov = async (object: BDObject, property: BDProperty<any, any>, value: BACNetAppData | BACNetAppData[]) => { 
     await this.#covqueue.push({ object, property, value });
   }
 
