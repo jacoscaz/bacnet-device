@@ -11,7 +11,7 @@
 import fastq from 'fastq';
 
 import { BDEvented } from '../evented.js';
-import { BDError } from '../errors.js';
+import { BACNetError } from '../errors.js';
 
 import { 
   type BACNetAppData,
@@ -148,17 +148,17 @@ export class BDSingletProperty<Tag extends ApplicationTag, Type extends Applicat
    */
   async ___writeValue(value: BACNetAppData<Tag, Type> | BACNetAppData<Tag, Type>[]): Promise<void> { 
     if (!this.writable || !this.settable) { 
-      throw new BDError('not writable', ErrorCode.WRITE_ACCESS_DENIED, ErrorClass.PROPERTY);
+      throw new BACNetError('not writable', ErrorCode.WRITE_ACCESS_DENIED, ErrorClass.PROPERTY);
     }
     if (Array.isArray(value)) { 
       if (value.length !== 1) {
-        throw new BDError('not a list', ErrorCode.REJECT_INVALID_PARAMETER_DATA_TYPE, ErrorClass.PROPERTY);
+        throw new BACNetError('not a list', ErrorCode.REJECT_INVALID_PARAMETER_DATA_TYPE, ErrorClass.PROPERTY);
       } else { 
         value = value[0];
       }
     }
     if (value.type !== this.type) { 
-      throw new BDError('not a list', ErrorCode.REJECT_INVALID_PARAMETER_DATA_TYPE, ErrorClass.PROPERTY);
+      throw new BACNetError('not a list', ErrorCode.REJECT_INVALID_PARAMETER_DATA_TYPE, ErrorClass.PROPERTY);
     }
     await this.#queue.push(value);
   }

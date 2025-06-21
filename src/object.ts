@@ -10,7 +10,7 @@
 
 import { BDEvented, type BDEventMap } from './evented.js';
 
-import { BDError } from './errors.js';
+import { BACNetError } from './errors.js';
 
 import {
   type BACNetAppData,
@@ -179,7 +179,7 @@ export class BDObject<EM extends BDObjectEvents = BDObjectEvents> extends BDEven
     if (property) {
       await property.___writeValue(value);
     } else { 
-      throw new BDError('unknown property', ErrorCode.UNKNOWN_PROPERTY, ErrorClass.PROPERTY);    
+      throw new BACNetError('unknown property', ErrorCode.UNKNOWN_PROPERTY, ErrorClass.PROPERTY);    
     }
   }
   
@@ -199,7 +199,7 @@ export class BDObject<EM extends BDObjectEvents = BDObjectEvents> extends BDEven
       return this.#properties.get(property.id as PropertyIdentifier)!
         .___readValue();
     }
-    throw new BDError('unknown property', ErrorCode.UNKNOWN_PROPERTY, ErrorClass.PROPERTY);
+    throw new BACNetError('unknown property', ErrorCode.UNKNOWN_PROPERTY, ErrorClass.PROPERTY);
   }
   
   /**

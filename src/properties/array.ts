@@ -11,7 +11,7 @@
 import fastq from 'fastq';
 
 import { BDEvented } from '../evented.js';
-import { BDError } from '../errors.js';
+import { BACNetError } from '../errors.js';
 import { 
   type BACNetAppData,
   type ApplicationTagValueTypeMap,
@@ -118,7 +118,7 @@ export class BDArrayProperty<Tag extends ApplicationTag, Type extends Applicatio
    */
   async setValue(value: Type[]): Promise<void> {
     if (!this.settable) { 
-      throw new BDError('not settable', ErrorCode.WRITE_ACCESS_DENIED, ErrorClass.PROPERTY);
+      throw new BACNetError('not settable', ErrorCode.WRITE_ACCESS_DENIED, ErrorClass.PROPERTY);
     }
     await this.#queue.push(value.map(v => ({ type: this.type, value: v })));
   }
@@ -149,14 +149,14 @@ export class BDArrayProperty<Tag extends ApplicationTag, Type extends Applicatio
    */
   async ___writeValue(value: BACNetAppData<Tag, Type> | BACNetAppData<Tag, Type>[]): Promise<void> { 
     if (!this.writable || !this.settable) { 
-      throw new BDError('not writable', ErrorCode.WRITE_ACCESS_DENIED, ErrorClass.PROPERTY);
+      throw new BACNetError('not writable', ErrorCode.WRITE_ACCESS_DENIED, ErrorClass.PROPERTY);
     }
     if (!Array.isArray(value)) { 
       value = [value];
     }
     for (const { type } of value) { 
       if (type !== this.type) { 
-        throw new BDError('type mismatch', ErrorCode.REJECT_INVALID_PARAMETER_DATA_TYPE, ErrorClass.PROPERTY);
+        throw new BACNetError('type mismatch', ErrorCode.REJECT_INVALID_PARAMETER_DATA_TYPE, ErrorClass.PROPERTY);
       }  
     }
     await this.#queue.push(value);

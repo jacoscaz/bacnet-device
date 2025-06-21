@@ -9,7 +9,7 @@
  * @packageDocumentation
  */
 
-export { BDError } from './errors.js';
+export { BACNetError as BDError } from './errors.js';
 
 export { 
   type BDEventMap,

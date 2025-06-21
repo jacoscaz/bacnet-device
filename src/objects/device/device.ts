@@ -1,6 +1,6 @@
 
 import { 
-  BDError,
+  BACNetError,
 } from '../../errors.js';
 
 import { 
@@ -463,7 +463,7 @@ export class BDDevice extends BDObject<BDDeviceEvents> {
     if (object) { 
       return await cb(object, req);
     }
-    throw new BDError('unknown object', ErrorCode.UNKNOWN_OBJECT, ErrorClass.DEVICE);
+    throw new BACNetError('unknown object', ErrorCode.UNKNOWN_OBJECT, ErrorClass.DEVICE);
   }
 
 
@@ -584,8 +584,8 @@ export class BDDevice extends BDObject<BDDeviceEvents> {
       });
       this.#client.readPropertyResponse({ address: header.sender.address }, invokeId!, objectId, property, data);
     } catch (err) { 
-      if (err instanceof BDError) {
-        this.#client.errorResponse({ address: header.sender.address }, service!, invokeId!, err.errorClass, err.errorCode);
+      if (err instanceof BACNetError) {
+        this.#client.errorResponse({ address: header.sender.address }, service!, invokeId!, err.class, err.code);
       } else { 
         this.#client.errorResponse({ address: header.sender.address }, service!, invokeId!, ErrorClass.DEVICE, ErrorCode.INTERNAL_ERROR);
       }
@@ -800,8 +800,8 @@ export class BDDevice extends BDObject<BDDeviceEvents> {
       });  
       this.#client.simpleAckResponse({ address: header.sender.address }, service!, invokeId!);
     } catch (err) { 
-      if (err instanceof BDError) {
-        this.#client.errorResponse({ address: header.sender.address }, service!, invokeId!, err.errorClass, err.errorCode);
+      if (err instanceof BACNetError) {
+        this.#client.errorResponse({ address: header.sender.address }, service!, invokeId!, err.class, err.code);
       } else { 
         this.#client.errorResponse({ address: header.sender.address }, service!, invokeId!, ErrorClass.DEVICE, ErrorCode.INTERNAL_ERROR);
       }
