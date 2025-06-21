@@ -1,4 +1,4 @@
 
 import Debug from 'debug';
 
-export const device = Debug('bacnet-device:device');
+export const device = Debug('bacnet:device');
