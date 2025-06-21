@@ -253,7 +253,7 @@ export class BDObject<EM extends BDObjectEvents = BDObjectEvents> extends AsyncE
    * @private
    */
   #onPropertyBeforeCov = async (property: BDProperty<any, any>, nextValue: BACNetAppData | BACNetAppData[]) => { 
-    await this.asyncEmitSeries(false, 'beforecov', this, property, nextValue);
+    await this.___asyncEmitSeries(false, 'beforecov', this, property, nextValue);
   };
   
   /**
@@ -267,7 +267,7 @@ export class BDObject<EM extends BDObjectEvents = BDObjectEvents> extends AsyncE
    * @private
    */
   #onPropertyAfterCov = async (property: BDProperty<any, any>, nextValue: BACNetAppData | BACNetAppData[]) => { 
-    await this.asyncEmitSeries(false, 'aftercov', this, property, nextValue);
+    await this.___asyncEmitSeries(false, 'aftercov', this, property, nextValue);
   };
     
 }

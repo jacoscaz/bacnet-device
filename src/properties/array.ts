@@ -172,9 +172,9 @@ export class BDArrayProperty<Tag extends ApplicationTag, Type extends Applicatio
    * @private
    */
   #worker = async (value: BACNetAppData<Tag, Type>[]) => { 
-    await this.asyncEmitSeries(false, 'beforecov', this, value);
+    await this.___asyncEmitSeries(false, 'beforecov', this, value);
     this.#value = value;
-    await this.asyncEmitSeries(true, 'aftercov', this, value);
+    await this.___asyncEmitSeries(true, 'aftercov', this, value);
   };
  
 }

@@ -856,7 +856,7 @@ export class BDDevice extends BDObject<BDDeviceEvents> {
    */
   #onBacnetError = (err: Error) => {
     debug('server error', err);
-    this.emit('error', err);
+    this.___emit('error', err);
   };
   
   /**
@@ -869,7 +869,7 @@ export class BDDevice extends BDObject<BDDeviceEvents> {
    */
   #onBacnetListening = () => { 
     debug('server is listening');
-    this.emit('listening');
+    this.___emit('listening');
   };
   
     

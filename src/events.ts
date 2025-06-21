@@ -93,8 +93,9 @@ export class AsyncEventEmitter<T extends EventMap<T>> {
    * 
    * @param event - The event name to trigger
    * @param args - The arguments to pass to each listener
+   * @internal
    */
-  emit<K extends keyof T>(event: K, ...args: EventArgs<T, K>) {
+  ___emit<K extends keyof T>(event: K, ...args: EventArgs<T, K>) {
     if (event in this.#callbacks) { 
       const callbacks = this.#callbacks[event];
       for (let i = 0; i < callbacks.length; i += 1) { 
@@ -110,8 +111,9 @@ export class AsyncEventEmitter<T extends EventMap<T>> {
    * @param event - The event name to trigger
    * @param args - The arguments to pass to each listener
    * @returns A promise that resolves when all listeners have completed
+   * @internal
    */
-  async asyncEmitSeries<K extends keyof T>(throwErrors: boolean, event: K, ...args: EventArgs<T, K>) {
+  async ___asyncEmitSeries<K extends keyof T>(throwErrors: boolean, event: K, ...args: EventArgs<T, K>) {
     if (event in this.#callbacks) {
       const callbacks = this.#callbacks[event];
       for (let i = 0; i < callbacks.length; i += 1) {
