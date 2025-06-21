@@ -10,8 +10,9 @@
 
 import fastq from 'fastq';
 
-import { BDEvented } from '../evented.js';
+import { AsyncEventEmitter } from '../events.js';
 import { BACNetError } from '../errors.js';
+import { property as debug } from '../debug.js';
 import { 
   type BACNetAppData,
   type ApplicationTagValueTypeMap,
@@ -46,9 +47,9 @@ export interface BDArrayPropertyEvents<Tag extends ApplicationTag, Type extends 
  * 
  * @typeParam Tag - The BACnet application tag for the property values
  * @typeParam Type - The JavaScript type corresponding to the application tag
- * @extends BDEvented<BDArrayPropertyEvents<Tag, Type>>
+ * @extends AsyncEventEmitter<BDArrayPropertyEvents<Tag, Type>>
  */
-export class BDArrayProperty<Tag extends ApplicationTag, Type extends ApplicationTagValueTypeMap[Tag] = ApplicationTagValueTypeMap[Tag]> extends BDEvented<BDArrayPropertyEvents<Tag, Type>> {
+export class BDArrayProperty<Tag extends ApplicationTag, Type extends ApplicationTagValueTypeMap[Tag] = ApplicationTagValueTypeMap[Tag]> extends AsyncEventEmitter<BDArrayPropertyEvents<Tag, Type>> {
   
   /** Indicates this is not a list/array property (BACnet semantic, not JavaScript array) */
   readonly list: false;
@@ -171,9 +172,9 @@ export class BDArrayProperty<Tag extends ApplicationTag, Type extends Applicatio
    * @private
    */
   #worker = async (value: BACNetAppData<Tag, Type>[]) => { 
-    await this.trigger('beforecov', this, value);
+    await this.asyncEmitSeries(false, 'beforecov', this, value);
     this.#value = value;
-    await this.trigger('aftercov', this, value);
+    await this.asyncEmitSeries(true, 'aftercov', this, value);
   };
  
 }

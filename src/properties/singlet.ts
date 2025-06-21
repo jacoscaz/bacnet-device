@@ -10,7 +10,7 @@
 
 import fastq from 'fastq';
 
-import { BDEvented } from '../evented.js';
+import { AsyncEventEmitter } from '../events.js';
 import { BACNetError } from '../errors.js';
 
 import { 
@@ -47,9 +47,9 @@ export interface BDSingletPropertyEvents<Tag extends ApplicationTag, Type extend
  * 
  * @typeParam Tag - The BACnet application tag for the property value
  * @typeParam Type - The JavaScript type corresponding to the application tag
- * @extends BDEvented<BDSingletPropertyEvents<Tag, Type>>
+ * @extends AsyncEventEmitter<BDSingletPropertyEvents<Tag, Type>>
  */
-export class BDSingletProperty<Tag extends ApplicationTag, Type extends ApplicationTagValueTypeMap[Tag] = ApplicationTagValueTypeMap[Tag]> extends BDEvented<BDSingletPropertyEvents<Tag, Type>> {
+export class BDSingletProperty<Tag extends ApplicationTag, Type extends ApplicationTagValueTypeMap[Tag] = ApplicationTagValueTypeMap[Tag]> extends AsyncEventEmitter<BDSingletPropertyEvents<Tag, Type>> {
   
   /** Indicates this is not a list/array property */
   readonly list: false;
@@ -172,9 +172,9 @@ export class BDSingletProperty<Tag extends ApplicationTag, Type extends Applicat
    * @private
    */
   #worker = async (value: BACNetAppData<Tag, Type>) => { 
-    await this.trigger('beforecov', this, value);
+    await this.asyncEmitSeries(false, 'beforecov', this, value);
     this.#value = value;
-    await this.trigger('aftercov', this, value);
+    await this.asyncEmitSeries(true, 'aftercov', this, value);
   };
  
 }

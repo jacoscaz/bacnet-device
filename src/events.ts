@@ -1,4 +1,5 @@
 
+import { events as debug } from './debug.js';
 /**
  * Event handling module for BACnet devices
  * 
@@ -18,7 +19,7 @@
  * @typeParam T - An interface mapping event names to their argument arrays
  * @private 
  */
-export type BDEventMap<T> = Record<keyof T, any[]>;
+export type EventMap<T> = Record<keyof T, any[]>;
 
 /** 
  * Extracts the argument types for a specific event
@@ -27,7 +28,7 @@ export type BDEventMap<T> = Record<keyof T, any[]>;
  * @typeParam K - The event name to extract arguments for
  * @private 
  */
-export type BDEventArgs<T, K extends keyof T> = T[K];
+export type EventArgs<T, K extends keyof T> = T[K];
 
 /** 
  * Type for event listeners/handlers
@@ -36,7 +37,7 @@ export type BDEventArgs<T, K extends keyof T> = T[K];
  * @typeParam K - The event name this listener handles
  * @private 
  */
-export type BDEventListener<T, K extends keyof T> = T[K] extends unknown[] ? (...args: T[K]) => Promise<void> : never;
+export type EventListener<T, K extends keyof T> = T[K] extends unknown[] ? (...args: T[K]) => Promise<any> | any : never;
 
 
 /**
@@ -49,13 +50,13 @@ export type BDEventListener<T, K extends keyof T> = T[K] extends unknown[] ? (..
  * 
  * @typeParam T - An interface mapping event names to their argument arrays
  */
-export class BDEvented<T extends BDEventMap<T>> { 
+export class AsyncEventEmitter<T extends EventMap<T>> { 
   
   /** 
    * Internal mapping of event names to their registered listeners
    * @private 
    */
-  #callbacks: { [K in keyof T]: BDEventListener<T, K>[] };
+  #callbacks: { [K in keyof T]: EventListener<T, K>[] };
   
   /**
    * Creates a new Evented instance with no registered listeners
@@ -71,7 +72,7 @@ export class BDEvented<T extends BDEventMap<T>> {
    * @param cb - The callback function to execute when the event is triggered
    * @returns The callback function for chaining
    */
-  subscribe<K extends keyof T>(event: K, cb: BDEventListener<T, K>) { 
+  on<K extends keyof T>(event: K, cb: EventListener<T, K>) { 
     if (!this.#callbacks[event]) {
       this.#callbacks[event] = [];
     }
@@ -79,16 +80,50 @@ export class BDEvented<T extends BDEventMap<T>> {
   }
   
   /**
-   * Fires an event. All subscribed listeners will be called in parallel.
+   * Alias for `on`
+   * @alias on
+   */
+  addListener<K extends keyof T>(event: K, cb: EventListener<T, K>) {
+    this.on(event, cb);
+  }
+  
+  /**
+   * Fires an event. All subscribed listeners will be called synchronously.
+   * Promises will be ignored.
+   * 
+   * @param event - The event name to trigger
+   * @param args - The arguments to pass to each listener
+   */
+  emit<K extends keyof T>(event: K, ...args: EventArgs<T, K>) {
+    if (event in this.#callbacks) { 
+      const callbacks = this.#callbacks[event];
+      for (let i = 0; i < callbacks.length; i += 1) { 
+        callbacks[i].apply(this, args);
+      }
+    }
+  }
+  
+  /**
+   * Fires an event. All subscribed listeners will be called in series.
+   * Promises will be awaited for before continuing to the next listener.
    * 
    * @param event - The event name to trigger
    * @param args - The arguments to pass to each listener
    * @returns A promise that resolves when all listeners have completed
    */
-  async trigger<K extends keyof T>(event: K, ...args: BDEventArgs<T, K>) {
-    if (this.#callbacks[event]) { 
-      // TODO: consider whether to call listeners in series.
-      await Promise.all(this.#callbacks[event].map(cb => cb.apply(this, args)));  
+  async asyncEmitSeries<K extends keyof T>(throwErrors: boolean, event: K, ...args: EventArgs<T, K>) {
+    if (event in this.#callbacks) {
+      const callbacks = this.#callbacks[event];
+      for (let i = 0; i < callbacks.length; i += 1) {
+        try {
+          await callbacks[i].apply(this, args);
+        } catch (err) {
+          debug('error while calling listener #%s for event %s: %s', i, event, err instanceof Error ? err.stack : String(err));
+          if (throwErrors) { 
+            throw err;
+          } 
+        }
+      }
     }
   }
   

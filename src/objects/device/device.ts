@@ -432,8 +432,8 @@ export class BDDevice extends BDObject<BDDeviceEvents> {
     if (this.#objects.get(object.identifier.type)!.has(object.identifier.instance)) {
       throw new Error('Cannot register object: duplicate object identifier');
     }
-    object.subscribe('beforecov', this.#onChildBeforeCov);
-    object.subscribe('aftercov', this.#onChildAfterCov);
+    object.on('beforecov', this.#onChildBeforeCov);
+    object.on('aftercov', this.#onChildAfterCov);
     this.#objects.get(object.identifier.type)!.set(object.identifier.instance, object);
     this.#objectList.push({ type: ApplicationTag.OBJECTIDENTIFIER, value: object.identifier });
     return object;
@@ -856,7 +856,7 @@ export class BDDevice extends BDObject<BDDeviceEvents> {
    */
   #onBacnetError = (err: Error) => {
     debug('server error', err);
-    this.trigger('error', err);
+    this.emit('error', err);
   };
   
   /**
@@ -869,7 +869,7 @@ export class BDDevice extends BDObject<BDDeviceEvents> {
    */
   #onBacnetListening = () => { 
     debug('server is listening');
-    this.trigger('listening');
+    this.emit('listening');
   };
   
     

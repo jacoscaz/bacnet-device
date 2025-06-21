@@ -37,7 +37,7 @@ const damperControl = device.addObject(new BDAnalogOutput(1, {
 }));
 
 // Listen for BACnet events
-device.subscribe('listening', async () => {
+device.on('listening', () => {
   console.log('BACnet device is now online!');
   console.log(`Device Instance: ${device.identifier.instance}`);
   
@@ -64,6 +64,6 @@ setInterval(() => {
 }, 10000);
 
 // Listen for errors
-device.subscribe('error', async (err) => {
+device.on('error', (err) => {
   console.error('BACnet error:', err);
 });

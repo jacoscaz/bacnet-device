@@ -8,7 +8,7 @@
  * @module
  */
 
-import { BDEvented, type BDEventMap } from './evented.js';
+import { AsyncEventEmitter, type EventMap } from './events.js';
 
 import { BACNetError } from './errors.js';
 
@@ -42,7 +42,7 @@ import { ensureArray } from './utils.js';
 /**
  * Events that can be emitted by a BACnet object
  */
-export interface BDObjectEvents extends BDEventMap<any> { 
+export interface BDObjectEvents extends EventMap<any> { 
   /** Emitted before a property value changes */
   beforecov: [object: BDObject, property: BDProperty<any, any>, nextValue: BACNetAppData | BACNetAppData[]],
   
@@ -70,9 +70,9 @@ const unlistedProperties: PropertyIdentifier[] = [
  * according to the BACnet specification. It manages object properties and
  * handles property read/write operations and CoV notifications.
  * 
- * @extends BDEvented<BDObjectEvents>
+ * @extends AsyncEventEmitter<BDObjectEvents>
  */
-export class BDObject<EM extends BDObjectEvents = BDObjectEvents> extends BDEvented<EM> { 
+export class BDObject<EM extends BDObjectEvents = BDObjectEvents> extends AsyncEventEmitter<EM> { 
   
   /** The unique identifier for this object (type and instance number) */
   readonly identifier: BACNetObjectID;
@@ -158,8 +158,8 @@ export class BDObject<EM extends BDObjectEvents = BDObjectEvents> extends BDEven
     if (!unlistedProperties.includes(property.identifier)) { 
       this.#propertyList.push({ type: ApplicationTag.ENUMERATED, value: property.identifier });
     }
-    property.subscribe('beforecov', this.#onPropertyBeforeCov);
-    property.subscribe('aftercov', this.#onPropertyAfterCov);
+    property.on('beforecov', this.#onPropertyBeforeCov);
+    property.on('aftercov', this.#onPropertyAfterCov);
     return property;
   }
 
@@ -253,7 +253,7 @@ export class BDObject<EM extends BDObjectEvents = BDObjectEvents> extends BDEven
    * @private
    */
   #onPropertyBeforeCov = async (property: BDProperty<any, any>, nextValue: BACNetAppData | BACNetAppData[]) => { 
-    await this.trigger('beforecov', this, property, nextValue);
+    await this.asyncEmitSeries(false, 'beforecov', this, property, nextValue);
   };
   
   /**
@@ -267,7 +267,7 @@ export class BDObject<EM extends BDObjectEvents = BDObjectEvents> extends BDEven
    * @private
    */
   #onPropertyAfterCov = async (property: BDProperty<any, any>, nextValue: BACNetAppData | BACNetAppData[]) => { 
-    await this.trigger('aftercov', this, property, nextValue);
+    await this.asyncEmitSeries(false, 'aftercov', this, property, nextValue);
   };
     
 }
