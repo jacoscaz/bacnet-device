@@ -86,6 +86,16 @@ export class BDObject extends AsyncEventEmitter<BDObjectEvents> {
    */
   readonly #properties: Map<PropertyIdentifier, BDProperty<any, any>>;
   
+  readonly objectName: BDSingletProperty<ApplicationTag.CHARACTER_STRING>;
+  
+  readonly objectType: BDSingletProperty<ApplicationTag.ENUMERATED, ObjectType>;
+  
+  readonly objectIdentifier: BDSingletProperty<ApplicationTag.OBJECTIDENTIFIER>;
+  
+  readonly propertyList: BDArrayProperty<ApplicationTag.ENUMERATED, PropertyIdentifier>;
+  
+  readonly description: BDSingletProperty<ApplicationTag.CHARACTER_STRING>;
+  
   /**
    * Creates a new BACnet object
    * 
@@ -100,19 +110,19 @@ export class BDObject extends AsyncEventEmitter<BDObjectEvents> {
     this.#properties = new Map();
     this.#propertyList = [];
     
-    this.addProperty(new BDSingletProperty(
+    this.objectName = this.addProperty(new BDSingletProperty(
       PropertyIdentifier.OBJECT_NAME, ApplicationTag.CHARACTER_STRING, false, name));
     
-    this.addProperty(new BDSingletProperty(
+    this.objectType = this.addProperty(new BDSingletProperty(
       PropertyIdentifier.OBJECT_TYPE, ApplicationTag.ENUMERATED, false, type));
     
-    this.addProperty(new BDSingletProperty(
+    this.objectIdentifier = this.addProperty(new BDSingletProperty(
       PropertyIdentifier.OBJECT_IDENTIFIER, ApplicationTag.OBJECTIDENTIFIER, false, this.identifier));
     
-    this.addProperty(new BDArrayProperty<ApplicationTag.ENUMERATED, PropertyIdentifier>(
+    this.propertyList = this.addProperty(new BDArrayProperty<ApplicationTag.ENUMERATED, PropertyIdentifier>(
       PropertyIdentifier.PROPERTY_LIST, false,  () => this.#propertyList));
     
-    this.addProperty(new BDSingletProperty(
+    this.description = this.addProperty(new BDSingletProperty(
       PropertyIdentifier.DESCRIPTION, ApplicationTag.CHARACTER_STRING, false, description));
     
   }
