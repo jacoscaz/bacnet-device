@@ -5,7 +5,7 @@
   "types": "dist/index.d.ts",
   "type": "module",
   "scripts": {
-    "docs": "typedoc --out ./docs src/index.ts",
+    "docs": "typedoc --excludeInternal --out ./docs src/index.ts",
     "clean": "rm -rf ./dist",
     "build": "npm run clean && tsc -p .",
     "test": "echo \"Error: no test specified\" && exit 1"
