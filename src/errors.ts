@@ -19,7 +19,7 @@ export class BACNetError extends Error {
    * 
    * @param message - Human-readable error message
    * @param code - BACnet error code from the ErrorCode enum
-   * @param classs - BACnet error class from the ErrorClass enum
+   * @param clss - BACnet error class from the ErrorClass enum
    */
   constructor(message: string, code: ErrorCode, clss: ErrorClass) {
     super(message);

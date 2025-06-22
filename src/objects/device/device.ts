@@ -62,6 +62,7 @@ import {
 import { device as debug } from '../../debug.js';
 
 import fastq from 'fastq';
+import { AsyncEventEmitter } from '../../events.js';
 
 const { default: BACnetClient } = bacnet;
 
@@ -92,7 +93,7 @@ const { default: BACnetClient } = bacnet;
  * 
  * @extends BDObject
  */
-export class BDDevice extends BDObject<BDDeviceEvents> {
+export class BDDevice extends BDObject implements AsyncEventEmitter<BDDeviceEvents> {
   
   /**
    * @see https://bacnet.org/assigned-vendor-ids/
@@ -178,35 +179,19 @@ export class BDDevice extends BDObject<BDDeviceEvents> {
     
     // ================== PROPERTIES RELATED TO CHILD OBJECTS =================
     
-    this.addProperty(new BDArrayProperty(
-      PropertyIdentifier.OBJECT_LIST, 
-      ApplicationTag.OBJECTIDENTIFIER, 
-      false, 
-      () => this.#objectList,
-    ));
+    this.addProperty(new BDArrayProperty<ApplicationTag.OBJECTIDENTIFIER>(
+      PropertyIdentifier.OBJECT_LIST, false, () => this.#objectList));
     
-    this.addProperty(new BDArrayProperty(
-      PropertyIdentifier.STRUCTURED_OBJECT_LIST, 
-      ApplicationTag.OBJECTIDENTIFIER, 
-      false, 
-      [],
-    ));
+    this.addProperty(new BDArrayProperty<ApplicationTag.OBJECTIDENTIFIER>(
+      PropertyIdentifier.STRUCTURED_OBJECT_LIST, false, []));
     
     // ====================== PROTOCOL-RELATED PROPERTIES =====================
     
     this.addProperty(new BDSingletProperty(
-      PropertyIdentifier.PROTOCOL_VERSION, 
-      ApplicationTag.UNSIGNED_INTEGER, 
-      false, 
-      1,
-    ));
+      PropertyIdentifier.PROTOCOL_VERSION, ApplicationTag.UNSIGNED_INTEGER, false, 1));
     
     this.addProperty(new BDSingletProperty(
-      PropertyIdentifier.PROTOCOL_REVISION, 
-      ApplicationTag.UNSIGNED_INTEGER, 
-      false, 
-      28,
-    ));
+      PropertyIdentifier.PROTOCOL_REVISION, ApplicationTag.UNSIGNED_INTEGER, false, 28));
     
     const supportedServicesBitString = new ServicesSupportedBitString(
       ServicesSupported.WHO_IS,
@@ -219,11 +204,7 @@ export class BDDevice extends BDObject<BDDeviceEvents> {
     );
     
     this.addProperty(new BDSingletProperty(
-      PropertyIdentifier.PROTOCOL_SERVICES_SUPPORTED, 
-      ApplicationTag.BIT_STRING, 
-      false, 
-      supportedServicesBitString,
-    ));
+      PropertyIdentifier.PROTOCOL_SERVICES_SUPPORTED, ApplicationTag.BIT_STRING, false, supportedServicesBitString));
     
     const supportedObjectTypesBitString = new ObjectTypesSupportedBitString(
       ObjectTypesSupported.DEVICE,
@@ -232,181 +213,89 @@ export class BDDevice extends BDObject<BDDeviceEvents> {
     );
     
     this.addProperty(new BDSingletProperty(
-      PropertyIdentifier.PROTOCOL_OBJECT_TYPES_SUPPORTED, 
-      ApplicationTag.BIT_STRING, 
-      false, 
-      supportedObjectTypesBitString,
-    ));
+      PropertyIdentifier.PROTOCOL_OBJECT_TYPES_SUPPORTED, ApplicationTag.BIT_STRING, false, supportedObjectTypesBitString));
     
     // ==================== SUBSCRIPTION-RELATED PROPERTIES ===================
     
-    this.addProperty(new BDArrayProperty(
-      PropertyIdentifier.ACTIVE_COV_SUBSCRIPTIONS, 
-      ApplicationTag.COV_SUBSCRIPTION, 
-      false, 
-      () => this.#updateSubscriptionList(),
-    ));
+    this.addProperty(new BDArrayProperty<ApplicationTag.COV_SUBSCRIPTION>(
+      PropertyIdentifier.ACTIVE_COV_SUBSCRIPTIONS, false, () => this.#updateSubscriptionList()));
     
     // ========================== METADATA PROPERTIES =========================
     
     this.addProperty(new BDSingletProperty(
-      PropertyIdentifier.VENDOR_IDENTIFIER, 
-      ApplicationTag.UNSIGNED_INTEGER, 
-      false, 
-      this.#vendorId,
-    ));
+      PropertyIdentifier.VENDOR_IDENTIFIER, ApplicationTag.UNSIGNED_INTEGER, false, this.#vendorId));
     
     this.addProperty(new BDSingletProperty(
-      PropertyIdentifier.VENDOR_NAME, 
-      ApplicationTag.CHARACTER_STRING, 
-      false, 
-      opts.vendorName ?? '',
-    ));
+      PropertyIdentifier.VENDOR_NAME, ApplicationTag.CHARACTER_STRING, false, opts.vendorName ?? ''));
     
     this.addProperty(new BDSingletProperty(
-      PropertyIdentifier.MODEL_NAME, 
-      ApplicationTag.CHARACTER_STRING, 
-      false, 
-      opts.modelName,
-    ));
+      PropertyIdentifier.MODEL_NAME, ApplicationTag.CHARACTER_STRING, false, opts.modelName));
     
     this.addProperty(new BDSingletProperty(
-      PropertyIdentifier.FIRMWARE_REVISION, 
-      ApplicationTag.CHARACTER_STRING, 
-      false, 
-      opts.firmwareRevision,
-    ));
+      PropertyIdentifier.FIRMWARE_REVISION, ApplicationTag.CHARACTER_STRING, false, opts.firmwareRevision));
     
     this.addProperty(new BDSingletProperty(
-      PropertyIdentifier.APPLICATION_SOFTWARE_VERSION, 
-      ApplicationTag.CHARACTER_STRING, 
-      false, 
-      opts.applicationSoftwareVersion,
-    ));
+      PropertyIdentifier.APPLICATION_SOFTWARE_VERSION, ApplicationTag.CHARACTER_STRING, false, opts.applicationSoftwareVersion));
     
     this.addProperty(new BDSingletProperty(
-      PropertyIdentifier.DATABASE_REVISION, 
-      ApplicationTag.UNSIGNED_INTEGER, 
-      false, 
-      opts.databaseRevision,
-    ));
+      PropertyIdentifier.DATABASE_REVISION, ApplicationTag.UNSIGNED_INTEGER, false, opts.databaseRevision));
      
     // Bindings can be discovered via the "Who-Is" and "I-Am" services. 
     // This property represents a list of static bindings and we can leave it empty.
-    this.addProperty(new BDArrayProperty(
-      PropertyIdentifier.DEVICE_ADDRESS_BINDING, 
-      ApplicationTag.NULL, 
-      false, 
-      [],
-    ));
+    this.addProperty(new BDArrayProperty<ApplicationTag.NULL>(
+      PropertyIdentifier.DEVICE_ADDRESS_BINDING, false, []));
     
     // In your device constructor
     this.addProperty(new BDSingletProperty(
-      PropertyIdentifier.LOCATION, 
-      ApplicationTag.CHARACTER_STRING, 
-      false,   // Typically writable so operators can update the location
-      opts.location ?? '',
-    ));
+      PropertyIdentifier.LOCATION, ApplicationTag.CHARACTER_STRING, false, opts.location ?? ''));
     
     this.addProperty(new BDSingletProperty(
-      PropertyIdentifier.SERIAL_NUMBER, 
-      ApplicationTag.CHARACTER_STRING, 
-      false,
-      opts.serialNumber ?? '',
-    ));
+      PropertyIdentifier.SERIAL_NUMBER, ApplicationTag.CHARACTER_STRING, false, opts.serialNumber ?? ''));
     
     // ======================== APDU-RELATED PROPERTIES =======================
     
     this.addProperty(new BDSingletProperty(
-      PropertyIdentifier.MAX_APDU_LENGTH_ACCEPTED, 
-      ApplicationTag.UNSIGNED_INTEGER, 
-      false, 
-      opts.apduMaxLength ?? 1476,
-    ));
+      PropertyIdentifier.MAX_APDU_LENGTH_ACCEPTED, ApplicationTag.UNSIGNED_INTEGER, false, opts.apduMaxLength ?? 1476));
     
     this.addProperty(new BDSingletProperty(
-      PropertyIdentifier.APDU_TIMEOUT, 
-      ApplicationTag.UNSIGNED_INTEGER, 
-      false, 
-      opts.apduTimeout ?? 6000,
-    ));
+      PropertyIdentifier.APDU_TIMEOUT, ApplicationTag.UNSIGNED_INTEGER, false, opts.apduTimeout ?? 6000));
     
     this.addProperty(new BDSingletProperty(
-      PropertyIdentifier.NUMBER_OF_APDU_RETRIES, 
-      ApplicationTag.UNSIGNED_INTEGER, 
-      false, 
-      opts.apduRetries ?? 3,
-    ));
+      PropertyIdentifier.NUMBER_OF_APDU_RETRIES, ApplicationTag.UNSIGNED_INTEGER, false, opts.apduRetries ?? 3));
     
     this.addProperty(new BDSingletProperty(
-      PropertyIdentifier.APDU_SEGMENT_TIMEOUT,
-      ApplicationTag.UNSIGNED_INTEGER,
-      false,
-      opts.apduSegmentTimeout ?? 2000,
-    ));
+      PropertyIdentifier.APDU_SEGMENT_TIMEOUT, ApplicationTag.UNSIGNED_INTEGER, false, opts.apduSegmentTimeout ?? 2000));
   
     // ======================== SEGMENTATION PROPERTIES =======================
 
     this.addProperty(new BDSingletProperty(
-      PropertyIdentifier.SEGMENTATION_SUPPORTED, 
-      ApplicationTag.ENUMERATED, 
-      false, 
-      Segmentation.NO_SEGMENTATION,
-    ));
+      PropertyIdentifier.SEGMENTATION_SUPPORTED, ApplicationTag.ENUMERATED, false, Segmentation.NO_SEGMENTATION));
     
     // Accepter values: 2, 4, 8, 16, 32, 64 and 0 for "unspecified"
     this.addProperty(new BDSingletProperty(
-      PropertyIdentifier.MAX_SEGMENTS_ACCEPTED, 
-      ApplicationTag.UNSIGNED_INTEGER, 
-      false,
-      0,    
-    ));
+      PropertyIdentifier.MAX_SEGMENTS_ACCEPTED, ApplicationTag.UNSIGNED_INTEGER, false, 0));
     
     // ======================== TIME-RELATED PROPERTIES =======================
     
     this.addProperty(new BDSingletProperty(
-      PropertyIdentifier.UTC_OFFSET, 
-      ApplicationTag.SIGNED_INTEGER, 
-      false,
-      () => ({ type: ApplicationTag.SIGNED_INTEGER, value: new Date().getTimezoneOffset() * -1 }),
-    ));
+      PropertyIdentifier.UTC_OFFSET, ApplicationTag.SIGNED_INTEGER, false, () => new Date().getTimezoneOffset() * -1));
     
     this.addProperty(new BDSingletProperty(
-      PropertyIdentifier.LOCAL_DATE, 
-      ApplicationTag.DATE, 
-      false,
-      () => ({ type: ApplicationTag.DATE, value: new Date() }),
-    ));
+      PropertyIdentifier.LOCAL_DATE, ApplicationTag.DATE, false, () => new Date()));
     
     this.addProperty(new BDSingletProperty(
-      PropertyIdentifier.LOCAL_TIME, 
-      ApplicationTag.TIME, 
-      false,
-      () => ({ type: ApplicationTag.TIME, value: new Date() }),
-    ));
+      PropertyIdentifier.LOCAL_TIME, ApplicationTag.TIME, false, () => new Date()));
     
     this.addProperty(new BDSingletProperty(
-      PropertyIdentifier.DAYLIGHT_SAVINGS_STATUS, 
-      ApplicationTag.BOOLEAN, 
-      false, 
-      () => ({ type: ApplicationTag.BOOLEAN, value: isDstInEffect(new Date()) }),
-    ));
+      PropertyIdentifier.DAYLIGHT_SAVINGS_STATUS, ApplicationTag.BOOLEAN, false, () => isDstInEffect(new Date())));
     
     // ======================= STATUS-RELATED PROPERTIES ======================
     
     this.systemStatus = this.addProperty(new BDSingletProperty<ApplicationTag.ENUMERATED, DeviceStatus>(
-      PropertyIdentifier.SYSTEM_STATUS, 
-      ApplicationTag.ENUMERATED, 
-      false, 
-      DeviceStatus.OPERATIONAL,
-    ));
+      PropertyIdentifier.SYSTEM_STATUS, ApplicationTag.ENUMERATED, false, DeviceStatus.OPERATIONAL));
     
     this.eventState = this.addProperty(new BDSingletProperty<ApplicationTag.ENUMERATED, EventState>(
-      PropertyIdentifier.EVENT_STATE, 
-      ApplicationTag.ENUMERATED, 
-      false, 
-      EventState.NORMAL,
-    ));
+      PropertyIdentifier.EVENT_STATE, ApplicationTag.ENUMERATED, false, EventState.NORMAL));
     
   }
   
@@ -432,7 +321,6 @@ export class BDDevice extends BDObject<BDDeviceEvents> {
     if (this.#objects.get(object.identifier.type)!.has(object.identifier.instance)) {
       throw new Error('Cannot register object: duplicate object identifier');
     }
-    object.on('beforecov', this.#onChildBeforeCov);
     object.on('aftercov', this.#onChildAfterCov);
     this.#objects.get(object.identifier.type)!.set(object.identifier.instance, object);
     this.#objectList.push({ type: ApplicationTag.OBJECTIDENTIFIER, value: object.identifier });
@@ -530,18 +418,6 @@ export class BDDevice extends BDObject<BDDeviceEvents> {
   // ==========================================================================
   //                     LISTENERS FOR CHILD OBJECT EVENTS
   // ==========================================================================
-
-  /**
-   * Handles 'aftercov' events from child BACnet objects
-   * 
-   * @param object - The object that changed
-   * @param property - The property that changed
-   * @param value - The new value
-   * @private
-   */
-  #onChildBeforeCov = async (object: BDObject, property: BDProperty<any, any>, value: BACNetAppData | BACNetAppData[]) => { 
-    
-  }
   
   /**
    * Handles 'aftercov' events from child BACnet objects
@@ -584,6 +460,7 @@ export class BDDevice extends BDObject<BDDeviceEvents> {
       });
       this.#client.readPropertyResponse({ address: header.sender.address }, invokeId!, objectId, property, data);
     } catch (err) { 
+      debug('error: %s', (err as any).stack);
       if (err instanceof BACNetError) {
         this.#client.errorResponse({ address: header.sender.address }, service!, invokeId!, err.class, err.code);
       } else { 

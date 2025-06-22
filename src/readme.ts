@@ -42,13 +42,13 @@ device.on('listening', () => {
   console.log(`Device Instance: ${device.identifier.instance}`);
   
   // Set the initial value of the temperature input
-  temperatureSensor.presentValue.setValue(21.5);
+  temperatureSensor.presentValue.set(21.5);
   
   // Set the output value with a specific priority (1-16)
-  damperControl.presentValue.setValue(75.0);
+  damperControl.presentValue.set(75.0);
   
   // You can also manipulate status flags
-  temperatureSensor.statusFlags.setValue(
+  temperatureSensor.statusFlags.set(
     new StatusFlagsBitString(StatusFlags.OVERRIDDEN)
   );
 });
@@ -56,9 +56,9 @@ device.on('listening', () => {
 // Simulate changing values
 setInterval(() => {
   // Simulate temperature fluctuation
-  const currentTemp = temperatureSensor.presentValue.getValue();
+  const currentTemp = temperatureSensor.presentValue.value;
   const newTemp = currentTemp + (Math.random() * 0.4 - 0.2); // +/- 0.2°C
-  temperatureSensor.presentValue.setValue(newTemp);
+  temperatureSensor.presentValue.set(newTemp);
   
   console.log(`Temperature updated: ${newTemp.toFixed(1)}°C`);
 }, 10000);

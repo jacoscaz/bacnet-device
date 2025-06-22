@@ -42,10 +42,7 @@ import { ensureArray } from './utils.js';
 /**
  * Events that can be emitted by a BACnet object
  */
-export interface BDObjectEvents extends EventMap<any> { 
-  /** Emitted before a property value changes */
-  beforecov: [object: BDObject, property: BDProperty<any, any>, nextValue: BACNetAppData | BACNetAppData[]],
-  
+export interface BDObjectEvents extends EventMap { 
   /** Emitted after a property value has changed */
   aftercov: [object: BDObject, property: BDProperty<any, any>, newValue: BACNetAppData | BACNetAppData[]],
 }
@@ -72,7 +69,7 @@ const unlistedProperties: PropertyIdentifier[] = [
  * 
  * @extends AsyncEventEmitter<BDObjectEvents>
  */
-export class BDObject<EM extends BDObjectEvents = BDObjectEvents> extends AsyncEventEmitter<EM> { 
+export class BDObject extends AsyncEventEmitter<BDObjectEvents> {
   
   /** The unique identifier for this object (type and instance number) */
   readonly identifier: BACNetObjectID;
@@ -98,44 +95,25 @@ export class BDObject<EM extends BDObjectEvents = BDObjectEvents> extends AsyncE
    */
   constructor(type: ObjectType, instance: number, name: string, description: string = '') {
     super();
+    
     this.identifier = Object.freeze({ type, instance });
     this.#properties = new Map();
     this.#propertyList = [];
     
     this.addProperty(new BDSingletProperty(
-      PropertyIdentifier.OBJECT_NAME, 
-      ApplicationTag.CHARACTER_STRING, 
-      false, 
-      name,
-    ));
+      PropertyIdentifier.OBJECT_NAME, ApplicationTag.CHARACTER_STRING, false, name));
     
     this.addProperty(new BDSingletProperty(
-      PropertyIdentifier.OBJECT_TYPE, 
-      ApplicationTag.ENUMERATED, 
-      false, 
-      type,
-    ));
+      PropertyIdentifier.OBJECT_TYPE, ApplicationTag.ENUMERATED, false, type));
     
     this.addProperty(new BDSingletProperty(
-      PropertyIdentifier.OBJECT_IDENTIFIER, 
-      ApplicationTag.OBJECTIDENTIFIER, 
-      false, 
-      this.identifier,
-    ));
+      PropertyIdentifier.OBJECT_IDENTIFIER, ApplicationTag.OBJECTIDENTIFIER, false, this.identifier));
     
-    this.addProperty(new BDArrayProperty(
-      PropertyIdentifier.PROPERTY_LIST, 
-      ApplicationTag.ENUMERATED, 
-      false, 
-      () => this.#propertyList,
-    ));
+    this.addProperty(new BDArrayProperty<ApplicationTag.ENUMERATED, PropertyIdentifier>(
+      PropertyIdentifier.PROPERTY_LIST, false,  () => this.#propertyList));
     
     this.addProperty(new BDSingletProperty(
-      PropertyIdentifier.DESCRIPTION, 
-      ApplicationTag.CHARACTER_STRING, 
-      false, 
-      description,
-    ));
+      PropertyIdentifier.DESCRIPTION, ApplicationTag.CHARACTER_STRING, false, description));
     
   }
   
@@ -158,7 +136,6 @@ export class BDObject<EM extends BDObjectEvents = BDObjectEvents> extends AsyncE
     if (!unlistedProperties.includes(property.identifier)) { 
       this.#propertyList.push({ type: ApplicationTag.ENUMERATED, value: property.identifier });
     }
-    property.on('beforecov', this.#onPropertyBeforeCov);
     property.on('aftercov', this.#onPropertyAfterCov);
     return property;
   }
@@ -241,20 +218,6 @@ export class BDObject<EM extends BDObjectEvents = BDObjectEvents> extends AsyncE
     }
     return { objectId: this.identifier, values };
   }
-  
-  /**
-   * Handler for property 'beforecov' events
-   * 
-   * This method is called before a property value changes and propagates
-   * the event to object subscribers.
-   * 
-   * @param property - The property that is changing
-   * @param nextValue - The new value being set
-   * @private
-   */
-  #onPropertyBeforeCov = async (property: BDProperty<any, any>, nextValue: BACNetAppData | BACNetAppData[]) => { 
-    await this.___asyncEmitSeries(false, 'beforecov', this, property, nextValue);
-  };
   
   /**
    * Handler for property 'aftercov' events

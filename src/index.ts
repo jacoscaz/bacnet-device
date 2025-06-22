@@ -13,7 +13,8 @@ export { BACNetError as BDError } from './errors.js';
 
 export { 
   type EventMap,
-  type EventArgs, 
+  type EventKey,
+  type EventArgs,
   type EventListener,
   AsyncEventEmitter, 
 } from './events.js';

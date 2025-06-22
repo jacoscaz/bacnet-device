@@ -141,12 +141,8 @@ export class BDAnalogOutput extends BDObject {
     this.relinquishDefault = this.addProperty(new BDSingletProperty(
       PropertyIdentifier.RELINQUISH_DEFAULT, ApplicationTag.REAL, false, 0));
     
-    this.priorityArray = this.addProperty(new BDArrayProperty(
-      PropertyIdentifier.PRIORITY_ARRAY,
-      ApplicationTag.REAL | ApplicationTag.NULL,
-      false,
-      new Array(16).fill({ type: ApplicationTag.NULL, value: null } as BACNetAppData<ApplicationTag.REAL | ApplicationTag.NULL>),
-    ));
+    this.priorityArray = this.addProperty(new BDArrayProperty<ApplicationTag.REAL | ApplicationTag.NULL>(
+      PropertyIdentifier.PRIORITY_ARRAY, false, new Array(16).fill({ type: ApplicationTag.NULL, value: null } as BACNetAppData<ApplicationTag.REAL | ApplicationTag.NULL>)));
     
     this.covIncrement = this.addProperty(new BDSingletProperty(
       PropertyIdentifier.COV_INCREMENT, ApplicationTag.REAL, false, opts.covIncrement ?? 0.001));

@@ -10,7 +10,7 @@
 
 import fastq from 'fastq';
 
-import { AsyncEventEmitter } from '../events.js';
+import { AsyncEventEmitter, type EventMap } from '../events.js';
 import { BACNetError } from '../errors.js';
 import { property as debug } from '../debug.js';
 import { 
@@ -21,6 +21,7 @@ import {
   ErrorClass, 
   ApplicationTag,
 } from '@innovation-system/node-bacnet';
+import { throwNotWritable } from './utils.js';
 
 /**
  * Events that can be emitted by a BACnet array property
@@ -31,10 +32,9 @@ import {
  * @typeParam Tag - The BACnet application tag for the property values
  * @typeParam Type - The JavaScript type corresponding to the application tag
  */
-export interface BDArrayPropertyEvents<Tag extends ApplicationTag, Type extends ApplicationTagValueTypeMap[Tag] = ApplicationTagValueTypeMap[Tag]> { 
+export interface BDArrayPropertyEvents<Tag extends ApplicationTag, Type extends ApplicationTagValueTypeMap[Tag]> extends EventMap {   
   /** Emitted before a property value changes */
   beforecov: [property: BDArrayProperty<Tag, Type>, raw: BACNetAppData<Tag, Type>[]],
-  
   /** Emitted after a property value has changed */
   aftercov: [property: BDArrayProperty<Tag, Type>, raw: BACNetAppData<Tag, Type>[]],
 }
@@ -52,16 +52,10 @@ export interface BDArrayPropertyEvents<Tag extends ApplicationTag, Type extends 
 export class BDArrayProperty<Tag extends ApplicationTag, Type extends ApplicationTagValueTypeMap[Tag] = ApplicationTagValueTypeMap[Tag]> extends AsyncEventEmitter<BDArrayPropertyEvents<Tag, Type>> {
   
   /** Indicates this is not a list/array property (BACnet semantic, not JavaScript array) */
-  readonly list: false;
-  
-  /** The BACnet application tag for this property's values */
-  readonly type: Tag;
+  readonly list: true;
   
   /** Whether this property can be written to */
   readonly writable: boolean;
-  
-  /** Whether this property's entire value can be set at once */
-  readonly settable: boolean;
   
   /** The BACnet property identifier */
   readonly identifier: PropertyIdentifier;
@@ -82,18 +76,15 @@ export class BDArrayProperty<Tag extends ApplicationTag, Type extends Applicatio
    * Creates a new BACnet array property
    * 
    * @param identifier - The BACnet property identifier
-   * @param type - The BACnet application tag for this property's values
    * @param writable - Whether this property can be written to
    * @param value - Optional initial values for this property. If provided, the property is not settable as a whole.
    */
-  constructor(identifier: PropertyIdentifier, type: Tag, writable: boolean, value: BACNetAppData<Tag, Type>[] | (() => BACNetAppData<Tag, Type>[])) {
+  constructor(identifier: PropertyIdentifier, writable: boolean, value: BACNetAppData<Tag, Type>[] | (() => BACNetAppData<Tag, Type>[])) {
     super();
-    this.list = false;
-    this.type = type;
-    this.settable = typeof value !== 'function';
-    this.writable = typeof value !== 'function' && writable;
+    this.list = true;
     this.identifier = identifier;
     this.#value = value;
+    this.writable = typeof value === 'function' ? false : writable;
     this.#queue = fastq.promise(this.#worker, 1)
   }
   
@@ -102,9 +93,8 @@ export class BDArrayProperty<Tag extends ApplicationTag, Type extends Applicatio
    * 
    * @returns An array of the current property values
    */
-  getValue(): Type[] {
-    return (typeof this.#value === 'function' ? this.#value() : this.#value)
-      .map(v => v.value);
+  get value(): BACNetAppData<Tag, Type>[] {
+    return typeof this.#value === 'function' ? this.#value() : this.#value;
   }
   
   /**
@@ -117,11 +107,8 @@ export class BDArrayProperty<Tag extends ApplicationTag, Type extends Applicatio
    * @returns A promise that resolves when the values have been set
    * @throws BACnetError if the property is not settable as a whole
    */
-  async setValue(value: Type[]): Promise<void> {
-    if (!this.settable) { 
-      throw new BACNetError('not settable', ErrorCode.WRITE_ACCESS_DENIED, ErrorClass.PROPERTY);
-    }
-    await this.#queue.push(value.map(v => ({ type: this.type, value: v })));
+  async set(value: BACNetAppData<Tag, Type>[]): Promise<void> {
+    await this.#queue.push(value);
   }
   
   /**
@@ -134,7 +121,7 @@ export class BDArrayProperty<Tag extends ApplicationTag, Type extends Applicatio
    * @internal
    */
   ___readValue(): BACNetAppData<Tag, Type>[] {
-    return typeof this.#value === 'function' ? this.#value() : this.#value;
+    return this.value;
   }
   
   /**
@@ -149,7 +136,7 @@ export class BDArrayProperty<Tag extends ApplicationTag, Type extends Applicatio
    * @internal
    */
   async ___writeValue(value: BACNetAppData<Tag, Type> | BACNetAppData<Tag, Type>[]): Promise<void> { 
-    if (!this.writable || !this.settable) { 
+    if (!this.writable) { 
       throw new BACNetError('not writable', ErrorCode.WRITE_ACCESS_DENIED, ErrorClass.PROPERTY);
     }
     if (!Array.isArray(value)) { 
@@ -167,14 +154,12 @@ export class BDArrayProperty<Tag extends ApplicationTag, Type extends Applicatio
    * @private
    */
   #worker = async (value: BACNetAppData<Tag, Type>[]) => {
-    for (const { type } of value) { 
-      if (type !== this.type) { 
-        throw new BACNetError('type mismatch', ErrorCode.REJECT_INVALID_PARAMETER_DATA_TYPE, ErrorClass.PROPERTY);
-      }  
+    if (typeof this.#value === 'function') {
+      throw new BACNetError('polled property', ErrorCode.WRITE_ACCESS_DENIED, ErrorClass.PROPERTY);
     }
-    await this.___asyncEmitSeries(false, 'beforecov', this, value);
+    await this.___asyncEmitSeries(true, 'beforecov', this, value);
     this.#value = value;
-    await this.___asyncEmitSeries(true, 'aftercov', this, value);
+    await this.___asyncEmitSeries(false, 'aftercov', this, value);
   };
  
 }

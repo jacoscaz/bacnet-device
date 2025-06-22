@@ -1,44 +1,17 @@
 
 import { events as debug } from './debug.js';
-/**
- * Event handling module for BACnet devices
- * 
- * This module provides an asynchronous event system for BACnet components.
- * The implementation is inspired by Node.js's native EventEmitter but supports
- * asynchronous event handlers.
- * 
- * @module
- */
 
-// The following are simplified versions of the equivalent typings for
-// Node.js's native EventEmitter, as taken from the `@types/node` package.
+export type EventMap = Record<string, any[]>;
 
-/** 
- * Type mapping for event names to their argument arrays
- * 
- * @typeParam T - An interface mapping event names to their argument arrays
- * @private 
- */
-export type EventMap<T> = Record<keyof T, any[]>;
+export type EventKey<T extends EventMap> = keyof T;
 
-/** 
- * Extracts the argument types for a specific event
- * 
- * @typeParam T - An event map interface
- * @typeParam K - The event name to extract arguments for
- * @private 
- */
-export type EventArgs<T, K extends keyof T> = T[K];
+export type EventArgs<T extends EventMap, K extends EventKey<T>> = K extends keyof T 
+  ? T[K] 
+  : never;
 
-/** 
- * Type for event listeners/handlers
- * 
- * @typeParam T - An event map interface
- * @typeParam K - The event name this listener handles
- * @private 
- */
-export type EventListener<T, K extends keyof T> = T[K] extends unknown[] ? (...args: T[K]) => Promise<any> | any : never;
-
+export type EventListener<T extends EventMap, K extends EventKey<T>> = T[K] extends unknown[] 
+  ? (...args: T[K]) => any 
+  : never;
 
 /**
  * Implements an event emitter, conceptually similar to Node.js' native
@@ -50,13 +23,13 @@ export type EventListener<T, K extends keyof T> = T[K] extends unknown[] ? (...a
  * 
  * @typeParam T - An interface mapping event names to their argument arrays
  */
-export class AsyncEventEmitter<T extends EventMap<T>> { 
+export class AsyncEventEmitter<T extends EventMap> { 
   
   /** 
    * Internal mapping of event names to their registered listeners
    * @private 
    */
-  #callbacks: { [K in keyof T]: EventListener<T, K>[] };
+  #callbacks: { [K in EventKey<T>]: EventListener<T, K>[] };
   
   /**
    * Creates a new Evented instance with no registered listeners
@@ -72,18 +45,18 @@ export class AsyncEventEmitter<T extends EventMap<T>> {
    * @param cb - The callback function to execute when the event is triggered
    * @returns The callback function for chaining
    */
-  on<K extends keyof T>(event: K, cb: EventListener<T, K>) { 
-    if (!this.#callbacks[event]) {
-      this.#callbacks[event] = [];
+  on<K extends EventKey<T>>(event: K, cb: EventListener<T, K>) { 
+    let callbacks = this.#callbacks[event];
+    if (!callbacks) { 
+      callbacks = (this.#callbacks[event] = []);
     }
-    this.#callbacks[event].push(cb);
+    callbacks.push(cb);
   }
   
   /**
    * Alias for `on`
-   * @alias on
    */
-  addListener<K extends keyof T>(event: K, cb: EventListener<T, K>) {
+  addListener<K extends EventKey<T>>(event: K, cb: EventListener<T, K>) {
     this.on(event, cb);
   }
   
@@ -95,9 +68,9 @@ export class AsyncEventEmitter<T extends EventMap<T>> {
    * @param args - The arguments to pass to each listener
    * @internal
    */
-  ___emit<K extends keyof T>(event: K, ...args: EventArgs<T, K>) {
-    if (event in this.#callbacks) { 
-      const callbacks = this.#callbacks[event];
+  ___emit<K extends EventKey<T>>(event: K, ...args: EventArgs<T, K>) {
+    const callbacks = this.#callbacks[event];
+    if (callbacks) { 
       for (let i = 0; i < callbacks.length; i += 1) { 
         callbacks[i].apply(this, args);
       }
@@ -108,22 +81,23 @@ export class AsyncEventEmitter<T extends EventMap<T>> {
    * Fires an event. All subscribed listeners will be called in series.
    * Promises will be awaited for before continuing to the next listener.
    * 
+   * @param rethrow - Whether to rethrow errors thrown by listeners or ignore them
    * @param event - The event name to trigger
    * @param args - The arguments to pass to each listener
    * @returns A promise that resolves when all listeners have completed
    * @internal
    */
-  async ___asyncEmitSeries<K extends keyof T>(throwErrors: boolean, event: K, ...args: EventArgs<T, K>) {
-    if (event in this.#callbacks) {
-      const callbacks = this.#callbacks[event];
+  async ___asyncEmitSeries<K extends EventKey<T>>(rethrow: boolean, event: K, ...args: EventArgs<T, K>) {
+    const callbacks = this.#callbacks[event];
+    if (callbacks) {
       for (let i = 0; i < callbacks.length; i += 1) {
         try {
           await callbacks[i].apply(this, args);
-        } catch (err) {
+        } catch (err) { 
           debug('error while calling listener #%s for event %s: %s', i, event, err instanceof Error ? err.stack : String(err));
-          if (throwErrors) { 
+          if (rethrow) {
             throw err;
-          } 
+          }
         }
       }
     }

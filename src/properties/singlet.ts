@@ -10,17 +10,19 @@
 
 import fastq from 'fastq';
 
-import { AsyncEventEmitter } from '../events.js';
-import { BACNetError } from '../errors.js';
-
 import { 
   type BACNetAppData,
   type ApplicationTagValueTypeMap,
-  PropertyIdentifier, 
-  ErrorCode, 
-  ErrorClass, 
+  PropertyIdentifier,
+  ErrorCode,
+  ErrorClass,
   ApplicationTag,
+  CharacterStringEncoding,
 } from '@innovation-system/node-bacnet';
+
+import { BACNetAppDataPolled } from './utils.js';
+import { AsyncEventEmitter, type EventMap } from '../events.js';
+import { BACNetError } from '../errors.js';
 
 /**
  * Events that can be emitted by a BACnet singlet property
@@ -31,10 +33,9 @@ import {
  * @typeParam Tag - The BACnet application tag for the property values
  * @typeParam Type - The JavaScript type corresponding to the application tag
  */
-export interface BDSingletPropertyEvents<Tag extends ApplicationTag, Type extends ApplicationTagValueTypeMap[Tag] = ApplicationTagValueTypeMap[Tag]> { 
+export interface BDSingletPropertyEvents<Tag extends ApplicationTag, Type extends ApplicationTagValueTypeMap[Tag]> extends EventMap {   
   /** Emitted before a property value changes */
   beforecov: [property: BDSingletProperty<Tag, Type>, value: BACNetAppData<Tag, Type>],
-  
   /** Emitted after a property value has changed */
   aftercov: [property: BDSingletProperty<Tag, Type>, value: BACNetAppData<Tag, Type>],
 }
@@ -54,13 +55,8 @@ export class BDSingletProperty<Tag extends ApplicationTag, Type extends Applicat
   /** Indicates this is not a list/array property */
   readonly list: false;
   
-  /** The BACnet application tag for this property's value */
-  readonly type: Tag;
-  
   /** Whether this property can be written to */
   readonly writable: boolean;
-  
-  readonly settable: boolean;
   
   /** The BACnet property identifier */
   readonly identifier: PropertyIdentifier;
@@ -69,7 +65,7 @@ export class BDSingletProperty<Tag extends ApplicationTag, Type extends Applicat
    * The current value of this property 
    * @private
    */
-  #value: BACNetAppData<Tag, Type> | (() => BACNetAppData<Tag, Type>);
+  #value: BACNetAppData<Tag, Type>;
   
   /**
    * Queue for serializing value changes
@@ -85,24 +81,30 @@ export class BDSingletProperty<Tag extends ApplicationTag, Type extends Applicat
    * @param writable - Whether this property can be written to
    * @param value - The initial value for this property
    */
-  constructor(identifier: PropertyIdentifier, type: Tag, writable: boolean, value: Type | (() => BACNetAppData<Tag, Type>)) {
+  constructor(identifier: PropertyIdentifier, type: Tag, writable: boolean, value: Type | (() => Type), encoding?: CharacterStringEncoding) {
     super();
     this.list = false;
-    this.type = type;
-    this.writable = typeof value !== 'function' && writable;
-    this.settable = typeof value !== 'function';
     this.identifier = identifier;
-    this.#value = typeof value === 'function' ? value :{ type, value };
-    this.#queue = fastq.promise(this.#worker, 1)
+    this.#queue = fastq.promise(this.#worker, 1);
+    if (typeof value === 'function') {
+      this.#value = new BACNetAppDataPolled<Tag, Type>(type, value, encoding);
+      this.writable = false;
+    } else { 
+      this.#value = { type, value, encoding };
+      this.writable = writable;
+    } 
   }
   
-  /**
-   * Gets the current value of this property
-   * 
-   * @returns The current property value
-   */
-  getValue(): Type {
-    return typeof this.#value === 'function' ? this.#value().value : this.#value.value;
+  get type(): Tag { 
+    return this.#value.type;
+  }
+  
+  get value(): Type {
+    return this.#value.value;
+  }
+  
+  get encoding(): CharacterStringEncoding | undefined { 
+    return this.#value.encoding;
   }
   
   /**
@@ -112,14 +114,11 @@ export class BDSingletProperty<Tag extends ApplicationTag, Type extends Applicat
    * notification and serialization of changes.
    * 
    * @param value - The new value to set
+   * @param encoding - The character string encoding to use
    * @returns A promise that resolves when the value has been set
    */
-  async setValue(value: Type): Promise<void> {
-    if (this.settable) {
-      await this.#queue.push({ type: this.type, value });
-    } else { 
-      throw new Error(`Property ${this.identifier} is not settable`);
-    }
+  async set(value: Type, encoding?: CharacterStringEncoding): Promise<void> {
+    await this.#queue.push({ type: this.type, value, encoding });
   }
   
   /**
@@ -132,7 +131,7 @@ export class BDSingletProperty<Tag extends ApplicationTag, Type extends Applicat
    * @internal
    */
   ___readValue(): BACNetAppData<Tag, Type> {
-    return typeof this.#value === 'function' ? this.#value() : this.#value;
+    return this.#value;
   }
   
   /**
@@ -147,7 +146,7 @@ export class BDSingletProperty<Tag extends ApplicationTag, Type extends Applicat
    * @internal
    */
   async ___writeValue(value: BACNetAppData<Tag, Type> | BACNetAppData<Tag, Type>[]): Promise<void> { 
-    if (!this.writable || !this.settable) { 
+    if (!this.writable) { 
       throw new BACNetError('not writable', ErrorCode.WRITE_ACCESS_DENIED, ErrorClass.PROPERTY);
     }
     if (Array.isArray(value)) { 
@@ -168,13 +167,13 @@ export class BDSingletProperty<Tag extends ApplicationTag, Type extends Applicat
    * @param value - The new value to set
    * @private
    */
-  #worker = async (value: BACNetAppData<Tag, Type>) => { 
-    if (value.type !== this.type) { 
-      throw new BACNetError('not a list', ErrorCode.REJECT_INVALID_PARAMETER_DATA_TYPE, ErrorClass.PROPERTY);
+  #worker = async (value: BACNetAppData<Tag, Type>) => {
+    if (this.#value instanceof BACNetAppDataPolled) {
+      throw new BACNetError('polled property', ErrorCode.WRITE_ACCESS_DENIED, ErrorClass.PROPERTY);
     }
-    await this.___asyncEmitSeries(false, 'beforecov', this, value);
+    await this.___asyncEmitSeries(true, 'beforecov', this, value);
     this.#value = value;
-    await this.___asyncEmitSeries(true, 'aftercov', this, value);
+    await this.___asyncEmitSeries(false, 'aftercov', this, value);
   };
  
 }
