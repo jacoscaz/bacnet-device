@@ -130,8 +130,34 @@ export class BDDevice extends BDObject implements AsyncEventEmitter<BDDeviceEven
   
   readonly #knownDevices: Map<number, IAMResult>;
   
+  readonly objectList: BDArrayProperty<ApplicationTag.OBJECTIDENTIFIER>;
+  readonly structuredObjectList: BDArrayProperty<ApplicationTag.OBJECTIDENTIFIER>;
+  readonly protocolVersion: BDSingletProperty<ApplicationTag.UNSIGNED_INTEGER>;
+  readonly protocolRevision: BDSingletProperty<ApplicationTag.UNSIGNED_INTEGER>;
+  readonly protocolServicesSupported: BDSingletProperty<ApplicationTag.BIT_STRING>;
+  readonly protocolObjectTypesSupported: BDSingletProperty<ApplicationTag.BIT_STRING>;
+  readonly activeCovSubscriptions: BDArrayProperty<ApplicationTag.COV_SUBSCRIPTION>;
+  readonly vendorIdentifier: BDSingletProperty<ApplicationTag.UNSIGNED_INTEGER>;
+  readonly vendorName: BDSingletProperty<ApplicationTag.CHARACTER_STRING>;
+  readonly modelName: BDSingletProperty<ApplicationTag.CHARACTER_STRING>;
+  readonly firmwareRevision: BDSingletProperty<ApplicationTag.CHARACTER_STRING>;
+  readonly applicationSoftwareVersion: BDSingletProperty<ApplicationTag.CHARACTER_STRING>;
+  readonly databaseRevision: BDSingletProperty<ApplicationTag.UNSIGNED_INTEGER>;
+  readonly deviceAddressBinding: BDArrayProperty<ApplicationTag.NULL>;
+  readonly location: BDSingletProperty<ApplicationTag.CHARACTER_STRING>;
+  readonly serialNumber: BDSingletProperty<ApplicationTag.CHARACTER_STRING>;
+  readonly maxApduLengthAccepted: BDSingletProperty<ApplicationTag.UNSIGNED_INTEGER>;
+  readonly apduTimeout: BDSingletProperty<ApplicationTag.UNSIGNED_INTEGER>;
+  readonly numberOfApduRetries: BDSingletProperty<ApplicationTag.UNSIGNED_INTEGER>;
+  readonly apduSegmentTimeout: BDSingletProperty<ApplicationTag.UNSIGNED_INTEGER>;
+  readonly segmentationSupported: BDSingletProperty<ApplicationTag.ENUMERATED, Segmentation>;
+  readonly maxSegmentsAccepted: BDSingletProperty<ApplicationTag.UNSIGNED_INTEGER>;
+  readonly utcOffset: BDSingletProperty<ApplicationTag.SIGNED_INTEGER>;
+  readonly localDate: BDSingletProperty<ApplicationTag.DATE>;
+  readonly localTime: BDSingletProperty<ApplicationTag.TIME>;
+  readonly daylightSavingsStatus: BDSingletProperty<ApplicationTag.BOOLEAN>;
   readonly systemStatus: BDSingletProperty<ApplicationTag.ENUMERATED, DeviceStatus>;
-  readonly eventState: BDSingletProperty<ApplicationTag.ENUMERATED, EventState>
+  readonly eventState: BDSingletProperty<ApplicationTag.ENUMERATED, EventState>;
   
 
   
@@ -179,18 +205,18 @@ export class BDDevice extends BDObject implements AsyncEventEmitter<BDDeviceEven
     
     // ================== PROPERTIES RELATED TO CHILD OBJECTS =================
     
-    this.addProperty(new BDArrayProperty<ApplicationTag.OBJECTIDENTIFIER>(
+    this.objectList = this.addProperty(new BDArrayProperty<ApplicationTag.OBJECTIDENTIFIER>(
       PropertyIdentifier.OBJECT_LIST, false, () => this.#objectList));
     
-    this.addProperty(new BDArrayProperty<ApplicationTag.OBJECTIDENTIFIER>(
+    this.structuredObjectList = this.addProperty(new BDArrayProperty<ApplicationTag.OBJECTIDENTIFIER>(
       PropertyIdentifier.STRUCTURED_OBJECT_LIST, false, []));
     
     // ====================== PROTOCOL-RELATED PROPERTIES =====================
     
-    this.addProperty(new BDSingletProperty(
+    this.protocolVersion = this.addProperty(new BDSingletProperty(
       PropertyIdentifier.PROTOCOL_VERSION, ApplicationTag.UNSIGNED_INTEGER, false, 1));
     
-    this.addProperty(new BDSingletProperty(
+    this.protocolRevision = this.addProperty(new BDSingletProperty(
       PropertyIdentifier.PROTOCOL_REVISION, ApplicationTag.UNSIGNED_INTEGER, false, 28));
     
     const supportedServicesBitString = new ServicesSupportedBitString(
@@ -203,7 +229,7 @@ export class BDDevice extends BDObject implements AsyncEventEmitter<BDDeviceEven
       ServicesSupported.UNCONFIRMED_COV_NOTIFICATION,
     );
     
-    this.addProperty(new BDSingletProperty(
+    this.protocolServicesSupported = this.addProperty(new BDSingletProperty(
       PropertyIdentifier.PROTOCOL_SERVICES_SUPPORTED, ApplicationTag.BIT_STRING, false, supportedServicesBitString));
     
     const supportedObjectTypesBitString = new ObjectTypesSupportedBitString(
@@ -212,81 +238,81 @@ export class BDDevice extends BDObject implements AsyncEventEmitter<BDDeviceEven
       ObjectTypesSupported.ANALOG_OUTPUT,
     );
     
-    this.addProperty(new BDSingletProperty(
+    this.protocolObjectTypesSupported = this.addProperty(new BDSingletProperty(
       PropertyIdentifier.PROTOCOL_OBJECT_TYPES_SUPPORTED, ApplicationTag.BIT_STRING, false, supportedObjectTypesBitString));
     
     // ==================== SUBSCRIPTION-RELATED PROPERTIES ===================
     
-    this.addProperty(new BDArrayProperty<ApplicationTag.COV_SUBSCRIPTION>(
+    this.activeCovSubscriptions = this.addProperty(new BDArrayProperty<ApplicationTag.COV_SUBSCRIPTION>(
       PropertyIdentifier.ACTIVE_COV_SUBSCRIPTIONS, false, () => this.#updateSubscriptionList()));
     
     // ========================== METADATA PROPERTIES =========================
     
-    this.addProperty(new BDSingletProperty(
+    this.vendorIdentifier = this.addProperty(new BDSingletProperty(
       PropertyIdentifier.VENDOR_IDENTIFIER, ApplicationTag.UNSIGNED_INTEGER, false, this.#vendorId));
     
-    this.addProperty(new BDSingletProperty(
+    this.vendorName = this.addProperty(new BDSingletProperty(
       PropertyIdentifier.VENDOR_NAME, ApplicationTag.CHARACTER_STRING, false, opts.vendorName ?? ''));
     
-    this.addProperty(new BDSingletProperty(
+    this.modelName = this.addProperty(new BDSingletProperty(
       PropertyIdentifier.MODEL_NAME, ApplicationTag.CHARACTER_STRING, false, opts.modelName));
     
-    this.addProperty(new BDSingletProperty(
+    this.firmwareRevision = this.addProperty(new BDSingletProperty(
       PropertyIdentifier.FIRMWARE_REVISION, ApplicationTag.CHARACTER_STRING, false, opts.firmwareRevision));
     
-    this.addProperty(new BDSingletProperty(
+    this.applicationSoftwareVersion = this.addProperty(new BDSingletProperty(
       PropertyIdentifier.APPLICATION_SOFTWARE_VERSION, ApplicationTag.CHARACTER_STRING, false, opts.applicationSoftwareVersion));
     
-    this.addProperty(new BDSingletProperty(
+    this.databaseRevision = this.addProperty(new BDSingletProperty(
       PropertyIdentifier.DATABASE_REVISION, ApplicationTag.UNSIGNED_INTEGER, false, opts.databaseRevision));
      
     // Bindings can be discovered via the "Who-Is" and "I-Am" services. 
     // This property represents a list of static bindings and we can leave it empty.
-    this.addProperty(new BDArrayProperty<ApplicationTag.NULL>(
+    this.deviceAddressBinding = this.addProperty(new BDArrayProperty<ApplicationTag.NULL>(
       PropertyIdentifier.DEVICE_ADDRESS_BINDING, false, []));
     
     // In your device constructor
-    this.addProperty(new BDSingletProperty(
+    this.location = this.addProperty(new BDSingletProperty(
       PropertyIdentifier.LOCATION, ApplicationTag.CHARACTER_STRING, false, opts.location ?? ''));
     
-    this.addProperty(new BDSingletProperty(
+    this.serialNumber = this.addProperty(new BDSingletProperty(
       PropertyIdentifier.SERIAL_NUMBER, ApplicationTag.CHARACTER_STRING, false, opts.serialNumber ?? ''));
     
     // ======================== APDU-RELATED PROPERTIES =======================
     
-    this.addProperty(new BDSingletProperty(
+    this.maxApduLengthAccepted = this.addProperty(new BDSingletProperty(
       PropertyIdentifier.MAX_APDU_LENGTH_ACCEPTED, ApplicationTag.UNSIGNED_INTEGER, false, opts.apduMaxLength ?? 1476));
     
-    this.addProperty(new BDSingletProperty(
+    this.apduTimeout = this.addProperty(new BDSingletProperty(
       PropertyIdentifier.APDU_TIMEOUT, ApplicationTag.UNSIGNED_INTEGER, false, opts.apduTimeout ?? 6000));
     
-    this.addProperty(new BDSingletProperty(
+    this.numberOfApduRetries = this.addProperty(new BDSingletProperty(
       PropertyIdentifier.NUMBER_OF_APDU_RETRIES, ApplicationTag.UNSIGNED_INTEGER, false, opts.apduRetries ?? 3));
     
-    this.addProperty(new BDSingletProperty(
+    this.apduSegmentTimeout = this.addProperty(new BDSingletProperty(
       PropertyIdentifier.APDU_SEGMENT_TIMEOUT, ApplicationTag.UNSIGNED_INTEGER, false, opts.apduSegmentTimeout ?? 2000));
   
     // ======================== SEGMENTATION PROPERTIES =======================
 
-    this.addProperty(new BDSingletProperty(
+    this.segmentationSupported = this.addProperty(new BDSingletProperty<ApplicationTag.ENUMERATED, Segmentation>(
       PropertyIdentifier.SEGMENTATION_SUPPORTED, ApplicationTag.ENUMERATED, false, Segmentation.NO_SEGMENTATION));
     
     // Accepter values: 2, 4, 8, 16, 32, 64 and 0 for "unspecified"
-    this.addProperty(new BDSingletProperty(
+    this.maxSegmentsAccepted = this.addProperty(new BDSingletProperty(
       PropertyIdentifier.MAX_SEGMENTS_ACCEPTED, ApplicationTag.UNSIGNED_INTEGER, false, 0));
     
     // ======================== TIME-RELATED PROPERTIES =======================
     
-    this.addProperty(new BDSingletProperty(
+    this.utcOffset = this.addProperty(new BDSingletProperty(
       PropertyIdentifier.UTC_OFFSET, ApplicationTag.SIGNED_INTEGER, false, () => new Date().getTimezoneOffset() * -1));
     
-    this.addProperty(new BDSingletProperty(
+    this.localDate = this.addProperty(new BDSingletProperty(
       PropertyIdentifier.LOCAL_DATE, ApplicationTag.DATE, false, () => new Date()));
     
-    this.addProperty(new BDSingletProperty(
+    this.localTime = this.addProperty(new BDSingletProperty(
       PropertyIdentifier.LOCAL_TIME, ApplicationTag.TIME, false, () => new Date()));
     
-    this.addProperty(new BDSingletProperty(
+    this.daylightSavingsStatus = this.addProperty(new BDSingletProperty(
       PropertyIdentifier.DAYLIGHT_SAVINGS_STATUS, ApplicationTag.BOOLEAN, false, () => isDstInEffect(new Date())));
     
     // ======================= STATUS-RELATED PROPERTIES ======================
