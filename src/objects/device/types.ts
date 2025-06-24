@@ -5,7 +5,7 @@ import {
 } from '../../object.js';
 
 import {
-  type BDProperty,
+  type BDAbstractProperty,
 } from '../../properties/index.js';
 
 import {
@@ -63,7 +63,7 @@ export interface BDQueuedCov {
   object: BDObject;
   
   /** The property within the object that changed */
-  property: BDProperty<any, any>;
+  property: BDAbstractProperty<any, any, any>;
   
   /** The new value of the property */
   value: BACNetAppData | BACNetAppData[];

@@ -9,7 +9,7 @@
  * @packageDocumentation
  */
 
-export { BACNetError as BDError } from './errors.js';
+export { BDError } from './errors.js';
 
 export { 
   type EventMap,
@@ -19,10 +19,10 @@ export {
   AsyncEventEmitter, 
 } from './events.js';
 
-export { 
-  type BDProperty,
-  type BDArrayPropertyEvents,
-  type BDSingletPropertyEvents,
+export {
+  type BDPropertyEvents,
+  BDPropertyType,
+  BDAbstractProperty,
   BDArrayProperty, 
   BDSingletProperty,
 } from './properties/index.js';

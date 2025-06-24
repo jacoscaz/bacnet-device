@@ -113,7 +113,7 @@ export class BDAnalogOutput extends BDObject {
    * has control of the Present_Value property, or NULL if the Relinquish_Default
    * is being used.
    */
-  readonly currentCommandPriority: BDSingletProperty<ApplicationTag.UNSIGNED_INTEGER | ApplicationTag.NULL>;
+  readonly currentCommandPriority: BDSingletProperty<ApplicationTag.UNSIGNED_INTEGER>;
   
   readonly covIncrement: BDSingletProperty<ApplicationTag.REAL>;
   
@@ -154,7 +154,7 @@ export class BDAnalogOutput extends BDObject {
       PropertyIdentifier.MIN_PRES_VALUE, ApplicationTag.REAL, false, opts.minPresentValue ?? Number.MIN_SAFE_INTEGER));
     
     this.currentCommandPriority = this.addProperty(new BDSingletProperty(
-      PropertyIdentifier.CURRENT_COMMAND_PRIORITY, ApplicationTag.UNSIGNED_INTEGER | ApplicationTag.NULL, false, null as number | null));
+      PropertyIdentifier.CURRENT_COMMAND_PRIORITY, ApplicationTag.UNSIGNED_INTEGER, false, 16));
     
   }
   

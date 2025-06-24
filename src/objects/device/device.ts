@@ -1,6 +1,6 @@
 
 import { 
-  BACNetError,
+  BDError,
 } from '../../errors.js';
 
 import { 
@@ -15,19 +15,19 @@ import {
 } from '../../utils.js';
 
 import { 
-  type BDProperty,
+  BDAbstractProperty,
   BDArrayProperty, 
   BDSingletProperty,
 } from '../../properties/index.js';
 
 import bacnet, {
+  type BACNetAppData,
   type BACNetObjectID,
   type BACNetReadAccess,
   type ListElementOperationPayload,
   type SubscribeCovPayload,
   type IAMResult,
   type BACNetEventInformation,
-  type BACNetAppData,
   ErrorCode,
   ErrorClass,
   ObjectType,
@@ -199,7 +199,8 @@ export class BDDevice extends BDObject implements AsyncEventEmitter<BDDeviceEven
       .on('writeProperty', this.#onBacnetWriteProperty)
       .on('addListElement', this.#onBacnetAddListElement)
       .on('removeListElement', this.#onBacnetRemoveListElement)
-      .on('getEventInformation', this.#onBacnetGetEventInformation);
+      .on('getEventInformation', this.#onBacnetGetEventInformation)
+      .on('unhandledEvent', this.#onBacnetUnhandledEvent);
     
     this.addObject(this);
     
@@ -209,7 +210,7 @@ export class BDDevice extends BDObject implements AsyncEventEmitter<BDDeviceEven
       PropertyIdentifier.OBJECT_LIST, false, () => this.#objectList));
     
     this.structuredObjectList = this.addProperty(new BDArrayProperty<ApplicationTag.OBJECTIDENTIFIER>(
-      PropertyIdentifier.STRUCTURED_OBJECT_LIST, false, []));
+      PropertyIdentifier.STRUCTURED_OBJECT_LIST, false, () => []));
     
     // ====================== PROTOCOL-RELATED PROPERTIES =====================
     
@@ -217,7 +218,7 @@ export class BDDevice extends BDObject implements AsyncEventEmitter<BDDeviceEven
       PropertyIdentifier.PROTOCOL_VERSION, ApplicationTag.UNSIGNED_INTEGER, false, 1));
     
     this.protocolRevision = this.addProperty(new BDSingletProperty(
-      PropertyIdentifier.PROTOCOL_REVISION, ApplicationTag.UNSIGNED_INTEGER, false, 28));
+      PropertyIdentifier.PROTOCOL_REVISION, ApplicationTag.UNSIGNED_INTEGER, false, 24));
     
     const supportedServicesBitString = new ServicesSupportedBitString(
       ServicesSupported.WHO_IS,
@@ -252,7 +253,7 @@ export class BDDevice extends BDObject implements AsyncEventEmitter<BDDeviceEven
       PropertyIdentifier.VENDOR_IDENTIFIER, ApplicationTag.UNSIGNED_INTEGER, false, this.#vendorId));
     
     this.vendorName = this.addProperty(new BDSingletProperty(
-      PropertyIdentifier.VENDOR_NAME, ApplicationTag.CHARACTER_STRING, false, opts.vendorName ?? ''));
+      PropertyIdentifier.VENDOR_NAME, ApplicationTag.CHARACTER_STRING, false, opts.vendorName ?? 'w'));
     
     this.modelName = this.addProperty(new BDSingletProperty(
       PropertyIdentifier.MODEL_NAME, ApplicationTag.CHARACTER_STRING, false, opts.modelName));
@@ -273,10 +274,10 @@ export class BDDevice extends BDObject implements AsyncEventEmitter<BDDeviceEven
     
     // In your device constructor
     this.location = this.addProperty(new BDSingletProperty(
-      PropertyIdentifier.LOCATION, ApplicationTag.CHARACTER_STRING, false, opts.location ?? ''));
+      PropertyIdentifier.LOCATION, ApplicationTag.CHARACTER_STRING, false, opts.location ?? 'w'));
     
     this.serialNumber = this.addProperty(new BDSingletProperty(
-      PropertyIdentifier.SERIAL_NUMBER, ApplicationTag.CHARACTER_STRING, false, opts.serialNumber ?? ''));
+      PropertyIdentifier.SERIAL_NUMBER, ApplicationTag.CHARACTER_STRING, false, opts.serialNumber ?? 'w'));
     
     // ======================== APDU-RELATED PROPERTIES =======================
     
@@ -295,11 +296,11 @@ export class BDDevice extends BDObject implements AsyncEventEmitter<BDDeviceEven
     // ======================== SEGMENTATION PROPERTIES =======================
 
     this.segmentationSupported = this.addProperty(new BDSingletProperty<ApplicationTag.ENUMERATED, Segmentation>(
-      PropertyIdentifier.SEGMENTATION_SUPPORTED, ApplicationTag.ENUMERATED, false, Segmentation.NO_SEGMENTATION));
+      PropertyIdentifier.SEGMENTATION_SUPPORTED, ApplicationTag.ENUMERATED, false, Segmentation.SEGMENTED_BOTH));
     
     // Accepter values: 2, 4, 8, 16, 32, 64 and 0 for "unspecified"
     this.maxSegmentsAccepted = this.addProperty(new BDSingletProperty(
-      PropertyIdentifier.MAX_SEGMENTS_ACCEPTED, ApplicationTag.UNSIGNED_INTEGER, false, 0));
+      PropertyIdentifier.MAX_SEGMENTS_ACCEPTED, ApplicationTag.UNSIGNED_INTEGER, false, 16));
     
     // ======================== TIME-RELATED PROPERTIES =======================
     
@@ -377,7 +378,7 @@ export class BDDevice extends BDObject implements AsyncEventEmitter<BDDeviceEven
     if (object) { 
       return await cb(object, req);
     }
-    throw new BACNetError('unknown object', ErrorCode.UNKNOWN_OBJECT, ErrorClass.DEVICE);
+    throw new BDError('unknown object', ErrorCode.UNKNOWN_OBJECT, ErrorClass.DEVICE);
   }
 
 
@@ -456,7 +457,7 @@ export class BDDevice extends BDObject implements AsyncEventEmitter<BDDeviceEven
    * @param value - The new value
    * @private
    */
-  #onChildAfterCov = async (object: BDObject, property: BDProperty<any, any>, value: BACNetAppData | BACNetAppData[]) => { 
+  #onChildAfterCov = async (object: BDObject, property: BDAbstractProperty<any, any, any>, value: BACNetAppData | BACNetAppData[]) => { 
     await this.#covqueue.push({ object, property, value });
   }
 
@@ -478,16 +479,16 @@ export class BDDevice extends BDObject implements AsyncEventEmitter<BDDeviceEven
   #onBacnetReadProperty = async (req: ReadPropertyContent) => {
     const { payload: { objectId, property }, address, header, service, invokeId } = req;
     debug('req #%s: readProperty, object %s %s, property %s', invokeId, ObjectType[objectId.type], objectId.instance, PropertyIdentifier[property.id]);
+    debug(JSON.stringify(property));
     if (!header) return;
     try {
-      const { payload: { objectId } } = req;
       const data = await this.#handleObjectReq(req, objectId, async (object) => {
-        return object.___readProperty(req);
+        return object.___readProperty(property);
       });
       this.#client.readPropertyResponse({ address: header.sender.address }, invokeId!, objectId, property, data);
     } catch (err) { 
       debug('error: %s', (err as any).stack);
-      if (err instanceof BACNetError) {
+      if (err instanceof BDError) {
         this.#client.errorResponse({ address: header.sender.address }, service!, invokeId!, err.class, err.code);
       } else { 
         this.#client.errorResponse({ address: header.sender.address }, service!, invokeId!, ErrorClass.DEVICE, ErrorCode.INTERNAL_ERROR);
@@ -703,7 +704,7 @@ export class BDDevice extends BDObject implements AsyncEventEmitter<BDDeviceEven
       });  
       this.#client.simpleAckResponse({ address: header.sender.address }, service!, invokeId!);
     } catch (err) { 
-      if (err instanceof BACNetError) {
+      if (err instanceof BDError) {
         this.#client.errorResponse({ address: header.sender.address }, service!, invokeId!, err.class, err.code);
       } else { 
         this.#client.errorResponse({ address: header.sender.address }, service!, invokeId!, ErrorClass.DEVICE, ErrorCode.INTERNAL_ERROR);
@@ -741,12 +742,19 @@ export class BDDevice extends BDObject implements AsyncEventEmitter<BDDeviceEven
     this.#onBacnetUnsupportedService(req);
   };
   
-  #onBacnetUnsupportedService = async (req: BaseEventContent) => { 
+  #onBacnetUnhandledEvent = async (req: Omit<BaseEventContent, 'payload'>) => {
+    this.#onBacnetUnsupportedService(req);
+  };
+  
+  #onBacnetUnsupportedService = async (req: Omit<BaseEventContent, 'payload'>) => { 
     const { header, invokeId, service } = req;
+    debug('req #%s: %s (not supported)', invokeId, service ? ServicesSupported[service] : 'unknown');
     if (!header || !invokeId || typeof service !== 'number') { 
       return;
     }
-    this.#client.errorResponse({ address: header.sender.address }, service, invokeId, ErrorClass.SERVICES, ErrorCode.SERVICE_REQUEST_DENIED);
+    if (header.expectingReply) {
+      this.#client.errorResponse({ address: header.sender.address }, service, invokeId, ErrorClass.SERVICES, ErrorCode.SERVICE_REQUEST_DENIED);
+    }
   };
   
   /**

@@ -7,7 +7,7 @@ import type { ErrorCode, ErrorClass } from '@innovation-system/node-bacnet';
  * BACnet errors include both an error code and an error class to provide detailed
  * information about the nature of the error according to the BACnet specification.
  */
-export class BACNetError extends Error { 
+export class BDError extends Error { 
   /** The specific BACnet error code */
   code: ErrorCode;
   

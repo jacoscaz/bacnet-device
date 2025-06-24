@@ -1,0 +1,2 @@
+
+export const MAX_ARRAY_INDEX = 4294967295;

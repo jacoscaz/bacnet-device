@@ -10,10 +10,13 @@
 
 import { AsyncEventEmitter, type EventMap } from './events.js';
 
-import { BACNetError } from './errors.js';
+import { BDError } from './errors.js';
 
 import {
   type BACNetAppData,
+  type BACNetObjectID,
+  type BACNetPropertyID,
+  type BACNetReadAccess,
   ErrorCode,
   ErrorClass,
   ObjectType,
@@ -21,30 +24,26 @@ import {
   PropertyIdentifier,
 } from '@innovation-system/node-bacnet';
 
-import type {
-  BACNetObjectID,
-  BACNetPropertyID,
-  BACNetReadAccess,
-} from '@innovation-system/node-bacnet';
-
 import type { 
-  ReadPropertyContent,
   ReadPropertyMultipleContent,
 } from '@innovation-system/node-bacnet/dist/lib/EventTypes.js';
 
 import {
+  BDAbstractProperty,
   BDSingletProperty,
   BDArrayProperty,
-  type BDProperty,
 } from './properties/index.js';
+
 import { ensureArray } from './utils.js';
+
+import { MAX_ARRAY_INDEX } from './constants.js';
 
 /**
  * Events that can be emitted by a BACnet object
  */
 export interface BDObjectEvents extends EventMap { 
   /** Emitted after a property value has changed */
-  aftercov: [object: BDObject, property: BDProperty<any, any>, newValue: BACNetAppData | BACNetAppData[]],
+  aftercov: [object: BDObject, property: BDAbstractProperty<any, any, any>, newValue: BACNetAppData | BACNetAppData[]],
 }
 
 /**
@@ -84,7 +83,7 @@ export class BDObject extends AsyncEventEmitter<BDObjectEvents> {
    * Map of all properties in this object by their identifier
    * @private
    */
-  readonly #properties: Map<PropertyIdentifier, BDProperty<any, any>>;
+  readonly #properties: Map<PropertyIdentifier, BDAbstractProperty<any, any, any>>;
   
   readonly objectName: BDSingletProperty<ApplicationTag.CHARACTER_STRING>;
   
@@ -103,7 +102,7 @@ export class BDObject extends AsyncEventEmitter<BDObjectEvents> {
    * @param instance - The instance number for this object
    * @param name - The name of this object
    */
-  constructor(type: ObjectType, instance: number, name: string, description: string = '') {
+  constructor(type: ObjectType, instance: number, name: string, description: string = 'w') {
     super();
     
     this.identifier = Object.freeze({ type, instance });
@@ -123,7 +122,7 @@ export class BDObject extends AsyncEventEmitter<BDObjectEvents> {
       PropertyIdentifier.PROPERTY_LIST, false,  () => this.#propertyList));
     
     this.description = this.addProperty(new BDSingletProperty(
-      PropertyIdentifier.DESCRIPTION, ApplicationTag.CHARACTER_STRING, false, description));
+      PropertyIdentifier.DESCRIPTION, ApplicationTag.CHARACTER_STRING, false, description ?? 'w'));
     
   }
   
@@ -138,7 +137,7 @@ export class BDObject extends AsyncEventEmitter<BDObjectEvents> {
    * @throws Error if a property with the same identifier already exists
    * @typeParam T - The specific BACnet property type
    */
-  addProperty<T extends BDProperty<any, any>>(property: T): T { 
+  addProperty<T extends BDAbstractProperty<any, any, any>>(property: T): T { 
     if (this.#properties.has(property.identifier)) { 
       throw new Error('Cannot register property: duplicate property identifier');
     }
@@ -164,9 +163,9 @@ export class BDObject extends AsyncEventEmitter<BDObjectEvents> {
     const property = this.#properties.get(identifier.id as PropertyIdentifier);
     // TODO: test/validate value before setting it!
     if (property) {
-      await property.___writeValue(value);
+      await property.___writeData(value);
     } else { 
-      throw new BACNetError('unknown property', ErrorCode.UNKNOWN_PROPERTY, ErrorClass.PROPERTY);    
+      throw new BDError('unknown property', ErrorCode.UNKNOWN_PROPERTY, ErrorClass.PROPERTY);    
     }
   }
   
@@ -180,13 +179,12 @@ export class BDObject extends AsyncEventEmitter<BDObjectEvents> {
    * @throws BACnetError if the property does not exist
    * @internal
    */
-  async ___readProperty(req: ReadPropertyContent): Promise<BACNetAppData | BACNetAppData[]> {
-    const { payload: { property } } = req;
+  async ___readProperty(property: BACNetPropertyID): Promise<BACNetAppData | BACNetAppData[]> {
     if (this.#properties.has(property.id as PropertyIdentifier)) { 
       return this.#properties.get(property.id as PropertyIdentifier)!
-        .___readValue();
+        .___readData(property.index);
     }
-    throw new BACNetError('unknown property', ErrorCode.UNKNOWN_PROPERTY, ErrorClass.PROPERTY);
+    throw new BDError('unknown property', ErrorCode.UNKNOWN_PROPERTY, ErrorClass.PROPERTY);
   }
   
   /**
@@ -201,7 +199,10 @@ export class BDObject extends AsyncEventEmitter<BDObjectEvents> {
   async ___readPropertyMultipleAll(): Promise<BACNetReadAccess> { 
     const values: BACNetReadAccess['values'] = [];
     for (const [identifier, property] of this.#properties.entries()) {
-      values.push({ property: { id: identifier, index: 0 }, value: ensureArray(property.___readValue()) });
+      values.push({ 
+        property: { id: identifier, index: MAX_ARRAY_INDEX }, 
+        value: ensureArray(property.___readData(MAX_ARRAY_INDEX)),
+      });
     }
     return { objectId: this.identifier, values };
   }
@@ -223,7 +224,7 @@ export class BDObject extends AsyncEventEmitter<BDObjectEvents> {
     }
     for (const property of properties) {
       if (this.#properties.has(property.id)) {
-        values.push({ property, value: ensureArray(this.#properties.get(property.id)!.___readValue()) });
+        values.push({ property, value: ensureArray(this.#properties.get(property.id)!.___readData(property.index)) });
       }
     }
     return { objectId: this.identifier, values };
@@ -239,7 +240,7 @@ export class BDObject extends AsyncEventEmitter<BDObjectEvents> {
    * @param nextValue - The new value that was set
    * @private
    */
-  #onPropertyAfterCov = async (property: BDProperty<any, any>, nextValue: BACNetAppData | BACNetAppData[]) => { 
+  #onPropertyAfterCov = async (property: BDAbstractProperty<any, any, any>, nextValue: BACNetAppData | BACNetAppData[]) => { 
     await this.___asyncEmitSeries(false, 'aftercov', this, property, nextValue);
   };
     
