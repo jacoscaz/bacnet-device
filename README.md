@@ -37,7 +37,7 @@ Any improvement that is applicable to [`node-bacnet`][2] is contributed upstream
 
 - Source code is available at [https://github.com/jacoscaz/bacnet-device][5].
 - API documentation is available at [https://jacoscaz.github.io/bacnet-device][3].
-- Supported object types are listed in the [SUPPORTED_OBJECT_TYPES.md][4] file.
+- Conformance is documented in the [CONFORMANCE.md][4] file.
 
 ## Example usage
 
@@ -116,6 +116,6 @@ device.on('error', (err) => {
 [1]: https://github.com/jacoscaz/bacnet-device
 [2]: https://github.com/innovation-system/node-bacnet
 [3]: https://jacoscaz.github.io/bacnet-device
-[4]: https://github.com/jacoscaz/bacnet-device/blob/main/SUPPORTED_OBJECT_TYPES.md
+[4]: https://github.com/jacoscaz/bacnet-device/blob/main/CONFORMANCE.md
 [5]: https://github.com/jacoscaz/bacnet-device
 [6]: https://www.innovation-system.it
