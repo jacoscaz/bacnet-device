@@ -39,22 +39,22 @@ Any improvement that is applicable to [`node-bacnet`][2] is contributed upstream
 - API documentation is available at [https://jacoscaz.github.io/bacnet-device][3].
 - Conformance is documented in the [CONFORMANCE.md][4] file.
 
-## Example usage
+## License
+
+This project is licensed under the MIT License - see the [LICENSE][7] file for details.
+
+## Usage
+
+- [Initializing a device](#initializing-a-device)
+- [Adding an object to a device](#adding-an-object-to-a-device)
+- [Changing property values](#changing-property-values)
+- [Extending object classes](#extending-object-classes)
+
+### Initializing a device
 
 ```typescript
-import { 
-  BDDevice,
-  BDAnalogInput,
-  BDAnalogOutput,
-} from './index.js';
+import { BDDevice } from 'bacnet-device';
 
-import { 
-  StatusFlags,
-  StatusFlagsBitString,
-  EngineeringUnits,
-} from '@innovation-system/node-bacnet';
-
-// Create a BACnet node (network interface)
 const device = new BDDevice({
   port: 47808,            // Standard BACnet/IP port
   interface: '0.0.0.0',   // Listen on all interfaces
@@ -68,50 +68,39 @@ const device = new BDDevice({
   databaseRevision: 1
 });
 
-// Create and add an Analog Input object
-const temperatureSensor = device.addObject(new BDAnalogInput(1, { 
-  name: 'Zone Temperature', 
-  unit: EngineeringUnits.DEGREES_CELSIUS,
-}));
-
-// Create and add an Analog Output object
-const damperControl = device.addObject(new BDAnalogOutput(1, {
-  name: 'VAV Damper Control',
-  unit: EngineeringUnits.PERCENT,
-}));
-
-// Listen for BACnet events
-device.on('listening', () => {
-  console.log('BACnet device is now online!');
-  console.log(`Device Instance: ${device.identifier.instance}`);
-  
-  // Set the initial value of the temperature input
-  temperatureSensor.presentValue.setValue(21.5);
-  
-  // Set the output value with a specific priority (1-16)
-  damperControl.presentValue.setValue(75.0);
-  
-  // You can also manipulate status flags
-  temperatureSensor.statusFlags.setValue(
-    new StatusFlagsBitString(StatusFlags.OVERRIDDEN)
-  );
-});
-
-// Simulate changing values
-setInterval(() => {
-  // Simulate temperature fluctuation
-  const currentTemp = temperatureSensor.presentValue.getValue();
-  const newTemp = currentTemp + (Math.random() * 0.4 - 0.2); // +/- 0.2°C
-  temperatureSensor.presentValue.setValue(newTemp);
-  
-  console.log(`Temperature updated: ${newTemp.toFixed(1)}°C`);
-}, 10000);
-
 // Listen for errors
 device.on('error', (err) => {
   console.error('BACnet error:', err);
 });
 ```
+
+### Adding an object to a device
+
+```typescript
+import { BDAnalogValue } from 'bacnet-device';
+import { EngineeringUnits } from '@innovation-system/node-bacnet';
+
+const analogValueObj = device.addObject(new BDAnalogValue(1, { 
+  name: 'Zone Temperature', 
+  unit: EngineeringUnits.DEGREES_CELSIUS,
+}));
+```
+
+### Changing property values
+
+```typescript 
+await analogValueObj.presentValue.setValue(25.6);
+```
+
+This will result in CoV events being sent to active subscriber, if present.
+
+### Extending object classes
+
+Have a look at the source code for object classes implementing the simpler
+BACnet object types and use the same pattern in your code:
+
+- [`BDAnalogValue`](https://github.com/jacoscaz/bacnet-device/blob/main/src/objects/analogvalue.ts)
+- [`BDIntegerValue`](https://github.com/jacoscaz/bacnet-device/blob/main/src/objects/integervalue.ts)
 
 [1]: https://github.com/jacoscaz/bacnet-device
 [2]: https://github.com/innovation-system/node-bacnet
@@ -119,3 +108,4 @@ device.on('error', (err) => {
 [4]: https://github.com/jacoscaz/bacnet-device/blob/main/CONFORMANCE.md
 [5]: https://github.com/jacoscaz/bacnet-device
 [6]: https://www.innovation-system.it
+[7]: https://github.com/jacoscaz/bacnet-device/blob/main/LICENSE

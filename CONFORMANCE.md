@@ -1,6 +1,9 @@
 
 # Conformance
 
+This document summarizes the conformance status of this library with respect
+to the BACnet specifications.
+
 ## Table of Contents
 
 - [Supported Services](#supported-services)
