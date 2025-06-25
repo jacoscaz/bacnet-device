@@ -8,7 +8,6 @@ import {
   EventState,
   EngineeringUnits,
   PropertyIdentifier,
-  StatusFlagsBitString,
 } from '@innovation-system/node-bacnet';
 
 export interface BDAnalogOutputOpts { 
@@ -58,36 +57,12 @@ export class BDAnalogOutput extends BDObject {
   readonly minPresentValue: BDSingletProperty<ApplicationTag.REAL>;
   
   /**
-   * The current status flags for this object
-   * 
-   * This property contains four flags: IN_ALARM, FAULT, OVERRIDDEN, and OUT_OF_SERVICE.
-   * These flags provide a summary of the object's current status.
-   */
-  readonly statusFlags: BDSingletProperty<ApplicationTag.BIT_STRING>;
-  
-  /**
-   * The current event state of this object
-   * 
-   * This property indicates whether the object is in an alarm condition.
-   * For objects that do not support event reporting, this is typically NORMAL.
-   */
-  readonly eventState: BDSingletProperty<ApplicationTag.ENUMERATED, EventState>;
-  
-  /**
    * The engineering units for the present value
    * 
    * This property specifies the units of measurement for the present value,
    * such as degrees Celsius, Pascal, etc.
    */
   readonly engineeringUnit: BDSingletProperty<ApplicationTag.ENUMERATED, EngineeringUnits>;
-  
-  /**
-   * Indicates whether this object is out of service
-   * 
-   * When true, the Present_Value property is decoupled from the physical output
-   * and can be modified directly for testing or other purposes.
-   */
-  readonly outOfService: BDSingletProperty<ApplicationTag.BOOLEAN>;
   
   /**
    * The default value for the present value when all priority array slots are NULL
@@ -126,17 +101,8 @@ export class BDAnalogOutput extends BDObject {
     this.presentValue = this.addProperty(new BDSingletProperty(
       PropertyIdentifier.PRESENT_VALUE, ApplicationTag.REAL, true, opts.presentValue ?? 0));
     
-    this.statusFlags = this.addProperty(new BDSingletProperty<ApplicationTag.BIT_STRING, StatusFlagsBitString>(
-      PropertyIdentifier.STATUS_FLAGS, ApplicationTag.BIT_STRING, false, new StatusFlagsBitString()));
-    
-    this.eventState = this.addProperty(new BDSingletProperty<ApplicationTag.ENUMERATED, EventState>(
-      PropertyIdentifier.EVENT_STATE, ApplicationTag.ENUMERATED, false, EventState.NORMAL));
-    
     this.engineeringUnit = this.addProperty(new BDSingletProperty<ApplicationTag.ENUMERATED, EngineeringUnits>(
       PropertyIdentifier.UNITS, ApplicationTag.ENUMERATED, false, opts.unit));
-    
-    this.outOfService  = this.addProperty(new BDSingletProperty(
-      PropertyIdentifier.OUT_OF_SERVICE, ApplicationTag.BOOLEAN, false, false));
     
     this.relinquishDefault = this.addProperty(new BDSingletProperty(
       PropertyIdentifier.RELINQUISH_DEFAULT, ApplicationTag.REAL, false, 0));

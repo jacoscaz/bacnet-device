@@ -157,7 +157,6 @@ export class BDDevice extends BDObject implements AsyncEventEmitter<BDDeviceEven
   readonly localTime: BDSingletProperty<ApplicationTag.TIME>;
   readonly daylightSavingsStatus: BDSingletProperty<ApplicationTag.BOOLEAN>;
   readonly systemStatus: BDSingletProperty<ApplicationTag.ENUMERATED, DeviceStatus>;
-  readonly eventState: BDSingletProperty<ApplicationTag.ENUMERATED, EventState>;
   
 
   
@@ -320,9 +319,6 @@ export class BDDevice extends BDObject implements AsyncEventEmitter<BDDeviceEven
     
     this.systemStatus = this.addProperty(new BDSingletProperty<ApplicationTag.ENUMERATED, DeviceStatus>(
       PropertyIdentifier.SYSTEM_STATUS, ApplicationTag.ENUMERATED, false, DeviceStatus.OPERATIONAL));
-    
-    this.eventState = this.addProperty(new BDSingletProperty<ApplicationTag.ENUMERATED, EventState>(
-      PropertyIdentifier.EVENT_STATE, ApplicationTag.ENUMERATED, false, EventState.NORMAL));
     
   }
   

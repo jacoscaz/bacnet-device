@@ -4,11 +4,8 @@ import { BDObject } from './generic/object.js';
 import { 
   ObjectType,
   ApplicationTag,
-  EventState,
   EngineeringUnits,
-  Reliability,
   PropertyIdentifier,
-  StatusFlagsBitString,
 } from '@innovation-system/node-bacnet';
 
 export interface BDAnalogInputOpts { 
@@ -55,23 +52,7 @@ export class BDAnalogInput extends BDObject {
   readonly maxPresentValue: BDSingletProperty<ApplicationTag.REAL>;
   
   readonly minPresentValue: BDSingletProperty<ApplicationTag.REAL>;
-  
-  /**
-   * The current status flags for this object
-   * 
-   * This property contains four flags: IN_ALARM, FAULT, OVERRIDDEN, and OUT_OF_SERVICE.
-   * These flags provide a summary of the object's current status.
-   */
-  readonly statusFlags: BDSingletProperty<ApplicationTag.BIT_STRING>;
-  
-  /**
-   * The current event state of this object
-   * 
-   * This property indicates whether the object is in an alarm condition.
-   * For objects that do not support event reporting, this is typically NORMAL.
-   */
-  readonly eventState: BDSingletProperty<ApplicationTag.ENUMERATED, EventState>;
-  
+
   /**
    * The engineering units for the present value
    * 
@@ -79,22 +60,6 @@ export class BDAnalogInput extends BDObject {
    * such as degrees Celsius, Pascal, etc.
    */
   readonly engineeringUnit: BDSingletProperty<ApplicationTag.ENUMERATED, EngineeringUnits>;
-  
-  /**
-   * Indicates whether this object is out of service
-   * 
-   * When true, the Present_Value property is decoupled from the physical input
-   * and can be modified directly for testing or other purposes.
-   */
-  readonly outOfService: BDSingletProperty<ApplicationTag.BOOLEAN>;
-  
-  /**
-   * The reliability of the present value
-   * 
-   * This property indicates whether the Present_Value is reliable and why it
-   * might be unreliable (e.g., sensor failure, communication failure, etc.).
-   */
-  readonly reliability: BDSingletProperty<ApplicationTag.ENUMERATED, Reliability>;
   
   readonly covIncrement: BDSingletProperty<ApplicationTag.REAL>;
   
@@ -107,20 +72,8 @@ export class BDAnalogInput extends BDObject {
     this.presentValue = this.addProperty(new BDSingletProperty(
       PropertyIdentifier.PRESENT_VALUE, ApplicationTag.REAL, false, opts.presentValue ?? 0));
     
-    this.statusFlags = this.addProperty(new BDSingletProperty<ApplicationTag.BIT_STRING, StatusFlagsBitString>(
-      PropertyIdentifier.STATUS_FLAGS, ApplicationTag.BIT_STRING, false, new StatusFlagsBitString()));
-    
-    this.eventState = this.addProperty(new BDSingletProperty<ApplicationTag.ENUMERATED, EventState>(
-      PropertyIdentifier.EVENT_STATE, ApplicationTag.ENUMERATED, false, EventState.NORMAL));
-    
     this.engineeringUnit = this.addProperty(new BDSingletProperty<ApplicationTag.ENUMERATED, EngineeringUnits>(
       PropertyIdentifier.UNITS, ApplicationTag.ENUMERATED, false, opts.unit));
-    
-    this.outOfService = this.addProperty(new BDSingletProperty(
-      PropertyIdentifier.OUT_OF_SERVICE, ApplicationTag.BOOLEAN, false, false));
-    
-    this.reliability = this.addProperty(new BDSingletProperty<ApplicationTag.ENUMERATED, Reliability>(
-      PropertyIdentifier.RELIABILITY, ApplicationTag.ENUMERATED, false, Reliability.NO_FAULT_DETECTED));
     
     this.covIncrement = this.addProperty(new BDSingletProperty(
       PropertyIdentifier.COV_INCREMENT, ApplicationTag.REAL, false, opts.covIncrement ?? 0.001));

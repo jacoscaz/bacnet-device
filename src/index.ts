@@ -44,12 +44,9 @@ export {
   type BDDeviceEvents,
 } from './objects/device/types.js';
 
-export { 
-  type BDAnalogOutputOpts, 
-  BDAnalogOutput,
-} from './objects/analogoutput.js';
+export * from './objects/analogoutput.js';
+export * from './objects/analoginput.js';
+export * from './objects/analogvalue.js';
 
-export { 
-  type BDAnalogInputOpts, 
-  BDAnalogInput,
-} from './objects/analoginput.js';
+export * from './objects/integervalue.js';
+export * from './objects/positiveintegervalue.js';

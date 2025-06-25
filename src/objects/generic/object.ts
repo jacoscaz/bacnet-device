@@ -20,8 +20,11 @@ import {
   ErrorCode,
   ErrorClass,
   ObjectType,
+  EventState,
+  Reliability,
   ApplicationTag,
   PropertyIdentifier,
+  StatusFlagsBitString,
 } from '@innovation-system/node-bacnet';
 
 import type { 
@@ -98,6 +101,14 @@ export class BDObject extends AsyncEventEmitter<BDObjectEvents> {
   
   readonly description: BDSingletProperty<ApplicationTag.CHARACTER_STRING>;
   
+  readonly outOfService: BDSingletProperty<ApplicationTag.BOOLEAN>;
+  
+  readonly statusFlags: BDSingletProperty<ApplicationTag.BIT_STRING>;
+  
+  readonly eventState: BDSingletProperty<ApplicationTag.ENUMERATED, EventState>;
+  
+  readonly reliability: BDSingletProperty<ApplicationTag.ENUMERATED, Reliability>;
+  
   readonly #queue: TaskQueue;
   /**
    * Creates a new BACnet object
@@ -106,7 +117,7 @@ export class BDObject extends AsyncEventEmitter<BDObjectEvents> {
    * @param instance - The instance number for this object
    * @param name - The name of this object
    */
-  constructor(type: ObjectType, instance: number, name: string, description: string = 'w') {
+  constructor(type: ObjectType, instance: number, name: string, description: string = '') {
     super();
     
     this.#queue = new TaskQueue();
@@ -128,7 +139,19 @@ export class BDObject extends AsyncEventEmitter<BDObjectEvents> {
       PropertyIdentifier.PROPERTY_LIST, false,  () => this.#propertyList));
     
     this.description = this.addProperty(new BDSingletProperty(
-      PropertyIdentifier.DESCRIPTION, ApplicationTag.CHARACTER_STRING, false, description ?? 'w'));
+      PropertyIdentifier.DESCRIPTION, ApplicationTag.CHARACTER_STRING, false, description));
+    
+    this.outOfService = this.addProperty(new BDSingletProperty(
+      PropertyIdentifier.OUT_OF_SERVICE, ApplicationTag.BOOLEAN, false, false));
+    
+    this.statusFlags = this.addProperty(new BDSingletProperty<ApplicationTag.BIT_STRING, StatusFlagsBitString>(
+      PropertyIdentifier.STATUS_FLAGS, ApplicationTag.BIT_STRING, false, new StatusFlagsBitString()));
+    
+    this.eventState = this.addProperty(new BDSingletProperty<ApplicationTag.ENUMERATED, EventState>(
+      PropertyIdentifier.EVENT_STATE, ApplicationTag.ENUMERATED, false, EventState.NORMAL));
+    
+    this.reliability = this.addProperty(new BDSingletProperty<ApplicationTag.ENUMERATED, Reliability>(
+      PropertyIdentifier.RELIABILITY, ApplicationTag.ENUMERATED, false, Reliability.NO_FAULT_DETECTED));
     
   }
   

@@ -69,7 +69,7 @@ this library using the appropriate primitives.
 | --- | --- | --- | --- |
 | ✅ | ANALOG_INPUT | all | none |
 | ✅ | ANALOG_OUTPUT | all | none |
-| ❌ | ANALOG_VALUE | | |
+| ✅ | ANALOG_VALUE | | |
 | ❌ | BINARY_INPUT | | |
 | ❌ | BINARY_OUTPUT | | |
 | ❌ | BINARY_VALUE | | |
@@ -112,10 +112,10 @@ this library using the appropriate primitives.
 | ❌ | DATE_VALUE | | |
 | ❌ | DATETIMEPATTERN_VALUE | | |
 | ❌ | DATETIME_VALUE | | |
-| ❌ | INTEGER_VALUE | | |
+| ✅ | INTEGER_VALUE | | |
 | ❌ | LARGE_ANALOG_VALUE | | |
 | ❌ | OCTETSTRING_VALUE | | |
-| ❌ | POSITIVE_INTEGER_VALUE | | |
+| ✅ | POSITIVE_INTEGER_VALUE | | |
 | ❌ | TIMEPATTERN_VALUE | | |
 | ❌ | TIME_VALUE | | |
 | ❌ | NOTIFICATION_FORWARDER | | |
