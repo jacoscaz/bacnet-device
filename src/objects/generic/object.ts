@@ -188,12 +188,12 @@ export class BDObject extends AsyncEventEmitter<BDObjectEvents> {
    * @throws BACnetError if the property does not exist
    * @internal
    */
-  async ___readProperty(property: BACNetPropertyID): Promise<BACNetAppData | BACNetAppData[]> {
+  async ___readProperty(identifier: BACNetPropertyID): Promise<BACNetAppData | BACNetAppData[]> {
     return this.#queue.run(async () => {
       const ctx: BDPropertyAccessContext = { date: new Date() };
-      if (this.#properties.has(property.id as PropertyIdentifier)) { 
-        return this.#properties.get(property.id as PropertyIdentifier)!
-          .___readData(property.index, ctx);
+      const property = this.#properties.get(identifier.id);
+      if (property) { 
+        return property.___readData(identifier.index, ctx);
       }
       throw new BDError('unknown property', ErrorCode.UNKNOWN_PROPERTY, ErrorClass.PROPERTY);
     });
@@ -208,15 +208,21 @@ export class BDObject extends AsyncEventEmitter<BDObjectEvents> {
    * @returns An object containing all property values
    * @internal
    */
-  async ___readPropertyMultipleAll(ctx: BDPropertyAccessContext): Promise<BACNetReadAccess> { 
-    const values: BACNetReadAccess['values'] = [];
-    for (const [identifier, property] of this.#properties.entries()) {
-      values.push({
-        property: { id: identifier, index: MAX_ARRAY_INDEX },
-        value: ensureArray(property.___readData(MAX_ARRAY_INDEX, ctx)),
-      });
-    }
-    return { objectId: this.identifier, values };
+  async ___readPropertyMultipleAll(): Promise<BACNetReadAccess> { 
+    return this.#queue.run(async () => {
+      const ctx: BDPropertyAccessContext = { date: new Date() };
+      const values: BACNetReadAccess['values'] = [];
+      for (const [identifier, property] of this.#properties.entries()) {
+        values.push({
+          property: {
+            id: identifier,
+            index: MAX_ARRAY_INDEX,
+          },
+          value: ensureArray(property.___readData(MAX_ARRAY_INDEX, ctx)),
+        });
+      }
+      return { objectId: this.identifier, values };
+    });
   }
   
   /**
@@ -225,24 +231,24 @@ export class BDObject extends AsyncEventEmitter<BDObjectEvents> {
    * This internal method is used to handle ReadPropertyMultiple operations
    * from the BACnet network.
    * 
-   * @param properties - Array of property identifiers to read
+   * @param identifiers - Array of property identifiers to read
    * @returns An object containing the requested property values
    * @internal
    */
-  async ___readPropertyMultiple(properties: ReadPropertyMultipleContent['payload']['properties'][number]['properties']): Promise<BACNetReadAccess> { 
+  async ___readPropertyMultiple(identifiers: ReadPropertyMultipleContent['payload']['properties'][number]['properties']): Promise<BACNetReadAccess> { 
+    if (identifiers.length === 1 && identifiers[0].id === PropertyIdentifier.ALL) {
+      return this.___readPropertyMultipleAll();
+    }
     return this.#queue.run(async () => {
       const ctx: BDPropertyAccessContext = { date: new Date() };
       const values: BACNetReadAccess['values'] = [];
-      if (properties.length === 1 && properties[0].id === PropertyIdentifier.ALL) {
-        return this.___readPropertyMultipleAll(ctx);
-      }
-      for (const property of properties) {
-        if (this.#properties.has(property.id)) {
-          values.push({ 
-            property, 
-            value: ensureArray(this.#properties.get(property.id)!
-              .___readData(property.index, ctx)),
-          });
+      for (const identifier of identifiers) {
+        const property = this.#properties.get(identifier.id);
+        if (property) { 
+          values.push({
+            property: identifier,
+            value: ensureArray(property.___readData(identifier.index, ctx))
+          })
         }
       }
       return { objectId: this.identifier, values };

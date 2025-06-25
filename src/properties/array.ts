@@ -23,14 +23,10 @@ import { MAX_ARRAY_INDEX } from '../constants.js';
 
 
 /**
- * Implementation of a BACnet property with multiple values (array)
- * 
- * This class represents a BACnet property that contains multiple values in an array.
- * It manages the property's values and handles read/write operations and change notifications.
+ * Implementation of a BACnet property with multiple values (array).
  * 
  * @typeParam Tag - The BACnet application tag for the property values
  * @typeParam Type - The JavaScript type corresponding to the application tag
- * @extends AsyncEventEmitter<BDArrayPropertyEvents<Tag, Type>>
  */
  export class BDArrayProperty<
    Tag extends ApplicationTag, 

@@ -24,14 +24,10 @@ import { BDAbstractProperty, BDPropertyType, type BDPropertyAccessContext } from
 
 
 /**
- * Implementation of a BACnet property with a single value
- * 
- * This class represents a BACnet property that contains a single value (not an array).
- * It manages the property's value and handles read/write operations and change notifications.
+ * Implementation of a BACnet property with a single value.
  * 
  * @typeParam Tag - The BACnet application tag for the property value
  * @typeParam Type - The JavaScript type corresponding to the application tag
- * @extends AsyncEventEmitter<BDSingletPropertyEvents<Tag, Type>>
  */
 export class BDSingletProperty<
   Tag extends ApplicationTag, 

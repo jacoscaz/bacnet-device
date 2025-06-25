@@ -71,14 +71,23 @@ export const sendUnconfirmedCovNotification = async (client: BACNetClientType, e
   );
 }
 
-
+/**
+ * Start date of the process.
+ */
 export const PROCESS_START_DATE = new Date();
 
+/**
+ * Standard time zone offset local to the computer running this code.
+ */
 export const STD_TZ_OFFSET = Math.max(
   new Date(PROCESS_START_DATE.getFullYear(), 0, 1).getTimezoneOffset(),
   new Date(PROCESS_START_DATE.getFullYear(), 6, 1).getTimezoneOffset(),
 ); 
 
+/**
+ * Returns whether daylight saving time is in effect for a given date,
+ * relative to the local time zone of the computer running this code.
+ */
 export const isDstInEffect = (date: Date): boolean => { 
   return date.getTimezoneOffset() < STD_TZ_OFFSET;
 };

@@ -12,7 +12,7 @@
 export { 
   type BDPropertyEvents, 
   type BDPropertyAccessContext,
-  type BDPropertyValueGetter,
+  type BDPropertyDataGetter as BDPropertyValueGetter,
   BDPropertyType,
   BDAbstractProperty,
 } from './abstract.js';

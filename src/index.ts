@@ -44,5 +44,12 @@ export {
   type BDDeviceEvents,
 } from './objects/device/types.js';
 
-export { type BDAnalogOutputOpts, BDAnalogOutput } from './objects/analogoutput.js';
-export { type BDAnalogInputOpts, BDAnalogInput } from './objects/analoginput.js';
+export { 
+  type BDAnalogOutputOpts, 
+  BDAnalogOutput,
+} from './objects/analogoutput.js';
+
+export { 
+  type BDAnalogInputOpts, 
+  BDAnalogInput,
+} from './objects/analoginput.js';
