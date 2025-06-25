@@ -15,9 +15,10 @@ properties, and network operations, loosely coupled via events.</li>
 after full processing and acknowledgment, creating natural throttling; for
 example, COV notifications wait for subscriber confirmation before processing
 the next change.</li>
-<li><strong>Sequential property updates</strong>: value change operations, whether internal
-or coming in via the BACnet network, are processed through FIFO queues,
-preventing race conditions.</li>
+<li><strong>Object-level transactions</strong>: access to property values, whether by other
+devices in the BACnet network or by consumers of this library, are processed
+through per-object FIFO queues to maintain consistency and prevent race
+conditions.</li>
 </ol>
 <p>This library is built on top of the wonderful <a href="https://github.com/innovation-system/node-bacnet"><code>node-bacnet</code></a>, a TypeScript
 implementation of BACnet's protocol stack maintained by <a href="https://www.innovation-system.it">Innovation System</a>.

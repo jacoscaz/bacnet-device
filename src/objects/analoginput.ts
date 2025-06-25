@@ -1,6 +1,6 @@
 
 import { BDSingletProperty } from '../properties/index.js';
-import { BDObject } from '../object.js';
+import { BDObject } from './generic/object.js';
 import { 
   ObjectType,
   ApplicationTag,

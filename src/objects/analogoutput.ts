@@ -1,6 +1,6 @@
 
 import { BDSingletProperty, BDArrayProperty } from '../properties/index.js';
-import { BDObject } from '../object.js';
+import { BDObject } from './generic/object.js';
 import { 
   type BACNetAppData,
   ObjectType,

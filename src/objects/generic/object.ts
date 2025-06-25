@@ -7,10 +7,10 @@
  * 
  * @module
  */
+ 
+import { AsyncEventEmitter, type EventMap } from '../../events.js';
 
-import { AsyncEventEmitter, type EventMap } from './events.js';
-
-import { BDError } from './errors.js';
+import { BDError } from '../../errors.js';
 
 import {
   type BACNetAppData,
@@ -32,11 +32,14 @@ import {
   BDAbstractProperty,
   BDSingletProperty,
   BDArrayProperty,
-} from './properties/index.js';
+} from '../../properties/index.js';
 
-import { ensureArray } from './utils.js';
+import { ensureArray } from '../../utils.js';
 
-import { MAX_ARRAY_INDEX } from './constants.js';
+import { MAX_ARRAY_INDEX } from '../../constants.js';
+
+import { TaskQueue } from '../../taskqueue.js';
+import type { BDPropertyAccessContext } from '../../properties/abstract.js';
 
 /**
  * Events that can be emitted by a BACnet object
@@ -95,6 +98,7 @@ export class BDObject extends AsyncEventEmitter<BDObjectEvents> {
   
   readonly description: BDSingletProperty<ApplicationTag.CHARACTER_STRING>;
   
+  readonly #queue: TaskQueue;
   /**
    * Creates a new BACnet object
    * 
@@ -105,9 +109,11 @@ export class BDObject extends AsyncEventEmitter<BDObjectEvents> {
   constructor(type: ObjectType, instance: number, name: string, description: string = 'w') {
     super();
     
-    this.identifier = Object.freeze({ type, instance });
+    this.#queue = new TaskQueue();
     this.#properties = new Map();
     this.#propertyList = [];
+    
+    this.identifier = Object.freeze({ type, instance });
     
     this.objectName = this.addProperty(new BDSingletProperty(
       PropertyIdentifier.OBJECT_NAME, ApplicationTag.CHARACTER_STRING, false, name));
@@ -145,6 +151,7 @@ export class BDObject extends AsyncEventEmitter<BDObjectEvents> {
     if (!unlistedProperties.includes(property.identifier)) { 
       this.#propertyList.push({ type: ApplicationTag.ENUMERATED, value: property.identifier });
     }
+    property.___setQueue(this.#queue);
     property.on('aftercov', this.#onPropertyAfterCov);
     return property;
   }
@@ -160,13 +167,15 @@ export class BDObject extends AsyncEventEmitter<BDObjectEvents> {
    * @internal
    */
   async ___writeProperty(identifier: BACNetPropertyID, value: BACNetAppData | BACNetAppData[]): Promise<void> {
-    const property = this.#properties.get(identifier.id as PropertyIdentifier);
-    // TODO: test/validate value before setting it!
-    if (property) {
-      await property.___writeData(value);
-    } else { 
-      throw new BDError('unknown property', ErrorCode.UNKNOWN_PROPERTY, ErrorClass.PROPERTY);    
-    }
+    return this.#queue.run(async () => { 
+      const property = this.#properties.get(identifier.id as PropertyIdentifier);
+      // TODO: test/validate value before setting it!
+      if (property) {
+        await property.___writeData(value);
+      } else { 
+        throw new BDError('unknown property', ErrorCode.UNKNOWN_PROPERTY, ErrorClass.PROPERTY);    
+      }
+    });
   }
   
   /**
@@ -180,11 +189,14 @@ export class BDObject extends AsyncEventEmitter<BDObjectEvents> {
    * @internal
    */
   async ___readProperty(property: BACNetPropertyID): Promise<BACNetAppData | BACNetAppData[]> {
-    if (this.#properties.has(property.id as PropertyIdentifier)) { 
-      return this.#properties.get(property.id as PropertyIdentifier)!
-        .___readData(property.index);
-    }
-    throw new BDError('unknown property', ErrorCode.UNKNOWN_PROPERTY, ErrorClass.PROPERTY);
+    return this.#queue.run(async () => {
+      const ctx: BDPropertyAccessContext = { date: new Date() };
+      if (this.#properties.has(property.id as PropertyIdentifier)) { 
+        return this.#properties.get(property.id as PropertyIdentifier)!
+          .___readData(property.index, ctx);
+      }
+      throw new BDError('unknown property', ErrorCode.UNKNOWN_PROPERTY, ErrorClass.PROPERTY);
+    });
   }
   
   /**
@@ -196,12 +208,12 @@ export class BDObject extends AsyncEventEmitter<BDObjectEvents> {
    * @returns An object containing all property values
    * @internal
    */
-  async ___readPropertyMultipleAll(): Promise<BACNetReadAccess> { 
+  async ___readPropertyMultipleAll(ctx: BDPropertyAccessContext): Promise<BACNetReadAccess> { 
     const values: BACNetReadAccess['values'] = [];
     for (const [identifier, property] of this.#properties.entries()) {
-      values.push({ 
-        property: { id: identifier, index: MAX_ARRAY_INDEX }, 
-        value: ensureArray(property.___readData(MAX_ARRAY_INDEX)),
+      values.push({
+        property: { id: identifier, index: MAX_ARRAY_INDEX },
+        value: ensureArray(property.___readData(MAX_ARRAY_INDEX, ctx)),
       });
     }
     return { objectId: this.identifier, values };
@@ -218,16 +230,23 @@ export class BDObject extends AsyncEventEmitter<BDObjectEvents> {
    * @internal
    */
   async ___readPropertyMultiple(properties: ReadPropertyMultipleContent['payload']['properties'][number]['properties']): Promise<BACNetReadAccess> { 
-    const values: BACNetReadAccess['values'] = [];
-    if (properties.length === 1 && properties[0].id === PropertyIdentifier.ALL) { 
-      return this.___readPropertyMultipleAll();
-    }
-    for (const property of properties) {
-      if (this.#properties.has(property.id)) {
-        values.push({ property, value: ensureArray(this.#properties.get(property.id)!.___readData(property.index)) });
+    return this.#queue.run(async () => {
+      const ctx: BDPropertyAccessContext = { date: new Date() };
+      const values: BACNetReadAccess['values'] = [];
+      if (properties.length === 1 && properties[0].id === PropertyIdentifier.ALL) {
+        return this.___readPropertyMultipleAll(ctx);
       }
-    }
-    return { objectId: this.identifier, values };
+      for (const property of properties) {
+        if (this.#properties.has(property.id)) {
+          values.push({ 
+            property, 
+            value: ensureArray(this.#properties.get(property.id)!
+              .___readData(property.index, ctx)),
+          });
+        }
+      }
+      return { objectId: this.identifier, values };
+    });
   }
   
   /**

@@ -11,6 +11,8 @@
 
 export { BDError } from './errors.js';
 
+export { TaskQueue } from './taskqueue.js';
+
 export { 
   type EventMap,
   type EventKey,
@@ -21,13 +23,18 @@ export {
 
 export {
   type BDPropertyEvents,
+  type BDPropertyValueGetter,
+  type BDPropertyAccessContext,
   BDPropertyType,
   BDAbstractProperty,
   BDArrayProperty, 
   BDSingletProperty,
 } from './properties/index.js';
 
-export { type BDObjectEvents, BDObject } from './object.js';
+export { 
+  type BDObjectEvents,
+  BDObject,
+} from './objects/generic/object.js';
 
 export { BDDevice } from './objects/device/device.js';
 

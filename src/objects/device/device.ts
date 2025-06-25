@@ -5,7 +5,7 @@ import {
 
 import { 
   BDObject,
-} from '../../object.js';
+} from '../generic/object.js';
 
 import { 
   type BACNetClientType,
@@ -305,16 +305,16 @@ export class BDDevice extends BDObject implements AsyncEventEmitter<BDDeviceEven
     // ======================== TIME-RELATED PROPERTIES =======================
     
     this.utcOffset = this.addProperty(new BDSingletProperty(
-      PropertyIdentifier.UTC_OFFSET, ApplicationTag.SIGNED_INTEGER, false, () => new Date().getTimezoneOffset() * -1));
+      PropertyIdentifier.UTC_OFFSET, ApplicationTag.SIGNED_INTEGER, false, (ctx) => ctx.date.getTimezoneOffset() * -1));
     
     this.localDate = this.addProperty(new BDSingletProperty(
-      PropertyIdentifier.LOCAL_DATE, ApplicationTag.DATE, false, () => new Date()));
+      PropertyIdentifier.LOCAL_DATE, ApplicationTag.DATE, false, (ctx) => ctx.date));
     
     this.localTime = this.addProperty(new BDSingletProperty(
-      PropertyIdentifier.LOCAL_TIME, ApplicationTag.TIME, false, () => new Date()));
+      PropertyIdentifier.LOCAL_TIME, ApplicationTag.TIME, false, (ctx) => ctx.date));
     
     this.daylightSavingsStatus = this.addProperty(new BDSingletProperty(
-      PropertyIdentifier.DAYLIGHT_SAVINGS_STATUS, ApplicationTag.BOOLEAN, false, () => isDstInEffect(new Date())));
+      PropertyIdentifier.DAYLIGHT_SAVINGS_STATUS, ApplicationTag.BOOLEAN, false, (ctx) => isDstInEffect(ctx.date)));
     
     // ======================= STATUS-RELATED PROPERTIES ======================
     

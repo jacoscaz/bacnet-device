@@ -11,6 +11,8 @@
 
 export { 
   type BDPropertyEvents, 
+  type BDPropertyAccessContext,
+  type BDPropertyValueGetter,
   BDPropertyType,
   BDAbstractProperty,
 } from './abstract.js';

@@ -80,7 +80,7 @@ import { MAX_ARRAY_INDEX } from '../constants.js';
     if (!Array.isArray(data)) { 
       data = [data];
     }
-    await this.___queueData(data);
+    await this.___updateData(data);
   }
   
 }

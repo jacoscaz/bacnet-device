@@ -1,6 +1,4 @@
 
-import fastq from 'fastq';
-
 import { 
   type BACNetAppData,
   type ApplicationTag,
@@ -16,6 +14,7 @@ import {
   type EventMap,
   AsyncEventEmitter,
 } from '../events.js';
+import { TaskQueue } from '../taskqueue.js';
 
 export interface BDPropertyEvents<
   Tag extends ApplicationTag, 
@@ -33,6 +32,15 @@ export enum BDPropertyType {
   ARRAY = 1,
 }
 
+const shared_task_queue = new TaskQueue();
+
+export interface BDPropertyAccessContext {
+  date: Date;
+}
+
+export type BDPropertyValueGetter<Data extends BACNetAppData | BACNetAppData[]> = 
+  (ctx: BDPropertyAccessContext) => Data;
+
 export abstract class BDAbstractProperty<
   Tag extends ApplicationTag, 
   Type extends ApplicationTagValueTypeMap[Tag], 
@@ -45,50 +53,41 @@ export abstract class BDAbstractProperty<
   
   readonly writable: boolean;
   
-  #data: Data | (() => Data);
+  #queue: TaskQueue;
   
-  #queue: fastq.queueAsPromised<Data>;
+  #data: Data | BDPropertyValueGetter<Data>;
   
-  constructor(identifier: PropertyIdentifier, writable: boolean, value: Data | (() => Data)) {
+  constructor(identifier: PropertyIdentifier, writable: boolean, value: Data | BDPropertyValueGetter<Data>) {
     super();
     this.#data = value;
     this.identifier = identifier;
     this.writable = typeof value !== 'function' && writable;
-    this.#queue = fastq.promise(this.#worker, 1);
+    this.#queue = shared_task_queue;
   }
   
   getData(): Data {
-    return typeof this.#data === 'function' ? this.#data() : this.#data;
+    return typeof this.#data === 'function' ? this.#data({ date: new Date() }) : this.#data;
   }
   
-  async setData(value: Data): Promise<void> {
-    await this.#queue.push(value);
+  async setData(data: Data): Promise<void> {
+    await this.#queue.run(() => this.___updateData(data));
   }
   
-  abstract ___readData(index: number): BACNetAppData | BACNetAppData[];
+  abstract ___readData(index: number, ctx: BDPropertyAccessContext): BACNetAppData | BACNetAppData[];
   
   abstract ___writeData(value: BACNetAppData<Tag, Type> | BACNetAppData<Tag, Type>[]): Promise<void>;
   
-  async ___queueData(value: Data): Promise<void> {
-    await this.#queue.push(value);
+  ___setQueue(queue: TaskQueue) {
+    this.#queue = queue;
   }
   
-  /**
-   * Worker function for processing the value change queue
-   * 
-   * This method processes each value change and triggers the appropriate events.
-   * 
-   * @param data - The new value to set
-   * @private
-   */
-  #worker = async (data: Data) => {
+  protected async ___updateData(data: Data): Promise<void> {
     if (typeof this.#data === 'function') {
       throw new BDError('polled property', ErrorCode.WRITE_ACCESS_DENIED, ErrorClass.PROPERTY);
     }
     await this.___asyncEmitSeries(true, 'beforecov', this, data);
     this.#data = data;
     await this.___asyncEmitSeries(false, 'aftercov', this, data);
-  };
-  
+  }
   
 } 

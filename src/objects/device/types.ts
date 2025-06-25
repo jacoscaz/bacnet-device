@@ -2,7 +2,7 @@
 import {
   type BDObject,
   type BDObjectEvents,
-} from '../../object.js';
+} from '../generic/object.js';
 
 import {
   type BDAbstractProperty,

@@ -19,7 +19,7 @@ import {
 } from '@innovation-system/node-bacnet';
 
 import { BDError } from '../errors.js';
-import { BDAbstractProperty, BDPropertyType } from './abstract.js';
+import { BDAbstractProperty, BDPropertyType, type BDPropertyAccessContext } from './abstract.js';
 
 
 
@@ -44,11 +44,11 @@ export class BDSingletProperty<
     identifier: PropertyIdentifier, 
     type: Tag, 
     writable: boolean, 
-    value: Type | (() => Type), 
+    value: Type | ((ctx: BDPropertyAccessContext) => Type), 
     encoding?: CharacterStringEncoding,
   ) { 
     super(identifier, writable, typeof value === 'function' 
-      ? () => ({ type, value: (value as Function)(), encoding })
+      ? (ctx) => ({ type, value: (value as Function)(ctx), encoding })
       : { type, value, encoding }
     );
   }
@@ -92,7 +92,7 @@ export class BDSingletProperty<
         value = value[0];
       }
     }
-    await this.___queueData(value);
+    await this.___updateData(value);
   }
   
  
