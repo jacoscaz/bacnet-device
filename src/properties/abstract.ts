@@ -90,7 +90,7 @@ export abstract class BDAbstractProperty<
    * Indicates whether this property can be written to by other devices in
    * the BACnet network.
    */
-  readonly writable: boolean;
+  #writable: boolean;
   
   #queue: TaskQueue;
   
@@ -100,8 +100,24 @@ export abstract class BDAbstractProperty<
     super();
     this.#data = data;
     this.identifier = identifier;
-    this.writable = typeof data !== 'function' && writable;
+    this.#writable = typeof data !== 'function' && writable;
     this.#queue = shared_task_queue;
+  }
+  
+  /**
+   * Returns true if the property is writable (commandable) from other devices
+   * on the BACnet network, false otherwise.
+   */
+  isWritable(): boolean { 
+    return this.#writable;
+  }
+  
+  /**
+   * Sets whether this property can be written to from other devices on the
+   * BACnet network.
+   */
+  setWritable(writable: boolean) {
+    this.#writable = writable;
   }
   
   getData(): Data {

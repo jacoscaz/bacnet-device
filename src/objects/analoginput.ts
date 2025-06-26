@@ -11,6 +11,7 @@ import {
 export interface BDAnalogInputOpts { 
   name: string, 
   unit: EngineeringUnits, 
+  writable?: boolean,
   description?: string,
   minPresentValue?: number,
   maxPresentValue?: number,
@@ -70,7 +71,7 @@ export class BDAnalogInput extends BDObject {
     super(ObjectType.ANALOG_INPUT, instance, opts.name, opts.description);
     
     this.presentValue = this.addProperty(new BDSingletProperty(
-      PropertyIdentifier.PRESENT_VALUE, ApplicationTag.REAL, false, opts.presentValue ?? 0));
+      PropertyIdentifier.PRESENT_VALUE, ApplicationTag.REAL, opts.writable ?? true, opts.presentValue ?? 0));
     
     this.engineeringUnit = this.addProperty(new BDSingletProperty<ApplicationTag.ENUMERATED, EngineeringUnits>(
       PropertyIdentifier.UNITS, ApplicationTag.ENUMERATED, false, opts.unit));

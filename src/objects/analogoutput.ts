@@ -13,6 +13,7 @@ import {
 export interface BDAnalogOutputOpts { 
   name: string, 
   unit: EngineeringUnits, 
+  writable?: boolean,
   description?: string,
   minPresentValue?: number,
   maxPresentValue?: number,
@@ -99,7 +100,7 @@ export class BDAnalogOutput extends BDObject {
     super(ObjectType.ANALOG_OUTPUT, instance, opts.name, opts.description);
     
     this.presentValue = this.addProperty(new BDSingletProperty(
-      PropertyIdentifier.PRESENT_VALUE, ApplicationTag.REAL, true, opts.presentValue ?? 0));
+      PropertyIdentifier.PRESENT_VALUE, ApplicationTag.REAL, opts.writable ?? false, opts.presentValue ?? 0));
     
     this.engineeringUnit = this.addProperty(new BDSingletProperty<ApplicationTag.ENUMERATED, EngineeringUnits>(
       PropertyIdentifier.UNITS, ApplicationTag.ENUMERATED, false, opts.unit));

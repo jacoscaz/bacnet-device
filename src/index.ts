@@ -48,5 +48,13 @@ export * from './objects/analogoutput.js';
 export * from './objects/analoginput.js';
 export * from './objects/analogvalue.js';
 
+export * from './objects/binaryvalue.js';
+
+export * from './objects/timevalue.js';
+export * from './objects/datevalue.js';
+export * from './objects/datetimevalue.js';
+
 export * from './objects/integervalue.js';
 export * from './objects/positiveintegervalue.js';
+
+export * from './objects/characterstringvalue.js';

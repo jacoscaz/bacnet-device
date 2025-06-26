@@ -70,7 +70,7 @@ import { MAX_ARRAY_INDEX } from '../constants.js';
    * @internal
    */
   async ___writeData(data: BACNetAppData<Tag, Type> | BACNetAppData<Tag, Type>[]): Promise<void> { 
-    if (!this.writable) { 
+    if (!this.isWritable()) { 
       throw new BDError('not writable', ErrorCode.WRITE_ACCESS_DENIED, ErrorClass.PROPERTY);
     }
     if (!Array.isArray(data)) { 

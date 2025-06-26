@@ -11,6 +11,7 @@ import {
 export interface BDIntegerValueOpts { 
   name: string, 
   unit: EngineeringUnits, 
+  writable?: boolean,
   description?: string,
   presentValue?: number,
   covIncrement?: number,
@@ -26,7 +27,7 @@ export class BDIntegerValue extends BDObject {
     super(ObjectType.INTEGER_VALUE, instance, opts.name, opts.description);
     
     this.presentValue = this.addProperty(new BDSingletProperty(
-      PropertyIdentifier.PRESENT_VALUE, ApplicationTag.SIGNED_INTEGER, true, opts.presentValue ?? 0));
+      PropertyIdentifier.PRESENT_VALUE, ApplicationTag.SIGNED_INTEGER, opts.writable ?? false, opts.presentValue ?? 0));
     
     this.engineeringUnit = this.addProperty(new BDSingletProperty(
       PropertyIdentifier.UNITS, ApplicationTag.ENUMERATED, false, opts.unit));

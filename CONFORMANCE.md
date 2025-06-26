@@ -75,7 +75,7 @@ this library using the appropriate primitives.
 | ✅ | ANALOG_VALUE | | |
 | ❌ | BINARY_INPUT | | |
 | ❌ | BINARY_OUTPUT | | |
-| ❌ | BINARY_VALUE | | |
+| ✅ | BINARY_VALUE | | |
 | ❌ | CALENDAR | | |
 | ❌ | COMMAND | | |
 | ✅ | DEVICE | all | some |
@@ -110,17 +110,17 @@ this library using the appropriate primitives.
 | ❌ | CREDENTIAL_DATA_INPUT | | |
 | ❌ | NETWORK_SECURITY | | |
 | ❌ | BITSTRING_VALUE | | |
-| ❌ | CHARACTERSTRING_VALUE | | |
+| ✅ | CHARACTERSTRING_VALUE | | |
 | ❌ | DATEPATTERN_VALUE | | |
-| ❌ | DATE_VALUE | | |
+| ✅ | DATE_VALUE | | |
 | ❌ | DATETIMEPATTERN_VALUE | | |
-| ❌ | DATETIME_VALUE | | |
+| ✅ | DATETIME_VALUE | | |
 | ✅ | INTEGER_VALUE | | |
 | ❌ | LARGE_ANALOG_VALUE | | |
 | ❌ | OCTETSTRING_VALUE | | |
 | ✅ | POSITIVE_INTEGER_VALUE | | |
 | ❌ | TIMEPATTERN_VALUE | | |
-| ❌ | TIME_VALUE | | |
+| ✅ | TIME_VALUE | | |
 | ❌ | NOTIFICATION_FORWARDER | | |
 | ❌ | ALERT_ENROLLMENT | | |
 | ❌ | CHANNEL | | |
