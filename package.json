@@ -1,5 +1,5 @@
 {
-  "name": "bacnet-device",
+  "name": "@bacnet-js/device",
   "version": "0.0.3",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -24,16 +24,16 @@
     "debug": "^4.4.1",
     "fastq": "^1.19.1"
   },
-  "homepage": "https://github.com/jacoscaz/bacnet-device",
-  "bugs": "https://github.com/jacoscaz/bacnet-device/issues",
+  "homepage": "https://github.com/bacnet-js/device",
+  "bugs": "https://github.com/bacnet-js/device/issues",
   "repository": {
     "type": "git",
-    "url": "https://github.com/jacoscaz/bacnet-device.git"
+    "url": "https://github.com/bacnet-js/device.git"
   },
   "files": [
     "dist/**/*.js",
     "dist/**/*.d.ts",
-    "SUPPORTED_OBJECT_TYPES.md"
+    "CONFORMANCE.md"
   ],
   "keywords": [
     "bacnet",
