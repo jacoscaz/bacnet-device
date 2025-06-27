@@ -1,23 +1,31 @@
 
-# `bacnet-device`
+# @bacnet-js/device
 
 A TypeScript library for implementing BACnet/IP devices in Node.js.
 
 ## Status
 
-Under heavy development as of June 2025. For more information, [get in touch][1].
+Under heavy development as of June 2025.
+
+This project was started by [Jacopo Scazzosi] ([@jacoscaz]), who continues
+to maintain it, halfway through 2025. However, just a few weeks after the first
+alpha release, it was then moved to the newly-created [bacnet-js] organization,
+together with primary dependency [node-bacnet]. By putting our heads together
+we hope to create a robust, modular, cohesive ecosystem for BACnet applications
+in Node.js.
+
+Interested in the intersection of BACnet and Node.js? [Come visit us][bacnet-js]!
 
 ## Characteristics
 
 This library provides a high-level API that simplifies the instantiation and
 management of BACnet objects by abstracting network operations (subscription
-management, CoV propagation, value updates) and offering classes specific to
-individual BACnet object types that automatically instantiate all properties
-required by the BACnet specification.
+management, CoV propagation, value updates) and accurately modelling BACnet's
+object types through dedicated classes that automatically instantiate all
+properties required by the BACnet specification.
 
-1. **Detailed types**: uses and contributes to [`node-bacnet`][2]'s
-   well-defined interfaces, generics, and type definitions that accurately
-   model BACnet's complex data structures.
+1. **Detailed types**: ships well-defined interfaces and classes to surface
+   BACnet's complex data structures at the typings level.
 2. **Separation of concerns**: maintains separate classes for BACnet objects,
    properties, and network operations, loosely coupled via events.
 3. **Backpressure management**: operations return Promises that resolve only
@@ -29,19 +37,20 @@ required by the BACnet specification.
    through per-object FIFO queues to maintain consistency and prevent race 
    conditions.
 
-This library is built on top of the wonderful [`node-bacnet`][2], a TypeScript
-implementation of BACnet's protocol stack maintained by [Innovation System][6].
-Any improvement that is applicable to [`node-bacnet`][2] is contributed upstream.
+This library is built on top of the wonderful [node-bacnet], a TypeScript
+implementation of BACnet's protocol. Any improvement that is applicable to 
+[node-bacnet] is contributed upstream.
 
 ## Documentation
 
-- Source code is available at [https://github.com/jacoscaz/bacnet-device][5].
-- API documentation is available at [https://jacoscaz.github.io/bacnet-device][3].
-- Conformance is documented in the [CONFORMANCE.md][4] file.
+- Source code: [https://github.com/bacnet-js/device][device]
+- API documentation: [https://bacnet-js.github.io/device][apidocs].
+- Conformance: see the [CONFORMANCE.md] file.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE][7] file for details.
+This project is licensed under the MIT License - see the [LICENSE] file
+for details.
 
 ## Usage
 
@@ -99,13 +108,15 @@ This will result in CoV events being sent to active subscriber, if present.
 Have a look at the source code for object classes implementing the simpler
 BACnet object types and use the same pattern in your code:
 
-- [`BDAnalogValue`](https://github.com/jacoscaz/bacnet-device/blob/main/src/objects/analogvalue.ts)
-- [`BDIntegerValue`](https://github.com/jacoscaz/bacnet-device/blob/main/src/objects/integervalue.ts)
+- [`BDAnalogValue`](https://github.com/bacnet-js/device/blob/main/src/objects/analogvalue.ts)
+- [`BDIntegerValue`](https://github.com/bacnet-js/device/blob/main/src/objects/integervalue.ts)
 
-[1]: https://github.com/jacoscaz/bacnet-device
-[2]: https://github.com/innovation-system/node-bacnet
-[3]: https://jacoscaz.github.io/bacnet-device
-[4]: https://github.com/jacoscaz/bacnet-device/blob/main/CONFORMANCE.md
-[5]: https://github.com/jacoscaz/bacnet-device
-[6]: https://www.innovation-system.it
-[7]: https://github.com/jacoscaz/bacnet-device/blob/main/LICENSE
+
+[device]: https://github.com/bacnet-js/device
+[apidocs]: https://bacnet-js.github.io/device
+[bacnet-js]: https://github.com/bacnet-js
+[Jacopo Scazzosi]: https://github.com/jacoscaz
+[@jacoscaz]: https://github.com/jacoscaz
+[node-bacnet]: https://github.com/bacnet-js/node-bacnet
+[LICENSE]: https://github.com/bacnet-js/device/blob/main/LICENSE
+[CONFORMANCE.md]: https://github.com/bacnet-js/device/blob/main/CONFORMANCE.md
